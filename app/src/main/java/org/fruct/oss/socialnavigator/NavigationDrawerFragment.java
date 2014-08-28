@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator;
 
+import android.os.Build;
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
 import android.support.v7.app.ActionBar;
@@ -99,16 +100,20 @@ public class NavigationDrawerFragment extends Fragment {
         });
         mDrawerListView.setAdapter(new ArrayAdapter<String>(
                 getActionBar().getThemedContext(),
-                android.R.layout.simple_list_item_1,
+				getDrawerItemRes(),
                 android.R.id.text1,
-                new String[]{
-                        getString(R.string.title_section1),
-                        getString(R.string.title_section2),
-                        getString(R.string.title_section3),
-                }));
+                getActivity().getResources().getStringArray(R.array.drawer_sections)));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }
+
+	private int getDrawerItemRes() {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+			return android.R.layout.simple_list_item_1;
+		} else {
+			return android.R.layout.simple_list_item_activated_1;
+		}
+	}
 
     public boolean isDrawerOpen() {
         return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(mFragmentContainerView);
