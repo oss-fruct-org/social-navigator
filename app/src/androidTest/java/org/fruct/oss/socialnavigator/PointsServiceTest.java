@@ -1,0 +1,60 @@
+package org.fruct.oss.socialnavigator;
+
+import android.content.Intent;
+import android.test.AndroidTestCase;
+import android.test.MoreAsserts;
+import android.test.ServiceTestCase;
+
+import org.fruct.oss.socialnavigator.points.ArrayPointsProvider;
+import org.fruct.oss.socialnavigator.points.Category;
+import org.fruct.oss.socialnavigator.points.Point;
+import org.fruct.oss.socialnavigator.points.PointsService;
+
+import java.util.List;
+
+public class PointsServiceTest extends ServiceTestCase<PointsService> {
+	private PointsService service;
+
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+	}
+
+	@Override
+	protected void tearDown() throws Exception {
+		super.tearDown();
+
+		service = null;
+	}
+
+	public PointsServiceTest() {
+		super(PointsService.class);
+	}
+
+	private void initTestService() {
+		Intent intent = new Intent(getContext(), PointsService.class);
+		intent.putExtra("test", true);
+		startService(intent);
+
+		assertNotNull(getService());
+		service = getService();
+	}
+
+	public void testStartService() {
+		initTestService();
+		assertNotNull(getService());
+	}
+
+	public void testAddCategories() {
+		initTestService();
+		ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
+		provider.setCategories("aaa", "bbb", "ccc");
+		service.addPointsProvider(provider);
+		service.awaitBackgroundTasks();
+
+		List<Category> categories = service.queryList(service.requestCategories());
+		assertEquals("aaa", categories.get(0).getName());
+		assertEquals("bbb", categories.get(1).getName());
+		assertEquals("ccc", categories.get(2).getName());
+	}
+}
