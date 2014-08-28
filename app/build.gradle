@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+ext {
+    debugProguard = false
+}
+
 android {
     compileSdkVersion 20
     buildToolsVersion "20.0.0"
@@ -15,6 +19,13 @@ android {
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        if (debugProguard) {
+            debug {
+                runProguard true
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
         }
     }
 }
