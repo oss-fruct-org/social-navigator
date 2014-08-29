@@ -1,6 +1,7 @@
 package org.fruct.oss.socialnavigator;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -13,7 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
 
+import org.fruct.oss.socialnavigator.fragments.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.PointFragment;
+import org.fruct.oss.socialnavigator.points.PointsService;
 
 
 public class MainActivity extends ActionBarActivity
@@ -31,24 +34,30 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        mTitle = getTitle();
+		mNavigationDrawerFragment = (NavigationDrawerFragment)
+				getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+		mTitle = getTitle();
 
-        // Set up the drawer.
-        mNavigationDrawerFragment.setUp(
-                R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
-    }
+		// Set up the drawer.
+		mNavigationDrawerFragment.setUp(
+				R.id.navigation_drawer,
+				(DrawerLayout) findViewById(R.id.drawer_layout));
+
+		startService(new Intent(this, PointsService.class));
+	}
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 		Fragment fragment;
 
 		switch (position) {
+		case 0:
+			fragment = MapFragment.newInstance();
+			break;
+
 		case 1:
 			fragment = PointFragment.newInstance();
 			break;

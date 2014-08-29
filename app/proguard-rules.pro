@@ -15,3 +15,6 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# osmdroid
+-dontwarn org.apache.http.entity.mime.**

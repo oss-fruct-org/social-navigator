@@ -56,6 +56,13 @@ public class PointsService extends Service {
 				setupTestProviders();
 			}
 		}, 1000);
+
+		log.info("created");
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		return START_NOT_STICKY;
 	}
 
 	@Override
@@ -65,6 +72,7 @@ public class PointsService extends Service {
 
 		executor.shutdown();
 
+		log.info("destroyed");
 		super.onDestroy();
 	}
 
