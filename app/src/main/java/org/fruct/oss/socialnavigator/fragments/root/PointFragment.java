@@ -1,4 +1,4 @@
-package org.fruct.oss.socialnavigator.fragments;
+package org.fruct.oss.socialnavigator.fragments.root;
 
 import android.content.ComponentName;
 import android.content.Context;

@@ -2,20 +2,21 @@ package org.fruct.oss.socialnavigator;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.support.v4.widget.DrawerLayout;
 
-import org.fruct.oss.socialnavigator.fragments.MapFragment;
-import org.fruct.oss.socialnavigator.fragments.PointFragment;
+import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
+import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
 
 
@@ -68,10 +69,19 @@ public class MainActivity extends ActionBarActivity
 		}
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .commit();
-    }
+		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+		/*for (Fragment existingFragment : fragmentManager.getFragments()) {
+			if (existingFragment != null
+					&& !"navigation_drawer".equals(existingFragment.getTag())
+					&& !"content_fragment".equals(existingFragment.getTag())) {
+				fragmentTransaction.remove(existingFragment);
+			}
+		}*/
+
+		fragmentTransaction.replace(R.id.container, fragment, "content_fragment");
+		fragmentTransaction.commit();
+	}
 
     public void onSectionAttached(int number) {
         switch (number) {

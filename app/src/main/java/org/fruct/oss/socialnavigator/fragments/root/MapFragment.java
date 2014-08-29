@@ -1,4 +1,4 @@
-package org.fruct.oss.socialnavigator.fragments;
+package org.fruct.oss.socialnavigator.fragments.root;
 
 import android.annotation.TargetApi;
 import android.os.Build;
@@ -14,6 +14,7 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.fragments.overlays.OverlayHolder;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.tileprovider.IRegisterReceiver;
 import org.osmdroid.tileprovider.MapTileProviderArray;
@@ -26,10 +27,10 @@ import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
-import org.osmdroid.util.ResourceProxyImpl;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.widget.FrameLayout.LayoutParams;
 
@@ -38,6 +39,7 @@ public class MapFragment extends Fragment {
 
 	private MapView mapView;
 	private FrameLayout mapLayout;
+	private List<OverlayHolder> overlayHolders = new ArrayList<OverlayHolder>();
 
 	private State state = new State();
 
@@ -53,13 +55,14 @@ public class MapFragment extends Fragment {
 		final View view = inflater.inflate(R.layout.fragment_map, container, false);
 
 		createMapView(view);
-		createLocationOverlay();
 
 		if (savedInstanceState != null) {
 			state = savedInstanceState.getParcelable(STATE);
 		} else {
 			state.zoom = 15;
 		}
+
+		setupOverlays(savedInstanceState);
 
 		ViewTreeObserver vto = view.getViewTreeObserver();
 		vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -78,9 +81,29 @@ public class MapFragment extends Fragment {
 		return view;
 	}
 
+	private void setupOverlays(Bundle savedInstanceState) {
+		OverlayHolder overlayFragment = new OverlayHolder(getActivity());
+		overlayHolders.add(overlayFragment);
+
+		int c = 0;
+		for (OverlayHolder overlay : overlayHolders) {
+			if (savedInstanceState != null) {
+				Bundle overlayState = savedInstanceState.getBundle("overlay-holder-" + c++);
+				overlay.onCreate(overlayState);
+			} else {
+				overlay.onCreate(null);
+			}
+		}
+	}
+
 	private void onGlobalLayout() {
 		mapView.getController().setZoom(state.zoom);
 		mapView.getController().setCenter(new GeoPoint(state.lat, state.lon));
+
+		// Notify all existing overlay fragments about mapView
+		for (OverlayHolder overlay : overlayHolders) {
+			overlay.onMapViewReady(mapView);
+		}
 	}
 
 	@Override
@@ -93,19 +116,26 @@ public class MapFragment extends Fragment {
 	}
 
 	@Override
+	public void onDestroy() {
+		for (OverlayHolder overlay : overlayHolders) {
+			overlay.onDestroy();
+		}
+
+		super.onDestroy();
+	}
+
+	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
 		outState.putParcelable(STATE, state);
-	}
 
-	private void createLocationOverlay() {
-		GpsMyLocationProvider provider = new GpsMyLocationProvider(getActivity());
-
-		MyLocationNewOverlay overlay = new MyLocationNewOverlay(getActivity(), provider, mapView);
-		mapView.getOverlayManager().add(overlay);
-		overlay.enableMyLocation();
-		overlay.enableFollowLocation();
+		int c = 0;
+		for (OverlayHolder overlay : overlayHolders) {
+			Bundle overlayState = new Bundle();
+			overlay.onSaveInstanceState(overlayState);
+			outState.putBundle("overlay-holder-" + c++, overlayState);
+		}
 	}
 
 	private void createMapView(View view) {
