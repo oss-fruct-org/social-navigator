@@ -12,11 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,7 +26,7 @@ public class PointsService extends Service {
 	private final Binder binder = new Binder();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	private final Map<String, PointsProvider> providerMap = new HashMap<String, PointsProvider>();
-	private final List<CursorHolder> cursorHolders = new ArrayList<CursorHolder>();
+	private final List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 
 	private Handler handler;
 
@@ -54,8 +53,11 @@ public class PointsService extends Service {
 		database.close();
 		database = null;
 
+		executor.shutdown();
+
 		super.onDestroy();
 	}
+
 
 	public void addPointsProvider(final PointsProvider pointsProvider) {
 		if (providerMap.containsKey(pointsProvider.getProviderName())) {
@@ -70,12 +72,20 @@ public class PointsService extends Service {
 			@Override
 			public void run() {
 				refreshProvider(pointsProvider.getProviderName());
+				notifyDataUpdated();
 			}
 		});
 	}
 
-	public CursorHolder queryCursorHolder(Request<?> request) {
-		return addCursorHolder(new CursorHolder(request));
+	private void notifyDataUpdated() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (Listener listener : listeners) {
+					listener.onDataUpdated();
+				}
+			}
+		});
 	}
 
 	@Blocking
@@ -163,27 +173,7 @@ public class PointsService extends Service {
 			}
 		}
 
-		reQueryCursorHolders();
 	}
-
-	private CursorHolder addCursorHolder(CursorHolder cursorHolder) {
-		cursorHolders.add(cursorHolder);
-		return cursorHolder;
-	}
-
-	private void reQueryCursorHolders() {
-		for (Iterator<CursorHolder> iterator = cursorHolders.iterator(); iterator.hasNext(); ) {
-			CursorHolder holder = iterator.next();
-
-			if (holder.isClosed()) {
-				iterator.remove();
-				continue;
-			}
-
-			holder.queryAsync();
-		}
-	}
-
 
 	public PointsService getService() {
 		return this;
@@ -191,7 +181,7 @@ public class PointsService extends Service {
 
 	public void awaitBackgroundTasks() {
 		final CountDownLatch latch = new CountDownLatch(1);
-		executor.submit(new Runnable() {
+		executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				latch.countDown();
@@ -203,22 +193,21 @@ public class PointsService extends Service {
 		}
 	}
 
+	public void addListener(Listener listener) {
+		listeners.add(listener);
+	}
+
+	public void removeListener(Listener listener) {
+		listeners.remove(listener);
+	}
+
 	public class Binder extends android.os.Binder {
 		public PointsService getService() {
 			return PointsService.this;
 		}
 	}
 
-	public static interface Listener {
-	}
-
-	private static class ProviderData {
-		private ProviderData(PointsProvider provider) {
-			this.provider = provider;
-		}
-
-		PointsProvider provider;
-		List<Category> categories = Collections.emptyList();
-		Map<Category, List<Point>> points = Collections.emptyMap();
+	public interface Listener {
+		void onDataUpdated();
 	}
 }

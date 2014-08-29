@@ -1,7 +1,7 @@
 package org.fruct.oss.socialnavigator;
 
 import android.content.Intent;
-import android.test.AndroidTestCase;
+import android.database.Cursor;
 import android.test.MoreAsserts;
 import android.test.ServiceTestCase;
 
@@ -14,6 +14,7 @@ import java.util.List;
 
 public class PointsServiceTest extends ServiceTestCase<PointsService> {
 	private PointsService service;
+	private Cursor cursor;
 
 	@Override
 	protected void setUp() throws Exception {
@@ -23,8 +24,14 @@ public class PointsServiceTest extends ServiceTestCase<PointsService> {
 	@Override
 	protected void tearDown() throws Exception {
 		super.tearDown();
+		getContext().deleteDatabase("points-db");
+
+		if (cursor != null) {
+			assertTrue(cursor.isClosed());
+		}
 
 		service = null;
+		cursor = null;
 	}
 
 	public PointsServiceTest() {
@@ -57,4 +64,10 @@ public class PointsServiceTest extends ServiceTestCase<PointsService> {
 		assertEquals("bbb", categories.get(1).getName());
 		assertEquals("ccc", categories.get(2).getName());
 	}
+
+	public void testEmptyCategories() {
+		initTestService();
+		MoreAsserts.assertEmpty(service.queryList(service.requestCategories()));
+	}
+
 }
