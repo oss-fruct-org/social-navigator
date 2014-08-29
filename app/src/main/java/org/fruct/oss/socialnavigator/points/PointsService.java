@@ -3,11 +3,13 @@ package org.fruct.oss.socialnavigator.points;
 import android.app.Service;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 
 import org.fruct.oss.socialnavigator.annotations.Blocking;
+import org.fruct.oss.socialnavigator.utils.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -46,6 +49,13 @@ public class PointsService extends Service {
 
 		database = new PointsDatabase(this);
 		handler = new Handler(Looper.getMainLooper());
+
+		handler.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				setupTestProviders();
+			}
+		}, 1000);
 	}
 
 	@Override
@@ -88,11 +98,26 @@ public class PointsService extends Service {
 		});
 	}
 
+	public void queryCursor(final Request<?> request, final Function<Cursor> callback) {
+		new AsyncTask<Void, Void, Cursor>() {
+			@Override
+			protected Cursor doInBackground(Void... params) {
+				return request.doQuery();
+			}
+
+			@Override
+			protected void onPostExecute(Cursor cursor) {
+				callback.call(cursor);
+			}
+		}.execute();
+	}
+
 	@Blocking
 	public Cursor queryCursor(Request<?> request) {
 		return request.doQuery();
 	}
 
+	@Blocking
 	public <T> List<T> queryList(Request<T> request) {
 		Cursor cursor = queryCursor(request);
 
@@ -175,10 +200,6 @@ public class PointsService extends Service {
 
 	}
 
-	public PointsService getService() {
-		return this;
-	}
-
 	public void awaitBackgroundTasks() {
 		final CountDownLatch latch = new CountDownLatch(1);
 		executor.execute(new Runnable() {
@@ -199,6 +220,15 @@ public class PointsService extends Service {
 
 	public void removeListener(Listener listener) {
 		listeners.remove(listener);
+	}
+
+	private void setupTestProviders() {
+		/*ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
+		provider.setCategories("Category 1", "Category 2", "Category 3");
+		provider.addPointDesc("Point 1", "Point 1 description", "http://example.com", "Category 1", 61.78, 34.35);
+		provider.addPointDesc("Point 2", "Point 2 description", "http://example.com", "Category 1", 61.78, 34.35);
+		provider.addPointDesc("Point 3", "Point 3 description", "http://example.com", "Category 1", 61.78, 34.35);
+		addPointsProvider(provider);*/
 	}
 
 	public class Binder extends android.os.Binder {

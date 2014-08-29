@@ -15,8 +15,9 @@ public class PointsDatabase implements Closeable {
 	private final Helper helper;
 	private final SQLiteDatabase db;
 
+	private static final String[] COLUMNS_ID = { "_id" };
 	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url"};
-	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId"};
+	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId", "provider"};
 
 	public PointsDatabase(Context context) {
 		this.context = context;
@@ -30,6 +31,15 @@ public class PointsDatabase implements Closeable {
 	}
 
 	public void insertCategory(Category category) {
+		Cursor existingCategory = db.query("category", COLUMNS_ID, "_id=?", toArray(category.getId()), null, null, null);
+		try {
+			if (existingCategory.moveToFirst()) {
+				return;
+			}
+		} finally {
+   			existingCategory.close();
+		}
+
 		ContentValues cv = new ContentValues(4);
 		cv.put("_id", category.getId());
 		cv.put("name", category.getName());
@@ -55,7 +65,10 @@ public class PointsDatabase implements Closeable {
 	}
 
 	public Cursor loadPoints(Category category) {
-		return db.query("point", COLUMNS_POINT, "categoryId=?", toArray(category.getId()), null, null, null);
+		if (category != null)
+			return loadPoints(category.getId());
+		else
+			return db.query("point", COLUMNS_POINT, null, null, null, null, null);
 	}
 
 	public Cursor loadPoints(int categoryId) {
@@ -93,13 +106,14 @@ public class PointsDatabase implements Closeable {
 					"lon INTEGER," +
 					"categoryId," +
 					"provider TEXT," +
-					"FOREIGN KEY(categoryId) REFERENCES category(id));");
+					"FOREIGN KEY(categoryId) REFERENCES category(_id));");
 		}
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			db.execSQL("DROP TABLE point;");
 			db.execSQL("DROP TABLE category;");
+			onCreate(db);
 		}
 
 		@Override

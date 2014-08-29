@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class ArrayPointsProvider implements PointsProvider {
-	private List<Category> categories = Collections.emptyList();
-	private List<Point> pointList = Collections.emptyList();
+	private List<Category> categories = new ArrayList<Category>();
+	private List<Point> pointList = new ArrayList<Point>();
 	private String providerName;
 
 	public ArrayPointsProvider(String providerName) {
