@@ -7,6 +7,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +29,9 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.spi.LoggerFactoryBinder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +39,8 @@ import java.util.List;
 import static android.widget.FrameLayout.LayoutParams;
 
 public class MapFragment extends Fragment {
+	private static final Logger log = LoggerFactory.getLogger(MapFragment.class);
+
 	private static final String STATE = "state";
 
 	private MapView mapView;
@@ -116,11 +122,18 @@ public class MapFragment extends Fragment {
 	}
 
 	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		log.debug("onCreate" ,"qwe");
+	}
+
+	@Override
 	public void onDestroy() {
 		for (OverlayHolder overlay : overlayHolders) {
 			overlay.onDestroy();
 		}
 
+		log.debug("onDestroy");
 		super.onDestroy();
 	}
 

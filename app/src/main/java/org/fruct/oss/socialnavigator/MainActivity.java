@@ -69,6 +69,7 @@ public class MainActivity extends ActionBarActivity
 		}
 
         FragmentManager fragmentManager = getSupportFragmentManager();
+		fragmentManager.popBackStack("root", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
 		/*for (Fragment existingFragment : fragmentManager.getFragments()) {
@@ -79,11 +80,21 @@ public class MainActivity extends ActionBarActivity
 			}
 		}*/
 
+		fragmentTransaction.addToBackStack("root");
 		fragmentTransaction.replace(R.id.container, fragment, "content_fragment");
 		fragmentTransaction.commit();
 	}
 
-    public void onSectionAttached(int number) {
+	@Override
+	public void onBackPressed() {
+		if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
+			getSupportFragmentManager().popBackStack();
+		} else {
+			finish();
+		}
+	}
+
+	public void onSectionAttached(int number) {
         switch (number) {
             case 1:
                 mTitle = getString(R.string.title_section1);
