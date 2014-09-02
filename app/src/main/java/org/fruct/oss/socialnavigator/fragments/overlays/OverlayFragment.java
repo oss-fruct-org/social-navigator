@@ -2,6 +2,7 @@ package org.fruct.oss.socialnavigator.fragments.overlays;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
@@ -9,23 +10,27 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OverlayHolder {
-	private static final Logger log = LoggerFactory.getLogger(OverlayHolder.class);
-	private final Context context;
+public class OverlayFragment extends Fragment {
+	private static final Logger log = LoggerFactory.getLogger(OverlayFragment.class);
 
-	public OverlayHolder(Context context) {
-		this.context = context;
+	private Context context;
+
+	public OverlayFragment() {
 	}
 
 	public void onCreate(Bundle in) {
+		super.onCreate(in);
 		log.debug("onCreate {}", in);
+		context = getActivity();
 	}
 
 	public void onDestroy() {
+		super.onDestroy();
 		log.debug("onDestroy");
 	}
 
 	public void onSaveInstanceState(Bundle out) {
+		super.onSaveInstanceState(out);
 		log.debug("onSaveInstanceState");
 	}
 

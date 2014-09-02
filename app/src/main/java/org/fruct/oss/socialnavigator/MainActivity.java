@@ -70,16 +70,8 @@ public class MainActivity extends ActionBarActivity
 
         FragmentManager fragmentManager = getSupportFragmentManager();
 		fragmentManager.popBackStack("root", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
 		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-		/*for (Fragment existingFragment : fragmentManager.getFragments()) {
-			if (existingFragment != null
-					&& !"navigation_drawer".equals(existingFragment.getTag())
-					&& !"content_fragment".equals(existingFragment.getTag())) {
-				fragmentTransaction.remove(existingFragment);
-			}
-		}*/
-
 		fragmentTransaction.addToBackStack("root");
 		fragmentTransaction.replace(R.id.container, fragment, "content_fragment");
 		fragmentTransaction.commit();
@@ -87,9 +79,17 @@ public class MainActivity extends ActionBarActivity
 
 	@Override
 	public void onBackPressed() {
-		if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
-			getSupportFragmentManager().popBackStack();
-		} else {
+		FragmentManager fragmentManager = getSupportFragmentManager();
+
+		int count = fragmentManager.getBackStackEntryCount();
+		String name;
+		do {
+			FragmentManager.BackStackEntry entry = fragmentManager.getBackStackEntryAt(--count);
+			fragmentManager.popBackStack();
+			name = entry.getName();
+		} while (name == null);
+
+		if (name.equals("root")) {
 			finish();
 		}
 	}

@@ -19,7 +19,7 @@ public class TestLoggerFactory  implements ILoggerFactory {
 		StringBuilder builder = new StringBuilder();
 
 		if (name.startsWith("org.fruct")) {
-			builder.append("SocialNavigator: ");
+			builder.append("SN: ");
 		}
 
 		int cutStart = 0;
