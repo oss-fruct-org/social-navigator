@@ -12,8 +12,12 @@ import android.support.v4.app.ListFragment;
 import org.fruct.oss.socialnavigator.adapters.PointAdapter;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PointFragment extends ListFragment implements PointsService.Listener {
+	private static final Logger log = LoggerFactory.getLogger(PointFragment.class);
+
 	private PointAdapter adapter;
 
 	private ServiceConnection pointConnection = new PointConnection();
@@ -40,9 +44,8 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 	@Override
 	public void onDestroy() {
-		super.onDestroy();
-
 		adapter.changeCursor(null);
+		adapter = null;
 
 		if (pointsService != null) {
 			pointsService.removeListener(this);
@@ -50,6 +53,8 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		}
 
 		getActivity().unbindService(pointConnection);
+
+		super.onDestroy();
 	}
 
 	public void onServiceReady(PointsService service) {
@@ -68,7 +73,11 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 			pointsService.queryCursor(pointsService.requestPoints(null), new Function<Cursor>() {
 				@Override
 				public void call(Cursor cursor) {
-					adapter.changeCursor(cursor);
+					if (adapter != null) {
+						adapter.changeCursor(cursor);
+					} else {
+						cursor.close();
+					}
 				}
 			});
 		}
