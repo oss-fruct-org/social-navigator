@@ -17,7 +17,7 @@ public class PointsDatabase implements Closeable {
 
 	private static final String[] COLUMNS_ID = { "_id" };
 	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url"};
-	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId", "provider"};
+	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId", "provider", "uuid"};
 
 	public PointsDatabase(Context context) {
 		this.context = context;
@@ -31,21 +31,17 @@ public class PointsDatabase implements Closeable {
 	}
 
 	public void insertCategory(Category category) {
-		Cursor existingCategory = db.query("category", COLUMNS_ID, "_id=?", toArray(category.getId()), null, null, null);
-		try {
-			if (existingCategory.moveToFirst()) {
-				return;
-			}
-		} finally {
-   			existingCategory.close();
-		}
-
 		ContentValues cv = new ContentValues(4);
-		cv.put("_id", category.getId());
 		cv.put("name", category.getName());
 		cv.put("description", category.getDescription());
 		cv.put("url", category.getUrl());
-		db.insert("category", null, cv);
+
+		if (!isCategoryExists(category)) {
+			cv.put("_id", category.getId());
+			db.insert("category", null, cv);
+		} else {
+			db.update("category", cv, "_id=?", toArray(category.getId()));
+		}
 	}
 
 	public void insertPoint(Point point) {
@@ -57,7 +53,13 @@ public class PointsDatabase implements Closeable {
 		cv.put("lon", point.getLonE6());
 		cv.put("categoryId", point.getCategoryId());
 		cv.put("provider", point.getProvider());
-		db.insert("point", null, cv);
+
+		if (!isPointExists(point)) {
+			cv.put("uuid", point.getUuid());
+			db.insert("point", null, cv);
+		} else {
+			db.update("point", cv, "uuid=?", toArray(point.getUuid()));
+		}
 	}
 
 	public Cursor loadCategories() {
@@ -73,6 +75,20 @@ public class PointsDatabase implements Closeable {
 
 	public Cursor loadPoints(int categoryId) {
 		return db.query("point", COLUMNS_POINT, "categoryId=?", toArray(categoryId), null, null, null);
+	}
+
+	private boolean isCategoryExists(Category category) {
+		Cursor cursor = db.query("category", COLUMNS_ID, "_id=?", toArray(category.getId()), null, null, null);
+		boolean isExists = cursor.moveToFirst();
+		cursor.close();
+		return isExists;
+	}
+
+	private boolean isPointExists(Point point) {
+		Cursor cursor = db.query("point", COLUMNS_ID, "uuid=?", toArray(point.getUuid()), null, null, null);
+		boolean isExists = cursor.moveToFirst();
+		cursor.close();
+		return isExists;
 	}
 
 	private static String[] toArray(Object... objects) {
@@ -106,6 +122,7 @@ public class PointsDatabase implements Closeable {
 					"lon INTEGER," +
 					"categoryId," +
 					"provider TEXT," +
+					"uuid TEXT," +
 					"FOREIGN KEY(categoryId) REFERENCES category(_id));");
 		}
 

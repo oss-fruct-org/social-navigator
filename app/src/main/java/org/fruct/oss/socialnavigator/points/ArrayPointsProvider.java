@@ -34,7 +34,7 @@ public class ArrayPointsProvider implements PointsProvider {
 			throw new IllegalArgumentException("Category " + categoryName + " don't exist");
 		}
 
-		pointList.add(new Point(name, description, url, lat, lon, cat.getId(), Point.TEST_PROVIDER));
+		pointList.add(new Point(name, description, url, lat, lon, cat.getId(), Point.TEST_PROVIDER, name));
 	}
 
 	@Override

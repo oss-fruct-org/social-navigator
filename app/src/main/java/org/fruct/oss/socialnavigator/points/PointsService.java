@@ -231,12 +231,12 @@ public class PointsService extends Service {
 	}
 
 	private void setupTestProviders() {
-		/*ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
+		ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
 		provider.setCategories("Category 1", "Category 2", "Category 3");
 		provider.addPointDesc("Point 1", "Point 1 description", "http://example.com", "Category 1", 61.78, 34.35);
 		provider.addPointDesc("Point 2", "Point 2 description", "http://example.com", "Category 1", 61.78, 34.35);
 		provider.addPointDesc("Point 3", "Point 3 description", "http://example.com", "Category 1", 61.78, 34.35);
-		addPointsProvider(provider);*/
+		addPointsProvider(provider);
 	}
 
 	public class Binder extends android.os.Binder {

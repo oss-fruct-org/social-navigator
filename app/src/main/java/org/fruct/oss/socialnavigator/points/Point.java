@@ -14,12 +14,13 @@ public class Point {
 	private int lonE6;
 	private int categoryId;
 	private String provider;
+	private String uuid;
 
-	public Point(String name, String description, String url, double lat, double lon, int categoryId, String provider) {
-		this(name, description, url, (int) (lat * 1e6), (int) (lon * 1e6), categoryId, provider);
+	public Point(String name, String description, String url, double lat, double lon, int categoryId, String provider, String uuid) {
+		this(name, description, url, (int) (lat * 1e6), (int) (lon * 1e6), categoryId, provider, uuid);
 	}
 
-	public Point(String name, String description, String url, int latE6, int lonE6, int categoryId, String provider) {
+	public Point(String name, String description, String url, int latE6, int lonE6, int categoryId, String provider, String uuid) {
 		this.name = name;
 		this.description = description;
 		this.url = url;
@@ -27,6 +28,7 @@ public class Point {
 		this.lonE6 = lonE6;
 		this.categoryId = categoryId;
 		this.provider = provider;
+		this.uuid = uuid;
 	}
 
 	public Point(Cursor cursor) {
@@ -37,6 +39,7 @@ public class Point {
 		this.lonE6 = cursor.getInt(5);
 		this.categoryId = cursor.getInt(6);
 		this.provider = cursor.getString(7);
+		this.uuid = cursor.getString(8);
 	}
 
 	public String getName() {
@@ -65,5 +68,27 @@ public class Point {
 
 	public String getProvider() {
 		return provider;
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Point point = (Point) o;
+
+		if (!uuid.equals(point.uuid)) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return uuid.hashCode();
 	}
 }
