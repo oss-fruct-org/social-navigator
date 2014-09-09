@@ -56,6 +56,14 @@ public class ArrayPointsProvider implements PointsProvider {
 			}
 		}
 
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException ignored) {
+		}
+
+		if (Math.random() > 0.8)
+			throw new RuntimeException("Test");
+
 		return catPoints;
 	}
 }

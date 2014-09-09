@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_refresh">Обновить</string>
+    <string name="str_data_refresh_failed">Не удается загрузить данные с сервера</string>
+</resources>

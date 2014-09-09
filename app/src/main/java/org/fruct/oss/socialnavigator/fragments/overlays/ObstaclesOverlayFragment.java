@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ObstaclesOverlayFragment extends OverlayFragment
@@ -92,6 +91,11 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 					new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleDrawable));
 		}
 		overlay.addItems(obstacles);
+	}
+
+	@Override
+	public void onDataUpdateFailed(Throwable throwable) {
+
 	}
 
 	public static class Obstacle extends OverlayItem {

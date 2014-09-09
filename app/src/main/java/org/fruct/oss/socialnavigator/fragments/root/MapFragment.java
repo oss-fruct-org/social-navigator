@@ -1,13 +1,16 @@
 package org.fruct.oss.socialnavigator.fragments.root;
 
 import android.annotation.TargetApi;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.widget.SlidingPaneLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +46,9 @@ public class MapFragment extends Fragment {
 	private static final Logger log = LoggerFactory.getLogger(MapFragment.class);
 
 	private static final String STATE = "state";
+	public static final String STORED_LAT = "pref-map-fragment-center-lat";
+	public static final String STORED_LON = "pref-map-fragment-center-lon";
+	public static final String STORED_ZOOM = "pref-map-fragment-zoom";
 
 	private MapView mapView;
 	private FrameLayout mapLayout;
@@ -60,13 +66,16 @@ public class MapFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		final View view = inflater.inflate(R.layout.fragment_map, container, false);
+		final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
 		createMapView(view);
 
 		if (savedInstanceState != null) {
 			state = savedInstanceState.getParcelable(STATE);
 		} else {
-			state.zoom = 15;
+			state.lat = pref.getInt(STORED_LAT, 0) / 1e6;
+			state.lon = pref.getInt(STORED_LON, 0) / 1e6;
+			state.zoom = pref.getInt(STORED_ZOOM, 15);
 		}
 
 		setupOverlays(savedInstanceState);
@@ -132,6 +141,16 @@ public class MapFragment extends Fragment {
 	}
 
 	@Override
+	public void onStop() {
+		super.onStop();
+
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		pref.edit().putInt(STORED_LAT, mapView.getMapCenter().getLatitudeE6())
+				.putInt(STORED_LON, mapView.getMapCenter().getLongitudeE6())
+				.putInt(STORED_ZOOM, mapView.getZoomLevel()).apply();
+	}
+
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		log.debug("onCreate");
@@ -155,6 +174,7 @@ public class MapFragment extends Fragment {
 		}
 		outState.putInt("overlay-holder-count", overlayFragments.size());
 	}
+
 
 	private void createMapView(View view) {
 		ViewGroup layout = (ViewGroup) view.findViewById(R.id.map_view);

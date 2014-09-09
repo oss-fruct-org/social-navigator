@@ -8,20 +8,30 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ListFragment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Toast;
 
+import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.adapters.PointAdapter;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PointFragment extends ListFragment implements PointsService.Listener {
+public class PointFragment extends ListFragment implements PointsService.Listener, SwipeRefreshLayout.OnRefreshListener {
 	private static final Logger log = LoggerFactory.getLogger(PointFragment.class);
 
 	private PointAdapter adapter;
 
 	private ServiceConnection pointConnection = new PointConnection();
 	private PointsService pointsService;
+	private SwipeRefreshLayout refreshLayout;
 
 	public PointFragment() {
 	}
@@ -40,6 +50,16 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		// Bind service
 		Intent intent = new Intent(getActivity(), PointsService.class);
 		getActivity().bindService(intent, pointConnection, Context.BIND_AUTO_CREATE);
+
+		setHasOptionsMenu(true);
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		refreshLayout = (SwipeRefreshLayout) inflater.inflate(R.layout.fragment_points, container, false);
+		refreshLayout.setOnRefreshListener(this);
+		refreshLayout.setColorSchemeColors(0xffff0000, 0xff00ff00, 0xff0000ff, 0xffff00ff);
+		return refreshLayout;
 	}
 
 	@Override
@@ -57,6 +77,20 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		super.onDestroy();
 	}
 
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.points, menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.action_refresh) {
+			onRefresh();
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
 	public void onServiceReady(PointsService service) {
 		this.pointsService = service;
 		pointsService.addListener(this);
@@ -65,7 +99,14 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 	@Override
 	public void onDataUpdated() {
+		refreshLayout.setRefreshing(false);
 		refreshList();
+	}
+
+	@Override
+	public void onDataUpdateFailed(Throwable throwable) {
+		refreshLayout.setRefreshing(false);
+		Toast.makeText(getActivity(), R.string.str_data_refresh_failed, Toast.LENGTH_SHORT).show();
 	}
 
 	private void refreshList() {
@@ -80,6 +121,14 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 					}
 				}
 			});
+		}
+	}
+
+	@Override
+	public void onRefresh() {
+		if (pointsService != null) {
+			pointsService.refreshProviders();
+			refreshLayout.setRefreshing(true);
 		}
 	}
 

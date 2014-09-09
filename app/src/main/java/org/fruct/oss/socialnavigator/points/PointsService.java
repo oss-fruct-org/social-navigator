@@ -22,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class PointsService extends Service {
 	private static final Logger log = LoggerFactory.getLogger(PointsService.class);
@@ -34,6 +35,9 @@ public class PointsService extends Service {
 	private Handler handler;
 
 	private PointsDatabase database;
+
+	// Tasks
+	private Future<?> refreshProvidersTask;
 
 	public PointsService() {
     }
@@ -76,6 +80,32 @@ public class PointsService extends Service {
 		super.onDestroy();
 	}
 
+	public void refreshProviders() {
+		if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
+			refreshProvidersTask.cancel(true);
+
+		refreshProvidersTask = executor.submit(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					for (String providerName : providerMap.keySet()) {
+						refreshProvider(providerName);
+
+						if (Thread.currentThread().isInterrupted())
+							return;
+					}
+
+					if (!Thread.currentThread().isInterrupted()) {
+						notifyDataUpdated();
+					}
+				} catch (Exception ex) {
+					// TODO: refreshProvider should throw specific checked exception
+					log.error("Cannot refresh provider", ex);
+					notifyDataUpdateFailed(ex);
+				}
+			}
+		});
+	}
 
 	public void addPointsProvider(final PointsProvider pointsProvider) {
 		if (providerMap.containsKey(pointsProvider.getProviderName())) {
@@ -86,13 +116,13 @@ public class PointsService extends Service {
 			providerMap.put(pointsProvider.getProviderName(), pointsProvider);
 		}
 
-		executor.execute(new Runnable() {
+		/*executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				refreshProvider(pointsProvider.getProviderName());
 				notifyDataUpdated();
 			}
-		});
+		});*/
 	}
 
 	private void notifyDataUpdated() {
@@ -105,6 +135,18 @@ public class PointsService extends Service {
 			}
 		});
 	}
+
+	private void notifyDataUpdateFailed(final Throwable throwable) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (Listener listener : listeners) {
+					listener.onDataUpdateFailed(throwable);
+				}
+			}
+		});
+	}
+
 
 	public void queryCursor(final Request<?> request, final Function<Cursor> callback) {
 		new AsyncTask<Void, Void, Cursor>() {
@@ -203,9 +245,12 @@ public class PointsService extends Service {
 				}
 
 				database.insertPoint(point);
+
+				if (Thread.currentThread().isInterrupted()) {
+					return;
+				}
 			}
 		}
-
 	}
 
 	public void awaitBackgroundTasks() {
@@ -235,8 +280,10 @@ public class PointsService extends Service {
 		provider.setCategories("Category 1", "Category 2", "Category 3");
 		provider.addPointDesc("Point 1", "Point 1 description", "http://example.com", "Category 1", 61.78, 34.35);
 		provider.addPointDesc("Point 2", "Point 2 description", "http://example.com", "Category 1", 61.79, 34.35);
-		provider.addPointDesc("Point 3", "Point 3 description", "http://example.com", "Category 1", 61.80, 34.35);
+		provider.addPointDesc("Point 3", "Point 3 description", "http://example.com", "Category 1", 61.79, 34.352);
 		addPointsProvider(provider);
+
+		refreshProviders();
 	}
 
 	public class Binder extends android.os.Binder {
@@ -247,5 +294,6 @@ public class PointsService extends Service {
 
 	public interface Listener {
 		void onDataUpdated();
+		void onDataUpdateFailed(Throwable throwable);
 	}
 }
