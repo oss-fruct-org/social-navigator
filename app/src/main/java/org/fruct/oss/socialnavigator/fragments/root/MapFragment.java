@@ -15,7 +15,9 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
+import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.tileprovider.IRegisterReceiver;
 import org.osmdroid.tileprovider.MapTileProviderArray;
@@ -90,9 +92,13 @@ public class MapFragment extends Fragment {
 		if (savedInstanceState == null) {
 			FragmentTransaction trans = getFragmentManager().beginTransaction();
 
-			OverlayFragment overlay = new OverlayFragment();
-			trans.add(overlay, "overlay-fragment");
-			overlayFragments.add(overlay);
+			PositionOverlayFragment positionOverlayFragment = new PositionOverlayFragment();
+			trans.add(positionOverlayFragment, "position-overlay-fragment");
+			overlayFragments.add(positionOverlayFragment);
+
+			ObstaclesOverlayFragment obstaclesOverlayFragment = new ObstaclesOverlayFragment();
+			trans.add(obstaclesOverlayFragment, "obstacle-overlay-gragment");
+			overlayFragments.add(obstaclesOverlayFragment);
 
 			trans.addToBackStack(null);
 			trans.commit();
