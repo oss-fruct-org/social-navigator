@@ -46,6 +46,8 @@ public class PositionOverlayFragment extends OverlayFragment {
 
 		if (isFollowingActive) {
 			positionMenuItem.getIcon().setColorFilter(0xff669900, PorterDuff.Mode.SRC_ATOP);
+		} else {
+			positionMenuItem.getIcon().setColorFilter(null);
 		}
 	}
 
