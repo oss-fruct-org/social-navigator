@@ -15,10 +15,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.adapters.PointAdapter;
+import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.Function;
 import org.slf4j.Logger;
@@ -86,6 +89,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.action_refresh) {
 			onRefresh();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
@@ -130,6 +134,20 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 			pointsService.refreshProviders();
 			refreshLayout.setRefreshing(true);
 		}
+	}
+
+	@Override
+	public void onListItemClick(ListView l, View v, int position, long id) {
+		super.onListItemClick(l, v, position, id);
+
+		Point point = new Point(adapter.getItem(position));
+		Bundle fragmentArgs = new Bundle();
+		fragmentArgs.putParcelable("point", point);
+
+		Intent intent = new Intent(MainActivity.ACTION_SWITCH, null, getActivity(), MainActivity.class);
+		intent.putExtra(MainActivity.ARG_INDEX, 0);
+		intent.putExtra(MainActivity.ARG_ARGUMENTS, fragmentArgs);
+		startActivity(intent);
 	}
 
 	private class PointConnection implements ServiceConnection {

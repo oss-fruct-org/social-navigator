@@ -1,8 +1,12 @@
 package org.fruct.oss.socialnavigator.points;
 
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Point {
+import org.osmdroid.util.GeoPoint;
+
+public class Point implements Parcelable{
 	public static final String LOCAL_PROVIDER = "local_provider";
 	public static final String TEST_PROVIDER = "test_provider";
 	public static final String GETS_PROVIDER = "gets_provider";
@@ -42,6 +46,17 @@ public class Point {
 		this.uuid = cursor.getString(8);
 	}
 
+	public Point(Parcel source) {
+		this.name = source.readString();
+		this.description = source.readString();
+		this.url = source.readString();
+		this.latE6 = source.readInt();
+		this.lonE6 = source.readInt();
+		this.categoryId = source.readInt();
+		this.provider = source.readString();
+		this.uuid = source.readString();
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -74,6 +89,10 @@ public class Point {
 		return uuid;
 	}
 
+	// TODO: can be optimized
+	public GeoPoint toGeoPoint() {
+		return new GeoPoint(latE6, lonE6);
+	}
 
 	@Override
 	public boolean equals(Object o) {
@@ -91,4 +110,34 @@ public class Point {
 	public int hashCode() {
 		return uuid.hashCode();
 	}
+
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(name);
+		dest.writeString(description);
+		dest.writeString(url);
+		dest.writeInt(latE6);
+		dest.writeInt(lonE6);
+		dest.writeInt(categoryId);
+		dest.writeString(provider);
+		dest.writeString(uuid);
+	}
+
+	public static final Creator<Point> CREATOR = new Creator<Point>() {
+		@Override
+		public Point createFromParcel(Parcel source) {
+			return new Point(source);
+		}
+
+		@Override
+		public Point[] newArray(int size) {
+			return new Point[size];
+		}
+	};
 }

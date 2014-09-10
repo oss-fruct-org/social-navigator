@@ -2,4 +2,5 @@
 <resources>
     <string name="action_refresh">Обновить</string>
     <string name="str_data_refresh_failed">Не удается загрузить данные с сервера</string>
+    <string name="action_position">Следовать</string>
 </resources>

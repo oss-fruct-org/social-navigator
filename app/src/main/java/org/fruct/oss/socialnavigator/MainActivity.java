@@ -23,7 +23,11 @@ import org.fruct.oss.socialnavigator.points.PointsService;
 public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
-    /**
+	public static final String ACTION_SWITCH = "org.fruct.oss.socialnavigator.MainActivity.ACTION_SWITCH";
+	public static final String ARG_INDEX = "org.fruct.oss.socialnavigator.INDEX";
+	public static final String ARG_ARGUMENTS = "org.fruct.oss.socialnavigator.ARGUMENTS";
+
+	/**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
     private NavigationDrawerFragment mNavigationDrawerFragment;
@@ -50,8 +54,19 @@ public class MainActivity extends ActionBarActivity
 		startService(new Intent(this, PointsService.class));
 	}
 
-    @Override
-    public void onNavigationDrawerItemSelected(int position) {
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+
+		if (intent.getAction().equals(ACTION_SWITCH)) {
+			int index = intent.getIntExtra(ARG_INDEX, 0);
+			Bundle arguments = intent.getBundleExtra(ARG_ARGUMENTS);
+			mNavigationDrawerFragment.selectItem(index, arguments);
+		}
+	}
+
+	@Override
+    public void onNavigationDrawerItemSelected(int position, Bundle arguments) {
 		Fragment fragment;
 
 		switch (position) {
@@ -66,6 +81,10 @@ public class MainActivity extends ActionBarActivity
 		default:
 			fragment = PlaceholderFragment.newInstance(position + 1);
 			break;
+		}
+
+		if (arguments != null) {
+			fragment.setArguments(arguments);
 		}
 
         FragmentManager fragmentManager = getSupportFragmentManager();

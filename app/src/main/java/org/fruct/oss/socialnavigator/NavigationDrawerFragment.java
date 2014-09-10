@@ -78,9 +78,15 @@ public class NavigationDrawerFragment extends Fragment {
 
         // Select either the default item (0) or the last selected item.
 		if (!mFromSavedInstanceState) {
-			selectItem(mCurrentSelectedPosition);
+			Bundle fragmentArguments = null;
+			if (getActivity().getIntent().getAction().equals(MainActivity.ACTION_SWITCH)) {
+				mCurrentSelectedPosition = getActivity().getIntent().getIntExtra(MainActivity.ARG_INDEX,
+						mCurrentSelectedPosition);
+				fragmentArguments = getActivity().getIntent().getBundleExtra(MainActivity.ARG_ARGUMENTS);
+			}
+			selectItem(mCurrentSelectedPosition, fragmentArguments);
 		}
-    }
+	}
 
     @Override
     public void onActivityCreated (Bundle savedInstanceState) {
@@ -195,7 +201,11 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerLayout.setDrawerListener(mDrawerToggle);
     }
 
-    private void selectItem(int position) {
+	private void selectItem(int position) {
+		selectItem(position, null);
+	}
+
+    void selectItem(int position, Bundle arguments) {
         mCurrentSelectedPosition = position;
         if (mDrawerListView != null) {
             mDrawerListView.setItemChecked(position, true);
@@ -204,7 +214,7 @@ public class NavigationDrawerFragment extends Fragment {
             mDrawerLayout.closeDrawer(mFragmentContainerView);
         }
         if (mCallbacks != null) {
-            mCallbacks.onNavigationDrawerItemSelected(position);
+            mCallbacks.onNavigationDrawerItemSelected(position, arguments);
         }
     }
 
@@ -279,6 +289,6 @@ public class NavigationDrawerFragment extends Fragment {
         /**
          * Called when an item in the navigation drawer is selected.
          */
-        void onNavigationDrawerItemSelected(int position);
+        void onNavigationDrawerItemSelected(int position, Bundle arguments);
     }
 }

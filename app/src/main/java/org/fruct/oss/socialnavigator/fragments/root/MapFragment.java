@@ -21,7 +21,11 @@ import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
+import org.fruct.oss.socialnavigator.points.Point;
 import org.osmdroid.DefaultResourceProxyImpl;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.IRegisterReceiver;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.modules.MapTileDownloader;
@@ -56,6 +60,8 @@ public class MapFragment extends Fragment {
 
 	private State state = new State();
 
+	private Point initialScrollPoint;
+
 	public MapFragment() {
 	}
 
@@ -76,6 +82,10 @@ public class MapFragment extends Fragment {
 			state.lat = pref.getInt(STORED_LAT, 0) / 1e6;
 			state.lon = pref.getInt(STORED_LON, 0) / 1e6;
 			state.zoom = pref.getInt(STORED_ZOOM, 15);
+		}
+
+		if (savedInstanceState == null && getArguments() != null) {
+			initialScrollPoint = getArguments().getParcelable("point");
 		}
 
 		setupOverlays(savedInstanceState);
@@ -124,6 +134,10 @@ public class MapFragment extends Fragment {
 	private void onGlobalLayout() {
 		mapView.getController().setZoom(state.zoom);
 		mapView.getController().setCenter(new GeoPoint(state.lat, state.lon));
+
+		if (initialScrollPoint != null) {
+			mapView.getController().animateTo(initialScrollPoint.toGeoPoint());
+		}
 
 		// Notify all existing overlay fragments about mapView
 		for (OverlayFragment overlay : overlayFragments) {
@@ -195,7 +209,6 @@ public class MapFragment extends Fragment {
 		mapView = new MapView(getActivity(), 256, new DefaultResourceProxyImpl(getActivity()), tileProviderArray);
 		mapView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		mapView.setMultiTouchControls(true);
-
 		layout.addView(mapView);
 
 		//setHardwareAccelerationOff();

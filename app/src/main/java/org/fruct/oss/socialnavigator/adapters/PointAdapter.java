@@ -33,6 +33,11 @@ public class PointAdapter extends CursorAdapter {
 		holder.textView.setText(point.getName());
 	}
 
+	@Override
+	public Cursor getItem(int position) {
+		return (Cursor) super.getItem(position);
+	}
+
 	private static class Holder {
 		TextView textView;
 	}
