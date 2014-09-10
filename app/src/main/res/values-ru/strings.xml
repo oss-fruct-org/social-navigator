@@ -3,4 +3,7 @@
     <string name="action_refresh">Обновить</string>
     <string name="str_data_refresh_failed">Не удается загрузить данные с сервера</string>
     <string name="action_position">Следовать</string>
+    <string name="action_route">Проложить маршрут</string>
+    <string name="action_create">Создать точку</string>
+    <string name="str_not_implemented">Не реализовано</string>
 </resources>

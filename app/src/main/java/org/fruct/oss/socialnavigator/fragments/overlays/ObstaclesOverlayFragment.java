@@ -4,17 +4,22 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.MotionEvent;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.osmdroid.DefaultResourceProxyImpl;
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +121,25 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			onPointsServiceDisconnected();
+		}
+	}
+
+
+	private class EventOverlay extends Overlay {
+		public EventOverlay(Context ctx) {
+			super(ctx);
+		}
+
+		@Override
+		protected void draw(Canvas c, MapView osmv, boolean shadow) {
+		}
+
+		@Override
+		public boolean onLongPress(MotionEvent e, MapView mapView) {
+			Projection proj = mapView.getProjection();
+			IGeoPoint point = proj.fromPixels((int) e.getX(), (int) e.getY());
+
+			return super.onLongPress(e, mapView);
 		}
 	}
 }

@@ -18,6 +18,7 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.fragments.overlays.CreatePointOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
@@ -119,6 +120,11 @@ public class MapFragment extends Fragment {
 			trans.add(obstaclesOverlayFragment, "obstacle-overlay-gragment");
 			overlayFragments.add(obstaclesOverlayFragment);
 
+			CreatePointOverlayFragment createPointOverlayFragment = new CreatePointOverlayFragment();
+			trans.add(createPointOverlayFragment, "create-point-overlay-gragment");
+			overlayFragments.add(createPointOverlayFragment);
+
+
 			trans.addToBackStack(null);
 			trans.commit();
 		} else {
@@ -209,8 +215,9 @@ public class MapFragment extends Fragment {
 		mapView = new MapView(getActivity(), 256, new DefaultResourceProxyImpl(getActivity()), tileProviderArray);
 		mapView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		mapView.setMultiTouchControls(true);
-		layout.addView(mapView);
 
+
+		layout.addView(mapView);
 		//setHardwareAccelerationOff();
 	}
 

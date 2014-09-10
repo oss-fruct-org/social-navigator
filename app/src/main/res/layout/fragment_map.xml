@@ -1,4 +1,4 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
@@ -8,4 +8,17 @@
         android:id="@+id/map_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-</FrameLayout>
+
+    <FrameLayout android:id="@+id/map_anchor"
+                 android:layout_alignParentLeft="true"
+                 android:layout_alignParentTop="true"
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+
+                 android:minHeight="8dp"
+                 android:minWidth="8dp"
+
+                 android:background="#ffffffff"
+
+                 android:visibility="invisible" />
+</RelativeLayout>
