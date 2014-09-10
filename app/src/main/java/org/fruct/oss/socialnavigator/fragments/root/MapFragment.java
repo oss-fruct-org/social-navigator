@@ -194,6 +194,7 @@ public class MapFragment extends Fragment {
 
 		mapView = new MapView(getActivity(), 256, new DefaultResourceProxyImpl(getActivity()), tileProviderArray);
 		mapView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		mapView.setMultiTouchControls(true);
 
 		layout.addView(mapView);
 
