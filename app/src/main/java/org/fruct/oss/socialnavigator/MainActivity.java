@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.routing.Routing;
 
 
 public class MainActivity extends ActionBarActivity
@@ -145,6 +146,9 @@ public class MainActivity extends ActionBarActivity
             restoreActionBar();
             return true;
         }
+
+
+
         return super.onCreateOptionsMenu(menu);
     }
 

@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Canvas;
 import android.os.Bundle;
@@ -66,9 +67,13 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		Resources res = getActivity().getResources();
 		refreshLayout = (SwipeRefreshLayout) inflater.inflate(R.layout.fragment_points, container, false);
 		refreshLayout.setOnRefreshListener(this);
-		refreshLayout.setColorSchemeColors(0xffff0000, 0xff00ff00, 0xff0000ff, 0xffff00ff);
+		refreshLayout.setColorSchemeColors(res.getColor(R.color.color_base_1),
+				res.getColor(R.color.color_base_2),
+				res.getColor(R.color.color_base_3),
+				res.getColor(R.color.color_base_4));
 		return refreshLayout;
 	}
 
