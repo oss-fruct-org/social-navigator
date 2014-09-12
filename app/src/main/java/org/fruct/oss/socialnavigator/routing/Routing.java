@@ -19,7 +19,7 @@ import java.util.List;
 public class Routing {
 	private final CustomGraphHopper gh;
 
-	public Routing(Context context, String directory) {
+	Routing(String directory) {
 		gh = (CustomGraphHopper) new CustomGraphHopper().forMobile();
 		gh.disableCHShortcuts();
 		gh.load(directory);
@@ -29,8 +29,8 @@ public class Routing {
 		gh.close();
 	}
 
-	public List<PointList> route(final double fromLat, final double fromLon, final double toLat, final double toLon) {
-		return new ArrayList<PointList>(3) {
+	public List<RoutingService.RouteResult> route(final double fromLat, final double fromLon, final double toLat, final double toLon) {
+		return new ArrayList<RoutingService.RouteResult>(3) {
 			{
 				add(route(fromLat, fromLon, toLat, toLon, "CAR", "blocking"));
 				add(route(fromLat, fromLon, toLat, toLon, "FOOT", "blocking"));
@@ -39,13 +39,13 @@ public class Routing {
 		};
 	}
 
-	public PointList route(double fromLat, double fromLon, double toLat, double toLon, String vehicle, String weighting) {
+	public RoutingService.RouteResult route(double fromLat, double fromLon, double toLat, double toLon, String vehicle, String weighting) {
 		GHRequest request = new GHRequest(fromLat, fromLon, toLat, toLon);
 		request.setVehicle(vehicle);
 		request.setWeighting(weighting);
 
 		GHResponse response = gh.route(request);
-		return response.getPoints();
+		return new RoutingService.RouteResult(response.getPoints(), vehicle, weighting);
 	}
 
 	public void setObstacles(List<Point> points) {

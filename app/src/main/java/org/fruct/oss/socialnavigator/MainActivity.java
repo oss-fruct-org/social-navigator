@@ -19,6 +19,7 @@ import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.Routing;
+import org.fruct.oss.socialnavigator.routing.RoutingService;
 
 
 public class MainActivity extends ActionBarActivity
@@ -53,6 +54,7 @@ public class MainActivity extends ActionBarActivity
 				(DrawerLayout) findViewById(R.id.drawer_layout));
 
 		startService(new Intent(this, PointsService.class));
+		startService(new Intent(this, RoutingService.class));
 	}
 
 	@Override

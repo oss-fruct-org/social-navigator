@@ -22,6 +22,7 @@ import org.fruct.oss.socialnavigator.fragments.overlays.CreatePointOverlayFragme
 import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
+import org.fruct.oss.socialnavigator.fragments.overlays.RouteOverlayFragment;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.events.MapListener;
@@ -56,7 +57,6 @@ public class MapFragment extends Fragment {
 	public static final String STORED_ZOOM = "pref-map-fragment-zoom";
 
 	private MapView mapView;
-	private FrameLayout mapLayout;
 	private List<OverlayFragment> overlayFragments = new ArrayList<OverlayFragment>();
 
 	private State state = new State();
@@ -124,6 +124,9 @@ public class MapFragment extends Fragment {
 			trans.add(createPointOverlayFragment, "create-point-overlay-gragment");
 			overlayFragments.add(createPointOverlayFragment);
 
+			RouteOverlayFragment routeOverlayFragment = new RouteOverlayFragment();
+			trans.add(routeOverlayFragment, "route-overlay-gragment");
+			overlayFragments.add(routeOverlayFragment);
 
 			trans.addToBackStack(null);
 			trans.commit();
@@ -134,7 +137,6 @@ public class MapFragment extends Fragment {
 				overlayFragments.add(overlay);
 			}
 		}
-
 	}
 
 	private void onGlobalLayout() {
