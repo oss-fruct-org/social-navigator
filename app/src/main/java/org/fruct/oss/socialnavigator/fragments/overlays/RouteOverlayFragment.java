@@ -62,6 +62,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private void onServicesReady() {
 		routingService.addListener(this);
+		routingService.sendLastResult();
 	}
 
 	private void onServicesDisconnected() {

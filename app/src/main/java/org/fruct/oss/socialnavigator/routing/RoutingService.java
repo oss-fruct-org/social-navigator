@@ -121,6 +121,18 @@ public class RoutingService extends Service implements PointsService.Listener {
 		return RoutingService.START_NOT_STICKY;
 	}
 
+	public void sendLastResult() {
+		if (routeFuture != null && routeFuture.isDone() && !routeFuture.isCancelled()) {
+			try {
+				notifyPathsUpdated(routeFuture.get());
+			} catch (InterruptedException e) {
+				log.error("routeFuturn thrown InterruptedException but has 'done' flag", e);
+			} catch (ExecutionException e) {
+				log.error("Can't get last route result due to exception", e);
+			}
+		}
+	}
+
 	private void newTargetPoint(final GeoPoint targetPoint) {
 		if (routeFuture != null) {
 			routeFuture.cancel(true);
@@ -141,7 +153,9 @@ public class RoutingService extends Service implements PointsService.Listener {
 
 				List<RouteResult> results = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
 						targetPoint.getLatitude(), targetPoint.getLongitude());
+
 				notifyPathsUpdated(results);
+
 				return results;
 			}
 		});
