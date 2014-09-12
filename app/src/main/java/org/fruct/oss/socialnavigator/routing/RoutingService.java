@@ -46,11 +46,13 @@ public class RoutingService extends Service implements PointsService.Listener {
 
 	// Tasks
 	private Future<Routing> initializeFuture;
-	private Future<List<RouteResult>> routeFuture;
+	private Future<List<Path>> routeFuture;
 
 	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 
 	private Routing routing;
+	private GeoPoint targetPoint;
+	private List<Path> currentRoutes;
 
 	private PointsServiceConnection pointsServiceConnection;
 	private PointsService pointsService;
@@ -121,14 +123,22 @@ public class RoutingService extends Service implements PointsService.Listener {
 		return RoutingService.START_NOT_STICKY;
 	}
 
+	public void setPathActive(Path pathActive) {
+		for (Path path : currentRoutes) {
+			if (path.equals(pathActive)) {
+				path.setActive(true);
+			} else {
+				path.setActive(false);
+			}
+		}
+
+		notifyPathsUpdated(currentRoutes);
+	}
+
 	public void sendLastResult() {
-		if (routeFuture != null && routeFuture.isDone() && !routeFuture.isCancelled()) {
-			try {
-				notifyPathsUpdated(routeFuture.get());
-			} catch (InterruptedException e) {
-				log.error("routeFuturn thrown InterruptedException but has 'done' flag", e);
-			} catch (ExecutionException e) {
-				log.error("Can't get last route result due to exception", e);
+		synchronized (mutex) {
+			if (currentRoutes != null) {
+				notifyPathsUpdated(currentRoutes);
 			}
 		}
 	}
@@ -143,20 +153,29 @@ public class RoutingService extends Service implements PointsService.Listener {
 			return;
 		}
 
-		routeFuture = executor.submit(new Callable<List<RouteResult>>() {
+		this.targetPoint = targetPoint;
+		routeFuture = executor.submit(new Callable<List<Path>>() {
 			@Override
-			public List<RouteResult> call() {
+			public List<Path> call() {
+
 				if (!ensureRoutingReady()) {
 					// TODO: notify user that routing haven't been initialized
 					return null;
 				}
 
-				List<RouteResult> results = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
+				List<Path> newRoutes = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
 						targetPoint.getLatitude(), targetPoint.getLongitude());
 
-				notifyPathsUpdated(results);
+				if (newRoutes.size() > 0) {
+					newRoutes.get(0).setActive(true);
+				}
 
-				return results;
+				synchronized (mutex) {
+					currentRoutes = newRoutes;
+					notifyPathsUpdated(currentRoutes);
+				}
+
+				return newRoutes;
 			}
 		});
 	}
@@ -228,7 +247,7 @@ public class RoutingService extends Service implements PointsService.Listener {
 	public void onDataUpdateFailed(Throwable throwable) {
 	}
 
-	private void notifyPathsUpdated(final List<RouteResult> results) {
+	private void notifyPathsUpdated(final List<Path> results) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
@@ -245,15 +264,20 @@ public class RoutingService extends Service implements PointsService.Listener {
 		}
 	}
 
-	public static class RouteResult {
+	public static class Path {
 		private PointList pointList;
 		private String vehicle;
 		private String weighting;
+		private boolean isActive;
 
-		RouteResult(PointList pointList, String vehicle, String weighting) {
+		Path(PointList pointList, String vehicle, String weighting) {
 			this.pointList = pointList;
 			this.vehicle = vehicle;
 			this.weighting = weighting;
+		}
+
+		void setActive(boolean isActive) {
+			this.isActive = isActive;
 		}
 
 		public PointList getPointList() {
@@ -267,10 +291,14 @@ public class RoutingService extends Service implements PointsService.Listener {
 		public String getWeighting() {
 			return weighting;
 		}
+
+		public boolean isActive() {
+			return isActive;
+		}
 	}
 
 	public static interface Listener {
-		void pathsUpdated(List<RouteResult> paths);
+		void pathsUpdated(List<Path> paths);
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {

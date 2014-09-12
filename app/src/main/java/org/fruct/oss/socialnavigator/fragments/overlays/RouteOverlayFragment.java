@@ -5,17 +5,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.view.MotionEvent;
 
 import com.graphhopper.util.PointList;
 
-import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.PathOverlay;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener {
@@ -27,8 +29,10 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private int servicesBoundCount;
 
-	private PathOverlay[] pathOverlays;
+	private final List<PathOverlay> pathOverlays = new ArrayList<PathOverlay>();
+
 	private MapView mapView;
+	private ResourceProxy resourceProxy;
 
 	@Override
 	public void onMapViewReady(MapView mapView) {
@@ -39,16 +43,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		getActivity().bindService(new Intent(getActivity(), PointsService.class),
 				pointsServiceConnection, Context.BIND_AUTO_CREATE);
 
-		ResourceProxy proxy = new DefaultResourceProxyImpl(getActivity());
-
-		PathOverlay pathOverlay1 = new PathOverlay(0xaa33ff43, 4, proxy);
-		PathOverlay pathOverlay2 = new PathOverlay(0xaa3343f4, 4, proxy);
-		PathOverlay pathOverlay3 = new PathOverlay(0xaafe3443, 4, proxy);
-
-		pathOverlays = new PathOverlay[] {pathOverlay1, pathOverlay2, pathOverlay3};
-		for (PathOverlay pathOverlay : pathOverlays) {
-			mapView.getOverlayManager().add(pathOverlay);
-		}
+		resourceProxy = new DefaultResourceProxyImpl(getActivity());
 	}
 
 	@Override
@@ -70,17 +65,29 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	@Override
-	public void pathsUpdated(List<RoutingService.RouteResult> paths) {
-		int idx = 0;
-		for (PathOverlay pathOverlay : pathOverlays) {
-			pathOverlay.clearPath();
-			PointList pointList = paths.get(idx++).getPointList();
+	public void pathsUpdated(List<RoutingService.Path> paths) {
+		mapView.getOverlayManager().removeAll(pathOverlays);
+
+		for (RoutingService.Path path : paths) {
+			PointList pointList = path.getPointList();
+
+			PathOverlay pathOverlay = new PathOverlay(0xff1177ff, 8, resourceProxy);
+
+
+			if (path.isActive()) {
+				pathOverlay.setAlpha(255);
+			} else {
+				pathOverlay.setAlpha(127);
+			}
 
 			for (int i = 0; i < pointList.size(); i++) {
 				pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
 						(int) (pointList.getLongitude(i) * 1e6));
 			}
+
+			mapView.getOverlayManager().add(pathOverlay);
 		}
+
 		mapView.invalidate();
 	}
 
@@ -126,5 +133,21 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 				onServicesDisconnected();
 			}
 		}
+	}
+
+	private static class ClickablePathOverlay extends PathOverlay {
+		public ClickablePathOverlay(int color, float width, ResourceProxy resourceProxy) {
+			super(color, width, resourceProxy);
+		}
+
+		@Override
+		public boolean onSingleTapConfirmed(MotionEvent e, MapView mapView) {
+			Projection proj = mapView.getProjection();
+
+			//proj.to
+
+			return false;
+		}
+
 	}
 }
