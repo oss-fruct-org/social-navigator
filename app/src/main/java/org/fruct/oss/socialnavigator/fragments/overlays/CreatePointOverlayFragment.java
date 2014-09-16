@@ -85,7 +85,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 		View anchorView = getActivity().findViewById(R.id.map_anchor);
 
-		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			anchorView.setTranslationX(screenPoint.x);
 			anchorView.setTranslationY(screenPoint.y);
 		}

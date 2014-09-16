@@ -6,4 +6,8 @@
     <string name="action_route">Проложить маршрут</string>
     <string name="action_create">Создать точку</string>
     <string name="str_not_implemented">Не реализовано</string>
+    <string name="action_route_safe">Безопасный</string>
+    <string name="action_route_half_safe">Умеренно опасный</string>
+    <string name="action_route_unsafe">Наиболее быстрый</string>
+
 </resources>

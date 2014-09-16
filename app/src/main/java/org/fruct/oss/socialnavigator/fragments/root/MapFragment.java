@@ -125,7 +125,7 @@ public class MapFragment extends Fragment {
 			overlayFragments.add(createPointOverlayFragment);
 
 			RouteOverlayFragment routeOverlayFragment = new RouteOverlayFragment();
-			trans.add(routeOverlayFragment, "route-overlay-gragment");
+			trans.add(R.id.overlay_route, routeOverlayFragment, "route-overlay-gragment");
 			overlayFragments.add(routeOverlayFragment);
 
 			trans.addToBackStack(null);

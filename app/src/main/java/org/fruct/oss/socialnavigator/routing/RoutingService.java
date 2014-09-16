@@ -117,10 +117,26 @@ public class RoutingService extends Service implements PointsService.Listener {
 
 		if (intent.getAction().equals(ACTION_ROUTE)) {
 			GeoPoint targetPoint = intent.getParcelableExtra(ARG_TARGET);
-			newTargetPoint(targetPoint);
+			if (targetPoint == null) {
+				clearTargetPoint();
+			} else {
+				newTargetPoint(targetPoint);
+			}
+		}
+		return RoutingService.START_NOT_STICKY;
+	}
+
+	private void clearTargetPoint() {
+		if (routeFuture != null) {
+			routeFuture.cancel(true);
 		}
 
-		return RoutingService.START_NOT_STICKY;
+		synchronized (mutex) {
+			currentRoutes = null;
+			targetPoint = null;
+		}
+
+		notifyPathsCleared();
 	}
 
 	public void setPathActive(Path pathActive) {
@@ -157,7 +173,6 @@ public class RoutingService extends Service implements PointsService.Listener {
 		routeFuture = executor.submit(new Callable<List<Path>>() {
 			@Override
 			public List<Path> call() {
-
 				if (!ensureRoutingReady()) {
 					// TODO: notify user that routing haven't been initialized
 					return null;
@@ -171,6 +186,9 @@ public class RoutingService extends Service implements PointsService.Listener {
 				}
 
 				synchronized (mutex) {
+					if (Thread.currentThread().isInterrupted())
+						return null;
+
 					currentRoutes = newRoutes;
 					notifyPathsUpdated(currentRoutes);
 				}
@@ -258,6 +276,18 @@ public class RoutingService extends Service implements PointsService.Listener {
 		});
 	}
 
+	private void notifyPathsCleared() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (Listener listener : listeners) {
+					listener.pathsCleared();
+				}
+			}
+		});
+	}
+
+
 	public class Binder extends android.os.Binder {
 		public RoutingService getService() {
 			return RoutingService.this;
@@ -299,6 +329,7 @@ public class RoutingService extends Service implements PointsService.Listener {
 
 	public static interface Listener {
 		void pathsUpdated(List<Path> paths);
+		void pathsCleared();
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {
