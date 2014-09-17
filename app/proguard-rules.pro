@@ -18,3 +18,18 @@
 
 # osmdroid
 -dontwarn org.apache.http.entity.mime.**
+
+# graphhopper
+-dontwarn javax.xml.stream.**
+-dontwarn org.apache.xmlgraphics.**
+-dontwarn java.awt.**
+-dontwarn javax.imageio.**
+-dontwarn org.apache.avalon.**
+-dontwarn org.apache.log4j.**
+-dontwarn org.slf4j.impl.**
+-dontwarn org.openstreetmap.osmosis.**
+-dontwarn com.google.protobuf.**
+-dontwarn java.lang.management.**
+-dontwarn com.sun.management.**
+-dontwarn org.apache.log.**
+-dontwarn sun.misc.Unsafe
