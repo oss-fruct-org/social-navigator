@@ -42,7 +42,7 @@ public class Routing {
 		File ghPath = new File(context.getCacheDir(), "gh-path");
 		File nodesFile = new File(ghPath, "nodes");
 
-		if (!ghPath.mkdirs()) {
+		if (!ghPath.mkdirs() && !ghPath.isDirectory()) {
 			throw new IOException("Can't create target graphhopper directory " + ghPath);
 		}
 

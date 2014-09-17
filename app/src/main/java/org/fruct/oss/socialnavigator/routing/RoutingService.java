@@ -55,7 +55,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	// Tasks
 	private Future<Routing> initializeFuture;
-	private Future<List<Path>> routeFuture;
+	private Future<?> routeFuture;
 
 	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 
@@ -222,7 +222,11 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			}
 		}
 
-		executor.execute(new Runnable() {
+		if (routeFuture != null) {
+			routeFuture.cancel(true);
+		}
+
+		routeFuture = executor.submit(new Runnable() {
 			@Override
 			public void run() {
 				if (!ensureRoutingReady()) {
@@ -235,6 +239,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 						path.getVehicle(), path.getWeighting());
 
 				synchronized (mutex) {
+					if (Thread.currentThread().isInterrupted())
+						return;
+
 					activePath = newPath;
 					notifyRoutingUpdated(activePath);
 				}
@@ -253,12 +260,12 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		}
 
 		this.targetPoint = targetPoint;
-		routeFuture = executor.submit(new Callable<List<Path>>() {
+		routeFuture = executor.submit(new Runnable() {
 			@Override
-			public List<Path> call() {
+			public void run() {
 				if (!ensureRoutingReady()) {
 					// TODO: notify user that routing haven't been initialized
-					return null;
+					return;
 				}
 
 				List<Path> newRoutes = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
@@ -270,13 +277,11 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 				synchronized (mutex) {
 					if (Thread.currentThread().isInterrupted())
-						return null;
+						return;
 
 					currentRoutes = newRoutes;
 					notifyPathsUpdated(currentRoutes);
 				}
-
-				return newRoutes;
 			}
 		});
 	}

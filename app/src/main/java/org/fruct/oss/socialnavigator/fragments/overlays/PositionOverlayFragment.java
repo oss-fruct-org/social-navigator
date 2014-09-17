@@ -96,7 +96,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 		overlay.enableFollowLocation();
 		//positionMenuItem.setIcon(R.drawable.ic_action_location_found);
 		if (positionMenuItem != null)
-			positionMenuItem.getIcon().setColorFilter(R.color.color_blue, PorterDuff.Mode.SRC_ATOP);
+			positionMenuItem.getIcon().setColorFilter(getResources().getColor(R.color.color_blue), PorterDuff.Mode.SRC_ATOP);
 	}
 
 	private void deactivateFollowMode() {
