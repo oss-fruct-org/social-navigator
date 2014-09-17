@@ -65,7 +65,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private List<Path> currentRoutes;
 	private Path activePath;
 
-
 	private PointsServiceConnection pointsServiceConnection;
 	private PointsService pointsService;
 
@@ -84,7 +83,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		initializeFuture = executor.submit(new Callable<Routing>() {
 			@Override
 			public Routing call() throws Exception {
-				return new Routing("/sdcard/ptz.osm.pbf");
+				Routing routing = new Routing();
+				routing.loadFromAsset(RoutingService.this, "map.osm.pbf.ghz", 0);
+				return routing;
 			}
 		});
 
