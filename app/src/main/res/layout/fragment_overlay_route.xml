@@ -4,21 +4,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/shadow"
+                android:alpha="0.9"
                 android:visibility="gone">
     <FrameLayout
         android:id="@+id/left_button_layout"
         android:layout_width="@dimen/route_panel_height"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        >
+        android:layout_alignParentStart="true">
 
         <ImageButton
             android:id="@+id/route_button"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@null"
-            android:src="@drawable/ic_action_location_found"/>
+            android:src="@drawable/ic_action_accept"/>
 
     </FrameLayout>
 
@@ -41,9 +41,11 @@
         android:layout_toRightOf="@id/left_delimiter">
 
         <TextView
+            android:id="@+id/length_text"
+            android:textSize="14sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="123456"/>
+            android:text="0"/>
         </FrameLayout>
 
     <View

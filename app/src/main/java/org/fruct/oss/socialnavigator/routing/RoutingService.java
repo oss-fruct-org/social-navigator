@@ -8,10 +8,14 @@ import android.content.ServiceConnection;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
+import android.support.v4.content.LocalBroadcastManager;
 
+import com.graphhopper.GHResponse;
 import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.annotations.Blocking;
@@ -21,6 +25,7 @@ import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -31,12 +36,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class RoutingService extends Service implements PointsService.Listener {
+public class RoutingService extends Service implements PointsService.Listener, LocationReceiver.Listener {
 	private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
 
 	public static final String ACTION_ROUTE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_ROUTE";
+	public static final String ACTION_PLACE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_PLACE";
 
-	public static final String ARG_TARGET = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_TARGET";
+	public static final String ARG_POINT = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_POINT";
+	public static final String ARG_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_LOCATION";
+
+	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
 
 	private final Binder binder = new Binder();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -51,11 +60,16 @@ public class RoutingService extends Service implements PointsService.Listener {
 	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 
 	private Routing routing;
+
 	private GeoPoint targetPoint;
 	private List<Path> currentRoutes;
+	private Path activePath;
+
 
 	private PointsServiceConnection pointsServiceConnection;
 	private PointsService pointsService;
+
+	private LocationReceiver locationReceiver;
 
 	private Handler handler;
 
@@ -73,6 +87,10 @@ public class RoutingService extends Service implements PointsService.Listener {
 				return new Routing("/sdcard/ptz.osm.pbf");
 			}
 		});
+
+		locationReceiver = new LocationReceiver(this);
+		locationReceiver.setListener(this);
+		locationReceiver.start();
 
 		bindService(new Intent(this, PointsService.class),
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
@@ -106,6 +124,9 @@ public class RoutingService extends Service implements PointsService.Listener {
 			pointsService.removeListener(this);
 		}
 
+		locationReceiver.stop();
+		locationReceiver.setListener(null);
+
 		super.onDestroy();
 	}
 
@@ -115,14 +136,19 @@ public class RoutingService extends Service implements PointsService.Listener {
 			return RoutingService.START_NOT_STICKY;
 		}
 
-		if (intent.getAction().equals(ACTION_ROUTE)) {
-			GeoPoint targetPoint = intent.getParcelableExtra(ARG_TARGET);
+		String action = intent.getAction();
+		if (action.equals(ACTION_ROUTE)) {
+			GeoPoint targetPoint = intent.getParcelableExtra(ARG_POINT);
 			if (targetPoint == null) {
 				clearTargetPoint();
 			} else {
 				newTargetPoint(targetPoint);
 			}
+		} else if (action.equals(ACTION_PLACE)) {
+			GeoPoint targetPoint = intent.getParcelableExtra(ARG_POINT);
+			setCurrentLocation(targetPoint);
 		}
+
 		return RoutingService.START_NOT_STICKY;
 	}
 
@@ -139,16 +165,13 @@ public class RoutingService extends Service implements PointsService.Listener {
 		notifyPathsCleared();
 	}
 
-	public void setPathActive(Path pathActive) {
-		for (Path path : currentRoutes) {
-			if (path.equals(pathActive)) {
-				path.setActive(true);
-			} else {
-				path.setActive(false);
-			}
+	public void setPathActive(Path path) {
+		synchronized (mutex) {
+			activePath = path;
+			currentRoutes = Collections.emptyList();
 		}
 
-		notifyPathsUpdated(currentRoutes);
+		notifyRoutingUpdated(path);
 	}
 
 	public void sendLastResult() {
@@ -159,12 +182,72 @@ public class RoutingService extends Service implements PointsService.Listener {
 		}
 	}
 
+	public void sendLastLocation() {
+		locationReceiver.sendLastLocation();
+	}
+
+	public void setCurrentLocation(GeoPoint currentLocation) {
+		if (locationReceiver == null)
+			return;
+
+		Location location = new Location("test-provider");
+		location.setLatitude(currentLocation.getLatitude());
+		location.setLongitude(currentLocation.getLongitude());
+		location.setTime(System.currentTimeMillis());
+		location.setAccuracy(1);
+
+		if (Build.VERSION.SDK_INT >= 17) {
+			location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+		}
+
+		locationReceiver.mockLocation(location);
+	}
+
+	@Override
+	public void newLocation(Location location) {
+		Intent intent = new Intent(BC_LOCATION);
+		intent.putExtra(ARG_LOCATION, location);
+		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
+		recalculateActivePath(location);
+	}
+
+	private void recalculateActivePath(final Location location) {
+		final Path path;
+		synchronized (mutex) {
+			if (activePath == null) {
+				return;
+			} else {
+				path = activePath;
+			}
+		}
+
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if (!ensureRoutingReady()) {
+					// TODO: notify user that routing haven't been initialized
+					return;
+				}
+
+				Path newPath = routing.route(location.getLatitude(), location.getLongitude(),
+						targetPoint.getLatitude(), targetPoint.getLongitude(),
+						path.vehicle, path.weighting);
+
+				synchronized (mutex) {
+					activePath = newPath;
+					notifyRoutingUpdated(activePath);
+				}
+			}
+		});
+	}
+
 	private void newTargetPoint(final GeoPoint targetPoint) {
 		if (routeFuture != null) {
 			routeFuture.cancel(true);
 		}
 
-		final Location currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		final Location currentLocation = locationReceiver.getOldLocation();
 		if (currentLocation == null) {
 			return;
 		}
@@ -287,6 +370,17 @@ public class RoutingService extends Service implements PointsService.Listener {
 		});
 	}
 
+	private void notifyRoutingUpdated(final Path path) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (Listener listener : listeners) {
+					listener.routingUpdated(path);
+				}
+			}
+		});
+	}
+
 
 	public class Binder extends android.os.Binder {
 		public RoutingService getService() {
@@ -295,13 +389,15 @@ public class RoutingService extends Service implements PointsService.Listener {
 	}
 
 	public static class Path {
-		private PointList pointList;
-		private String vehicle;
-		private String weighting;
+		private final GHResponse response;
+		private final PointList pointList;
+		private final String vehicle;
+		private final String weighting;
 		private boolean isActive;
 
-		Path(PointList pointList, String vehicle, String weighting) {
-			this.pointList = pointList;
+		Path(GHResponse response, String vehicle, String weighting) {
+			this.pointList = response.getPoints();
+			this.response = response;
 			this.vehicle = vehicle;
 			this.weighting = weighting;
 		}
@@ -322,6 +418,10 @@ public class RoutingService extends Service implements PointsService.Listener {
 			return weighting;
 		}
 
+		public GHResponse getResponse() {
+			return response;
+		}
+
 		public boolean isActive() {
 			return isActive;
 		}
@@ -330,6 +430,7 @@ public class RoutingService extends Service implements PointsService.Listener {
 	public static interface Listener {
 		void pathsUpdated(List<Path> paths);
 		void pathsCleared();
+		void routingUpdated(Path path);
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {

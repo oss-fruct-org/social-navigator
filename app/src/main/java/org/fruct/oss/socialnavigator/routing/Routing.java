@@ -35,9 +35,8 @@ public class Routing {
 		GHRequest request = new GHRequest(fromLat, fromLon, toLat, toLon);
 		request.setVehicle(vehicle);
 		request.setWeighting(weighting);
-
 		GHResponse response = gh.route(request);
-		return new RoutingService.Path(response.getPoints(), vehicle, weighting);
+		return new RoutingService.Path(response, vehicle, weighting);
 	}
 
 	public void setObstacles(List<Point> points) {

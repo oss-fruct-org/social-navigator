@@ -9,5 +9,20 @@
     <string name="action_route_safe">Безопасный</string>
     <string name="action_route_half_safe">Умеренно опасный</string>
     <string name="action_route_unsafe">Наиболее быстрый</string>
+    <string name="str_path_length">Расстояние: </string>
+    <string name="action_place_here">Place here</string>
 
+    <plurals name="plural_meters">
+        <item quantity="one">%d метр</item>
+        <item quantity="few">%d метра</item>
+        <item quantity="many">%d метров</item>
+        <item quantity="other">%d метров</item>
+    </plurals>
+
+    <plurals name="plural_kilometers">
+        <item quantity="one">%d километр</item>
+        <item quantity="few">%d километра</item>
+        <item quantity="many">%d километров</item>
+        <item quantity="other">%d километр</item>
+    </plurals>
 </resources>

@@ -7,7 +7,6 @@ import android.content.ServiceConnection;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
@@ -18,13 +17,14 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
-import com.graphhopper.routing.Path;
 import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
+import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.util.GeoPoint;
@@ -78,9 +78,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 						return false;
 					}
 
-					for (int i = 0; i < pathOverlays.size(); i++) {
-						pathOverlays.get(i).setAlpha(i == idx ? 255 : 50);
-					}
+					pathSelected(idx);
 
 					return true;
 				}
@@ -95,6 +93,17 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			getActivity().startService(intent);
 		}
 	};
+
+	private View.OnClickListener acceptListener = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			if (routingService != null && currentPath != null) {
+				routingService.setPathActive(currentPath);
+			}
+		}
+	};
+
+	private RoutingService.Path currentPath;
 
 	@Override
 	public void onMapViewReady(MapView mapView) {
@@ -121,13 +130,27 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		view = inflater.inflate(R.layout.fragment_overlay_route, container, false);
 
+		view.setOnClickListener(typeListener);
+
 		ImageButton typeButton = (ImageButton) view.findViewById(R.id.route_button);
-		typeButton.setOnClickListener(typeListener);
+		typeButton.setOnClickListener(acceptListener);
 
 		ImageButton closeButton = (ImageButton) view.findViewById(R.id.route_button_close);
 		closeButton.setOnClickListener(closeListener);
 
 		return view;
+	}
+
+	private void pathSelected(int idx) {
+		for (int i = 0; i < pathOverlays.size(); i++) {
+			pathOverlays.get(i).setAlpha(i == idx ? 255 : 50);
+		}
+
+		currentPath = paths.get(idx);
+		PathOverlay pathOverlay = pathOverlays.get(idx);
+
+		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
+		lengthTextView.setText(Utils.stringDistance(getResources(), currentPath.getResponse().getDistance()));
 	}
 
 	private void showPanel() {
@@ -181,12 +204,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			PointList pointList = path.getPointList();
 
 			PathOverlay pathOverlay = new PathOverlay(0xff1177ff, 8, resourceProxy);
-
-			//if (path.isActive()) {
-				pathOverlay.setAlpha(255);
-			//} else {
-			//	pathOverlay.setAlpha(50);
-			//}
+			pathOverlay.setAlpha(255);
 
 			for (int i = 0; i < pointList.size(); i++) {
 				pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
@@ -203,6 +221,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 		if (!paths.isEmpty()) {
 			showPanel();
+			pathSelected(0);
 		}
 	}
 
@@ -212,6 +231,22 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		pathOverlays.clear();
 		paths = Collections.emptyList();
 		hidePanel();
+	}
+
+	@Override
+	public void routingUpdated(RoutingService.Path path) {
+		pathsCleared();
+
+		PathOverlay pathOverlay = new PathOverlay(0xff1177ff, 8, resourceProxy);
+		PointList pointList = path.getPointList();
+		for (int i = 0; i < pointList.size(); i++) {
+			pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
+					(int) (pointList.getLongitude(i) * 1e6));
+		}
+
+		pathOverlays.add(pathOverlay);
+		mapView.getOverlayManager().add(pathOverlay);
+		mapView.invalidate();
 	}
 
 	private void onPathClicked(RoutingService.Path path) {

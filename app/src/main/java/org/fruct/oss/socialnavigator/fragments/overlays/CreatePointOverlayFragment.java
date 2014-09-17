@@ -19,18 +19,13 @@ import android.widget.Toast;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
-import org.osmdroid.DefaultResourceProxyImpl;
-import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.Overlay;
-import org.osmdroid.views.overlay.PathOverlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
@@ -100,42 +95,14 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 	private void route() {
 		Intent intent = new Intent(RoutingService.ACTION_ROUTE, null, getActivity(), RoutingService.class);
-		intent.putExtra(RoutingService.ARG_TARGET, (Parcelable) selectedPoint);
+		intent.putExtra(RoutingService.ARG_POINT, (Parcelable) selectedPoint);
 		getActivity().startService(intent);
+	}
 
-		/*routingTask = new AsyncTask<Void, Void, List<PointList>>() {
-			@Override
-			protected List<PointList> doInBackground(Void... params) {
-				if (routing == null) {
-					routing = new Routing(getActivity(), "/sdcard/ptz.osm.pbf");
-					routing.setObstacles(obstaclesPoints);
-				}
-
-				LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-
-				Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
-				return routing.route(location.getLatitude(), location.getLongitude(),
-						selectedPoint.getLatitude(), selectedPoint.getLongitude());
-			}
-
-			@Override
-			protected void onPostExecute(List<PointList> pointLists) {
-				super.onPostExecute(pointLists);
-
-				int idx = 0;
-				for (PathOverlay pathOverlay : pathOverlays) {
-					pathOverlay.clearPath();
-					PointList pointList = pointLists.get(idx++);
-
-					for (int i = 0; i < pointList.size(); i++) {
-						pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
-								(int) (pointList.getLongitude(i) * 1e6));
-					}
-				}
-				mapView.invalidate();
-			}
-		}.execute();*/
+	private void place() {
+		Intent intent = new Intent(RoutingService.ACTION_PLACE, null, getActivity(), RoutingService.class);
+		intent.putExtra(RoutingService.ARG_POINT, (Parcelable) selectedPoint);
+		getActivity().startService(intent);
 	}
 
 	@Override
@@ -147,6 +114,10 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 		case R.id.action_create:
 			Toast.makeText(getActivity(), R.string.str_not_implemented, Toast.LENGTH_SHORT).show();
+			break;
+
+		case R.id.action_place_here:
+			place();
 			break;
 
 		default:

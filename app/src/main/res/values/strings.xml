@@ -19,4 +19,19 @@
     <string name="action_route_safe">Safe</string>
     <string name="action_route_half_safe">Medium</string>
     <string name="action_route_unsafe">Unsafe</string>
+    <string name="str_path_length">Distance: </string>
+    <string name="action_place_here">Place here</string>
+
+    <plurals name="plural_meters">
+        <item quantity="one">%d meter</item>
+        <item quantity="many">%d meters</item>
+        <item quantity="other">%d meters</item>
+    </plurals>
+
+    <plurals name="plural_kilometers">
+        <item quantity="one">%d kilometer</item>
+        <item quantity="many">%d kilometers</item>
+        <item quantity="other">%d kilometers</item>
+    </plurals>
+
 </resources>

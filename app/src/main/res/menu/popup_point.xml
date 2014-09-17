@@ -7,4 +7,7 @@
     <item android:id="@+id/action_create"
           android:title="@string/action_create" />
 
+    <item android:id="@+id/action_place_here"
+          android:title="@string/action_place_here" />
+
 </menu>
