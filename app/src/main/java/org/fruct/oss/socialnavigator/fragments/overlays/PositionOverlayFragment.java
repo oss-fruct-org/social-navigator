@@ -72,7 +72,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 		positionMenuItem = menu.findItem(R.id.action_position);
 
 		if (isFollowingActive) {
-			positionMenuItem.getIcon().setColorFilter(0xff669900, PorterDuff.Mode.SRC_ATOP);
+			positionMenuItem.getIcon().setColorFilter(getResources().getColor(R.color.color_blue), PorterDuff.Mode.SRC_ATOP);
 		} else {
 			positionMenuItem.getIcon().setColorFilter(null);
 		}
@@ -96,13 +96,14 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 		overlay.enableFollowLocation();
 		//positionMenuItem.setIcon(R.drawable.ic_action_location_found);
 		if (positionMenuItem != null)
-			positionMenuItem.getIcon().setColorFilter(0xff669900, PorterDuff.Mode.SRC_ATOP);
+			positionMenuItem.getIcon().setColorFilter(R.color.color_blue, PorterDuff.Mode.SRC_ATOP);
 	}
 
 	private void deactivateFollowMode() {
 		isFollowingActive = false;
 		overlay.disableFollowLocation();
 		positionMenuItem.getIcon().setColorFilter(null);
+		mapView.setMapOrientation(0);
 	}
 
 	@Override
@@ -156,6 +157,8 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 			mapView.setMapOrientation((float) -bearing);
 
 			activateFollowMode();
+		} else {
+			deactivateFollowMode();
 		}
 	}
 

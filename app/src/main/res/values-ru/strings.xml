@@ -11,6 +11,7 @@
     <string name="action_route_unsafe">Наиболее быстрый</string>
     <string name="str_path_length">Расстояние: </string>
     <string name="action_place_here">Place here</string>
+    <string name="action_close_route">Close route</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d метр</item>

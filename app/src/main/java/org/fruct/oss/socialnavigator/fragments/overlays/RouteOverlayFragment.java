@@ -10,6 +10,8 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -104,6 +106,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	};
 
 	private RoutingService.Path currentPath;
+	private MenuItem closeMenuItem;
 
 	@Override
 	public void onMapViewReady(MapView mapView) {
@@ -115,6 +118,31 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 				pointsServiceConnection, Context.BIND_AUTO_CREATE);
 
 		resourceProxy = new DefaultResourceProxyImpl(getActivity());
+	}
+
+	@Override
+	public void onCreate(Bundle in) {
+		super.onCreate(in);
+
+		setHasOptionsMenu(true);
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.map_close_route, menu);
+		closeMenuItem = menu.findItem(R.id.action_close_route);
+		closeMenuItem.setVisible(false);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.action_close_route) {
+			if (routingService != null) {
+				routingService.setPathActive(null);
+			}
+		}
+
+		return super.onOptionsItemSelected(item);
 	}
 
 	@Override
@@ -151,9 +179,13 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
 		lengthTextView.setText(Utils.stringDistance(getResources(), currentPath.getResponse().getDistance()));
+		mapView.invalidate();
 	}
 
 	private void showPanel() {
+		if (view.getVisibility() != View.GONE)
+			return;
+
 		Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_up);
 
 		if (view != null) {
@@ -163,6 +195,9 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	private void hidePanel() {
+		if (view.getVisibility() == View.GONE)
+			return;
+
 		Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_down);
 		anim.setAnimationListener(new Animation.AnimationListener() {
 			@Override
@@ -237,6 +272,12 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	public void routingUpdated(RoutingService.Path path) {
 		pathsCleared();
 
+		if (path == null) {
+			closeMenuItem.setVisible(false);
+			return;
+		}
+
+		closeMenuItem.setVisible(true);
 		PathOverlay pathOverlay = new PathOverlay(0xff1177ff, 8, resourceProxy);
 		PointList pointList = path.getPointList();
 		for (int i = 0; i < pointList.size(); i++) {
@@ -247,12 +288,6 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		pathOverlays.add(pathOverlay);
 		mapView.getOverlayManager().add(pathOverlay);
 		mapView.invalidate();
-	}
-
-	private void onPathClicked(RoutingService.Path path) {
-		if (routingService != null) {
-			routingService.setPathActive(path);
-		}
 	}
 
 	private class RoutingServiceConnection implements ServiceConnection {
@@ -298,62 +333,4 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			}
 		}
 	}
-
-	private class ClickablePathOverlay extends PathOverlay {
-		public static final float MAX_DIST = 20;
-
-		private List<Point> points = new ArrayList<Point>();
-		private Point tmpPoint = new Point();
-		private GeoPoint tmpGeoPoint = new GeoPoint(0, 0);
-
-		private boolean isPrecomputed;
-		private RoutingService.Path path;
-
-		public ClickablePathOverlay(int color, float width, ResourceProxy resourceProxy, RoutingService.Path path) {
-			super(color, width, resourceProxy);
-			this.path = path;
-		}
-
-		public void addPoint(int latE6, int lonE6) {
-			super.addPoint(latE6, lonE6);
-			points.add(new Point(latE6, lonE6));
-		}
-
-		@Override
-		public boolean onSingleTapConfirmed(MotionEvent e, MapView mapView) {
-			Projection proj = mapView.getProjection();
-
-			if (!isPrecomputed) {
-				for (Point point : points) {
-					proj.toProjectedPixels(point.x, point.y, point);
-				}
-				isPrecomputed = true;
-			}
-
-			float nearest = MAX_DIST * MAX_DIST;
-			boolean found = false;
-
-			for (Point point : points) {
-				proj.toPixelsFromProjected(point, tmpPoint);
-
-				float dx = tmpPoint.x - e.getX();
-				float dy = tmpPoint.y - e.getY();
-
-				float dist = dx * dx + dy * dy;
-				if (dist < nearest) {
-					nearest = dist;
-					found = true;
-				}
-			}
-
-			if (found) {
-				onPathClicked(path);
-				return true;
-			}
-
-			return false;
-		}
-
-	}
-
 }

@@ -170,7 +170,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			activePath = path;
 			currentRoutes = Collections.emptyList();
 		}
-
 		notifyRoutingUpdated(path);
 	}
 
@@ -215,7 +214,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private void recalculateActivePath(final Location location) {
 		final Path path;
 		synchronized (mutex) {
-			if (activePath == null) {
+			if (activePath == null || targetPoint == null) {
 				return;
 			} else {
 				path = activePath;
@@ -232,7 +231,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 				Path newPath = routing.route(location.getLatitude(), location.getLongitude(),
 						targetPoint.getLatitude(), targetPoint.getLongitude(),
-						path.vehicle, path.weighting);
+						path.getVehicle(), path.getWeighting());
 
 				synchronized (mutex) {
 					activePath = newPath;
