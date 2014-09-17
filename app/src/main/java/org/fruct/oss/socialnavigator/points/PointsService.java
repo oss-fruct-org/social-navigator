@@ -286,6 +286,11 @@ public class PointsService extends Service {
 		refreshProviders();
 	}
 
+	public void addPoint(Point point) {
+		database.insertPoint(point);
+		notifyDataUpdated();
+	}
+
 	public class Binder extends android.os.Binder {
 		public PointsService getService() {
 			return PointsService.this;

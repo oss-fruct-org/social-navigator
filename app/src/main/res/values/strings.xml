@@ -22,6 +22,9 @@
     <string name="str_path_length">Distance: </string>
     <string name="action_place_here">Place here</string>
     <string name="action_close_route">Close route</string>
+    <string name="str_hint_title">Title</string>
+    <string name="str_hint_description">Description</string>
+    <string name="str_hint_url">URL</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d meter</item>

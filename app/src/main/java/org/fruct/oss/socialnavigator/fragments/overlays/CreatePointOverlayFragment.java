@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.widget.PopupMenu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.dialogs.CreatePointDialog;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.osmdroid.api.IGeoPoint;
@@ -27,7 +29,7 @@ import org.osmdroid.views.overlay.Overlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener {
+public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, CreatePointDialog.Listener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
 
 	private EventOverlay overlay;
@@ -41,6 +43,11 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	@Override
 	public void onCreate(Bundle in) {
 		super.onCreate(in);
+
+		CreatePointDialog createPointDialog = (CreatePointDialog) getFragmentManager().findFragmentByTag("create-point-dialog");
+		if (createPointDialog != null) {
+			createPointDialog.setListener(this);
+		}
 	}
 
 	@Override
@@ -105,6 +112,12 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		getActivity().startService(intent);
 	}
 
+	private void createPoint() {
+		CreatePointDialog dialog = CreatePointDialog.newInstance(selectedPoint);
+		dialog.setListener(this);
+		dialog.show(getFragmentManager(), "create-point-dialog");
+	}
+
 	@Override
 	public boolean onMenuItemClick(MenuItem menuItem) {
 		switch (menuItem.getItemId()) {
@@ -113,7 +126,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 			break;
 
 		case R.id.action_create:
-			Toast.makeText(getActivity(), R.string.str_not_implemented, Toast.LENGTH_SHORT).show();
+			createPoint();
 			break;
 
 		case R.id.action_place_here:
@@ -125,6 +138,13 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		}
 
 		return true;
+	}
+
+	@Override
+	public void pointCreated(org.fruct.oss.socialnavigator.points.Point point) {
+		if (pointsService != null) {
+			pointsService.addPoint(point);
+		}
 	}
 
 	private class EventOverlay extends Overlay {
