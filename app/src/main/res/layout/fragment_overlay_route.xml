@@ -14,11 +14,11 @@
         android:layout_alignParentStart="true">
 
         <ImageButton
-            android:id="@+id/route_button"
+            android:id="@+id/route_button_type"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@null"
-            android:src="@drawable/ic_action_accept"/>
+            android:src="@drawable/ic_action_edit"/>
 
     </FrameLayout>
 

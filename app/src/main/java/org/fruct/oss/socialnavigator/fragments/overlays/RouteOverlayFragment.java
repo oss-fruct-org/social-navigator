@@ -148,10 +148,11 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		view = inflater.inflate(R.layout.fragment_overlay_route, container, false);
 
-		view.setOnClickListener(typeListener);
-
 		ImageButton closeButton = (ImageButton) view.findViewById(R.id.route_button_close);
 		closeButton.setOnClickListener(closeListener);
+
+		ImageButton typeButton = (ImageButton) view.findViewById(R.id.route_button_type);
+		typeButton.setOnClickListener(typeListener);
 
 		return view;
 	}
