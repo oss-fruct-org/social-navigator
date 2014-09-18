@@ -147,7 +147,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	}
 
-	@Override
+	/*@Override
 	public void routingUpdated(RoutingService.Path path) {
 		if (path != null) {
 			GeoPoint p1 = new GeoPoint(path.getPointList().getLatitude(0), path.getPointList().getLongitude(0));
@@ -160,7 +160,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 		} else {
 			deactivateFollowMode();
 		}
-	}
+	}*/
 
 	private class ScrollableOverlay extends MyLocationNewOverlay {
 		public ScrollableOverlay(Context context, IMyLocationProvider myLocationProvider, MapView mapView) {

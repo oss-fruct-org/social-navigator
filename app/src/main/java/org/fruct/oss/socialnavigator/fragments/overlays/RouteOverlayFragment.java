@@ -96,16 +96,6 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		}
 	};
 
-	private View.OnClickListener acceptListener = new View.OnClickListener() {
-		@Override
-		public void onClick(View v) {
-			if (routingService != null && currentPath != null) {
-				routingService.setPathActive(currentPath);
-			}
-		}
-	};
-
-	private RoutingService.Path currentPath;
 	private MenuItem closeMenuItem;
 
 	@Override
@@ -138,7 +128,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.action_close_route) {
 			if (routingService != null) {
-				routingService.setPathActive(null);
+				routingService.newTargetPoint(null);
 			}
 		}
 
@@ -160,13 +150,16 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 		view.setOnClickListener(typeListener);
 
-		ImageButton typeButton = (ImageButton) view.findViewById(R.id.route_button);
-		typeButton.setOnClickListener(acceptListener);
-
 		ImageButton closeButton = (ImageButton) view.findViewById(R.id.route_button_close);
 		closeButton.setOnClickListener(closeListener);
 
 		return view;
+	}
+
+	private void showPathInfo(RoutingService.Path path) {
+		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
+		lengthTextView.setText(Utils.stringDistance(getResources(), path.getResponse().getDistance()));
+		mapView.invalidate();
 	}
 
 	private void pathSelected(int idx) {
@@ -174,12 +167,9 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			pathOverlays.get(i).setAlpha(i == idx ? 255 : 50);
 		}
 
-		currentPath = paths.get(idx);
-		PathOverlay pathOverlay = pathOverlays.get(idx);
-
-		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
-		lengthTextView.setText(Utils.stringDistance(getResources(), currentPath.getResponse().getDistance()));
-		mapView.invalidate();
+		RoutingService.Path currentPath = paths.get(idx);
+		routingService.setPathActive(currentPath);
+		showPathInfo(currentPath);
 	}
 
 	private void showPanel() {
@@ -239,7 +229,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			PointList pointList = path.getPointList();
 
 			PathOverlay pathOverlay = new PathOverlay(0xff1177ff, 8, resourceProxy);
-			pathOverlay.setAlpha(255);
+			pathOverlay.setAlpha(path.isActive() ? 255 : 50);
 
 			for (int i = 0; i < pointList.size(); i++) {
 				pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
@@ -248,6 +238,10 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 			pathOverlays.add(pathOverlay);
 			mapView.getOverlayManager().add(pathOverlay);
+
+			if (path.isActive()) {
+				showPathInfo(path);
+			}
 		}
 
 		mapView.invalidate();
@@ -256,38 +250,17 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 		if (!paths.isEmpty()) {
 			showPanel();
-			pathSelected(0);
 		}
 	}
 
 	@Override
 	public void pathsCleared() {
 		mapView.getOverlayManager().removeAll(pathOverlays);
+		mapView.invalidate();
+
 		pathOverlays.clear();
 		paths = Collections.emptyList();
 		hidePanel();
-	}
-
-	@Override
-	public void routingUpdated(RoutingService.Path path) {
-		pathsCleared();
-
-		if (path == null) {
-			closeMenuItem.setVisible(false);
-			return;
-		}
-
-		closeMenuItem.setVisible(true);
-		PathOverlay pathOverlay = new PathOverlay(0xff1177ff, 8, resourceProxy);
-		PointList pointList = path.getPointList();
-		for (int i = 0; i < pointList.size(); i++) {
-			pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
-					(int) (pointList.getLongitude(i) * 1e6));
-		}
-
-		pathOverlays.add(pathOverlay);
-		mapView.getOverlayManager().add(pathOverlay);
-		mapView.invalidate();
 	}
 
 	private class RoutingServiceConnection implements ServiceConnection {

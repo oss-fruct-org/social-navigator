@@ -25,7 +25,6 @@ import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -63,8 +62,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private Routing routing;
 
 	private GeoPoint targetPoint;
-	private List<Path> currentRoutes;
-	private Path activePath;
+	private List<Path> currentPaths;
 
 	private PointsServiceConnection pointsServiceConnection;
 	private PointsService pointsService;
@@ -160,25 +158,17 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		}
 
 		synchronized (mutex) {
-			currentRoutes = null;
+			currentPaths = null;
 			targetPoint = null;
 		}
 
 		notifyPathsCleared();
 	}
 
-	public void setPathActive(Path path) {
-		synchronized (mutex) {
-			activePath = path;
-			currentRoutes = Collections.emptyList();
-		}
-		notifyRoutingUpdated(path);
-	}
-
 	public void sendLastResult() {
 		synchronized (mutex) {
-			if (currentRoutes != null) {
-				notifyPathsUpdated(currentRoutes);
+			if (currentPaths != null) {
+				notifyPathsUpdated(currentPaths);
 			}
 		}
 	}
@@ -210,61 +200,27 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		intent.putExtra(ARG_LOCATION, location);
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
-		recalculateActivePath(location);
+		recalculatePaths();
 	}
 
-	private void recalculateActivePath(final Location location) {
-		final Path path;
-		synchronized (mutex) {
-			if (activePath == null || targetPoint == null) {
-				return;
-			} else {
-				path = activePath;
-			}
-		}
-
+	private void recalculatePaths() {
 		if (routeFuture != null) {
 			routeFuture.cancel(true);
 		}
 
-		routeFuture = executor.submit(new Runnable() {
-			@Override
-			public void run() {
-				if (!ensureRoutingReady()) {
-					// TODO: notify user that routing haven't been initialized
-					return;
-				}
-
-				Path newPath = routing.route(location.getLatitude(), location.getLongitude(),
-						targetPoint.getLatitude(), targetPoint.getLongitude(),
-						path.getVehicle(), path.getWeighting());
-
-				synchronized (mutex) {
-					if (Thread.currentThread().isInterrupted())
-						return;
-
-					if (targetPoint.distanceTo(new GeoPoint(location)) < END_ROUTE_DISTANCE) {
-						setPathActive(null);
-					} else {
-						activePath = newPath;
-						notifyRoutingUpdated(activePath);
-					}
-				}
-			}
-		});
-	}
-
-	private void newTargetPoint(final GeoPoint targetPoint) {
-		if (routeFuture != null) {
-			routeFuture.cancel(true);
+		if (targetPoint == null) {
+			log.warn("Trying to recalculate paths with null target point");
+			return;
 		}
 
 		final Location currentLocation = locationReceiver.getOldLocation();
 		if (currentLocation == null) {
+			log.warn("No location");
 			return;
 		}
 
-		this.targetPoint = targetPoint;
+		final GeoPoint targetPoint = this.targetPoint;
+
 		routeFuture = executor.submit(new Runnable() {
 			@Override
 			public void run() {
@@ -273,22 +229,48 @@ public class RoutingService extends Service implements PointsService.Listener, L
 					return;
 				}
 
-				List<Path> newRoutes = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
-						targetPoint.getLatitude(), targetPoint.getLongitude());
+				if (currentPaths == null) {
+					List<Path> newRoutes = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
+							targetPoint.getLatitude(), targetPoint.getLongitude());
 
-				if (newRoutes.size() > 0) {
-					newRoutes.get(0).setActive(true);
-				}
+					if (newRoutes.size() > 0) {
+						newRoutes.get(0).setActive(true);
+					}
 
-				synchronized (mutex) {
+					synchronized (mutex) {
+						if (Thread.currentThread().isInterrupted())
+							return;
+
+						currentPaths = newRoutes;
+						notifyPathsUpdated(currentPaths);
+					}
+				} else {
+					for (Path path : currentPaths) {
+						Path newPath = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
+								targetPoint.getLatitude(), targetPoint.getLongitude(),
+								path.vehicle, path.weighting);
+						path.pointList = newPath.getPointList();
+						path.response = newPath.getResponse();
+					}
+
 					if (Thread.currentThread().isInterrupted())
 						return;
 
-					currentRoutes = newRoutes;
-					notifyPathsUpdated(currentRoutes);
+					notifyPathsUpdated(currentPaths);
 				}
 			}
 		});
+	}
+
+	public void newTargetPoint(final GeoPoint targetPoint) {
+		if (targetPoint == null) {
+			clearTargetPoint();
+			return;
+		}
+
+		this.targetPoint = targetPoint;
+
+		recalculatePaths();
 	}
 
 	@Blocking
@@ -380,17 +362,15 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		});
 	}
 
-	private void notifyRoutingUpdated(final Path path) {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				for (Listener listener : listeners) {
-					listener.routingUpdated(path);
-				}
+	public void setPathActive(Path currentPath) {
+		for (Path path : currentPaths) {
+			if (path.equals(currentPath)) {
+				path.setActive(true);
+			} else {
+				path.setActive(false);
 			}
-		});
+		}
 	}
-
 
 	public class Binder extends android.os.Binder {
 		public RoutingService getService() {
@@ -399,8 +379,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	public static class Path {
-		private final GHResponse response;
-		private final PointList pointList;
+		private GHResponse response;
+		private PointList pointList;
+
 		private final String vehicle;
 		private final String weighting;
 		private boolean isActive;
@@ -440,7 +421,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public static interface Listener {
 		void pathsUpdated(List<Path> paths);
 		void pathsCleared();
-		void routingUpdated(Path path);
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {
