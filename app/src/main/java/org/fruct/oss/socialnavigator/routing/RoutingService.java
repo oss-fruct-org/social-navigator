@@ -45,7 +45,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public static final String ARG_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_LOCATION";
 
 	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
-	public static final int END_ROUTE_DISTANCE = 10;
+	public static final int END_ROUTE_DISTANCE = 20;
 
 	private final Binder binder = new Binder();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -219,8 +219,12 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			return;
 		}
 
-		final GeoPoint targetPoint = this.targetPoint;
+		if (new GeoPoint(currentLocation).distanceTo(targetPoint) < END_ROUTE_DISTANCE) {
+			clearTargetPoint();
+			return;
+		}
 
+		final GeoPoint targetPoint = this.targetPoint;
 		routeFuture = executor.submit(new Runnable() {
 			@Override
 			public void run() {
