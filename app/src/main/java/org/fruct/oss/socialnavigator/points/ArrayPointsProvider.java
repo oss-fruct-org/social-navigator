@@ -21,7 +21,7 @@ public class ArrayPointsProvider implements PointsProvider {
 		}
 	}
 
-	public void addPointDesc(String name, String description, String url, String categoryName, double lat, double lon) {
+	public void addPointDesc(String name, String description, String url, String categoryName, double lat, double lon, int diff) {
 		Category cat = null;
 		for (Category exCat : categories) {
 			if (exCat.getDescription().equals(categoryName)) {
@@ -34,7 +34,7 @@ public class ArrayPointsProvider implements PointsProvider {
 			throw new IllegalArgumentException("Category " + categoryName + " don't exist");
 		}
 
-		pointList.add(new Point(name, description, url, lat, lon, cat.getId(), Point.TEST_PROVIDER, name));
+		pointList.add(new Point(name, description, url, lat, lon, cat.getId(), Point.TEST_PROVIDER, name, diff));
 	}
 
 	@Override

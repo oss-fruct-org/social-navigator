@@ -10,14 +10,14 @@ import java.io.Closeable;
 import java.io.IOException;
 
 public class PointsDatabase implements Closeable {
-	public static final int VERSION = 1;
+	public static final int VERSION = 2;
 	private final Context context;
 	private final Helper helper;
 	private final SQLiteDatabase db;
 
 	private static final String[] COLUMNS_ID = { "_id" };
 	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url"};
-	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId", "provider", "uuid"};
+	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId", "provider", "uuid", "difficulty" };
 
 	public PointsDatabase(Context context) {
 		this.context = context;
@@ -45,7 +45,7 @@ public class PointsDatabase implements Closeable {
 	}
 
 	public void insertPoint(Point point) {
-		ContentValues cv = new ContentValues(7);
+		ContentValues cv = new ContentValues(8);
 		cv.put("name", point.getName());
 		cv.put("description", point.getDescription());
 		cv.put("url", point.getUrl());
@@ -53,6 +53,7 @@ public class PointsDatabase implements Closeable {
 		cv.put("lon", point.getLonE6());
 		cv.put("categoryId", point.getCategoryId());
 		cv.put("provider", point.getProvider());
+		cv.put("difficulty", point.getDifficulty());
 
 		if (!isPointExists(point)) {
 			cv.put("uuid", point.getUuid());
@@ -123,6 +124,7 @@ public class PointsDatabase implements Closeable {
 					"categoryId," +
 					"provider TEXT," +
 					"uuid TEXT," +
+					"difficulty INTEGER," +
 					"FOREIGN KEY(categoryId) REFERENCES category(_id));");
 		}
 

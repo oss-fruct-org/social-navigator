@@ -19,12 +19,13 @@ public class Point implements Parcelable{
 	private int categoryId;
 	private String provider;
 	private String uuid;
+	private int difficulty;
 
-	public Point(String name, String description, String url, double lat, double lon, int categoryId, String provider, String uuid) {
-		this(name, description, url, (int) (lat * 1e6), (int) (lon * 1e6), categoryId, provider, uuid);
+	public Point(String name, String description, String url, double lat, double lon, int categoryId, String provider, String uuid, int difficulty) {
+		this(name, description, url, (int) (lat * 1e6), (int) (lon * 1e6), categoryId, provider, uuid, difficulty);
 	}
 
-	public Point(String name, String description, String url, int latE6, int lonE6, int categoryId, String provider, String uuid) {
+	public Point(String name, String description, String url, int latE6, int lonE6, int categoryId, String provider, String uuid, int difficulty) {
 		this.name = name;
 		this.description = description;
 		this.url = url;
@@ -33,6 +34,7 @@ public class Point implements Parcelable{
 		this.categoryId = categoryId;
 		this.provider = provider;
 		this.uuid = uuid;
+		this.difficulty = difficulty;
 	}
 
 	public Point(Cursor cursor) {
@@ -44,6 +46,7 @@ public class Point implements Parcelable{
 		this.categoryId = cursor.getInt(6);
 		this.provider = cursor.getString(7);
 		this.uuid = cursor.getString(8);
+		this.difficulty = cursor.getInt(9);
 	}
 
 	public Point(Parcel source) {
@@ -55,6 +58,7 @@ public class Point implements Parcelable{
 		this.categoryId = source.readInt();
 		this.provider = source.readString();
 		this.uuid = source.readString();
+		this.difficulty = source.readInt();
 	}
 
 	public String getName() {
@@ -87,6 +91,10 @@ public class Point implements Parcelable{
 
 	public String getUuid() {
 		return uuid;
+	}
+
+	public int getDifficulty() {
+		return difficulty;
 	}
 
 	// TODO: can be optimized
@@ -127,6 +135,7 @@ public class Point implements Parcelable{
 		dest.writeInt(categoryId);
 		dest.writeString(provider);
 		dest.writeString(uuid);
+		dest.writeInt(difficulty);
 	}
 
 	public static final Creator<Point> CREATOR = new Creator<Point>() {

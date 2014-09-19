@@ -56,7 +56,7 @@ public class CreatePointDialog extends DialogFragment {
 				String description = String.valueOf(descriptionTextView.getText());
 				String url = String.valueOf(urlTextView.getText());
 
-				Point point = new Point(title, description, url, geoPoint.getLatitudeE6(), geoPoint.getLongitudeE6(), 1, "local", UUID.randomUUID().toString());
+				Point point = new Point(title, description, url, geoPoint.getLatitudeE6(), geoPoint.getLongitudeE6(), 1, "local", UUID.randomUUID().toString(), 5);
 				if (listener != null) {
 					listener.pointCreated(point);
 				}
