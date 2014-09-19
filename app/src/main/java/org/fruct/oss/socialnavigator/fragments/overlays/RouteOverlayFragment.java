@@ -65,7 +65,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
 				@Override
 				public boolean onMenuItemClick(MenuItem menuItem) {
-					int idx = 0;
+					int idx;
 					switch (menuItem.getItemId()) {
 					case R.id.action_safe:
 						idx = 0;
@@ -96,8 +96,6 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		}
 	};
 
-	private MenuItem closeMenuItem;
-
 	@Override
 	public void onMapViewReady(MapView mapView) {
 		this.mapView = mapView;
@@ -110,32 +108,6 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		resourceProxy = new DefaultResourceProxyImpl(getActivity());
 	}
 
-	@Override
-	public void onCreate(Bundle in) {
-		super.onCreate(in);
-
-		setHasOptionsMenu(true);
-	}
-
-	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		inflater.inflate(R.menu.map_close_route, menu);
-		closeMenuItem = menu.findItem(R.id.action_close_route);
-		closeMenuItem.setVisible(false);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getItemId() == R.id.action_close_route) {
-			if (routingService != null) {
-				routingService.newTargetPoint(null);
-			}
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
 	public void onDestroy() {
 		getActivity().unbindService(routingServiceConnection);
 		getActivity().unbindService(pointsServiceConnection);

@@ -80,8 +80,8 @@ public class Routing {
 	public List<RoutingService.Path> route(final double fromLat, final double fromLon, final double toLat, final double toLon) {
 		return new ArrayList<RoutingService.Path>(3) {
 			{
-				add(route(fromLat, fromLon, toLat, toLon, "CAR", "blocking"));
 				add(route(fromLat, fromLon, toLat, toLon, "FOOT", "blocking"));
+				add(route(fromLat, fromLon, toLat, toLon, "FOOT", "half-blocking"));
 				add(route(fromLat, fromLon, toLat, toLon, "FOOT", "fastest"));
 			}
 		};
