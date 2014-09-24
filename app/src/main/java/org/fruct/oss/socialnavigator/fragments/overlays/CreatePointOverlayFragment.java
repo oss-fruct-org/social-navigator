@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -125,6 +127,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		*/
 
 		((ActionBarActivity) getActivity()).startSupportActionMode(actionModeCallback = new CreatePointActionMode());
+		mapView.getOverlayManager().add(new PlaceOverlay(getActivity(), selectedPoint));
 	}
 
 	@Override
@@ -192,13 +195,66 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	}
 
 	private class PlaceOverlay extends Overlay {
-		public PlaceOverlay(Context ctx) {
+		private final int ITEM_SIZE = 64;
+		private final GeoPoint geoPoint;
+		private final Drawable drawable;
+
+		private final Point point = new Point();
+		private final GeoPoint rGeoPoint = new GeoPoint(0, 0);
+
+		private boolean isDragging;
+		private int hookX;
+		private int hookY;
+
+		private int dragStartX;
+		private int dragStartY;
+
+		public PlaceOverlay(Context ctx, GeoPoint geoPoint) {
 			super(ctx);
+
+			this.geoPoint = geoPoint;
+			this.drawable = ctx.getResources().getDrawable(R.drawable.blank);
 		}
 
 		@Override
 		protected void draw(Canvas c, MapView mapView, boolean shadow) {
+			Projection proj = mapView.getProjection();
+			proj.toPixels(geoPoint, point);
 
+			drawable.setBounds(point.x - ITEM_SIZE, point.y - ITEM_SIZE, point.x + ITEM_SIZE, point.y + ITEM_SIZE);
+			drawable.draw(c);
+		}
+
+		@Override
+		public boolean onTouchEvent(MotionEvent e, MapView mapView) {
+			if (e.getAction() == MotionEvent.ACTION_DOWN) {
+				Projection proj = mapView.getProjection();
+				Rect screenRect = proj.getIntrinsicScreenRect();
+
+				dragStartX = (int) e.getX();
+				dragStartY = (int) e.getY();
+
+				final int absX = screenRect.left + dragStartX;
+				final int absY = screenRect.top + dragStartY;
+
+				proj.toPixels(geoPoint, point);
+
+				hookX = point.x - absX;
+				hookY = point.y - absY;
+
+				isDragging = true;
+				return true;
+			} else if (isDragging && e.getAction() == MotionEvent.ACTION_MOVE) {
+				Projection proj = mapView.getProjection();
+				proj.fromPixels((int) e.getX() + hookX, (int) e.getY() + hookY, geoPoint);
+				mapView.invalidate();
+				return true;
+			} else if (isDragging && e.getAction() == MotionEvent.ACTION_UP) {
+				isDragging = false;
+				return true;
+			}
+
+			return super.onTouchEvent(e, mapView);
 		}
 	}
 
