@@ -94,6 +94,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 		bindService(new Intent(this, PointsService.class),
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
+		log.info("created");
 	}
 
 	@Override
@@ -127,14 +128,36 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		locationReceiver.stop();
 		locationReceiver.setListener(null);
 
+		log.info("destroyed");
 		super.onDestroy();
 	}
+
+	@Override
+	public boolean onUnbind(Intent intent) {
+		handler.postDelayed(stopRunnable, 10000);
+		return true;
+	}
+
+	@Override
+	public void onRebind(Intent intent) {
+		super.onRebind(intent);
+		handler.removeCallbacks(stopRunnable);
+	}
+
+	private Runnable stopRunnable = new Runnable() {
+		@Override
+		public void run() {
+			stopSelf();
+		}
+	};
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (intent == null || intent.getAction() == null) {
 			return RoutingService.START_NOT_STICKY;
 		}
+
+		handler.removeCallbacks(stopRunnable);
 
 		String action = intent.getAction();
 		if (action.equals(ACTION_ROUTE)) {

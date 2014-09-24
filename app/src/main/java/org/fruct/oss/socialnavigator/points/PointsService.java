@@ -66,6 +66,7 @@ public class PointsService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		handler.removeCallbacks(stopRunnable);
 		return START_NOT_STICKY;
 	}
 
@@ -79,6 +80,25 @@ public class PointsService extends Service {
 		log.info("destroyed");
 		super.onDestroy();
 	}
+
+	@Override
+	public boolean onUnbind(Intent intent) {
+		handler.postDelayed(stopRunnable, 10000);
+		return true;
+	}
+
+	@Override
+	public void onRebind(Intent intent) {
+		super.onRebind(intent);
+		handler.removeCallbacks(stopRunnable);
+	}
+
+	private Runnable stopRunnable = new Runnable() {
+		@Override
+		public void run() {
+			stopSelf();
+		}
+	};
 
 	public void refreshProviders() {
 		if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
@@ -277,9 +297,9 @@ public class PointsService extends Service {
 
 	private void setupTestProviders() {
 		ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
-		provider.setCategories("Category 1", "Category 2", "Category 3");
-		provider.addPointDesc("Point 1", "Point 1 description", "http://example.com", "Category 1", 61.78751, 34.35507, 2);
-		provider.addPointDesc("Point 2", "Point 2 description", "http://example.com", "Category 1", 61.7879, 34.356045, 2);
+		provider.setCategories("Pit", "Category 2", "Category 3");
+		provider.addPointDesc("Point 1", "Point 1 description", "http://example.com", "Pit", 61.78751, 34.35507, 2);
+		provider.addPointDesc("Point 2", "Point 2 description", "http://example.com", "Pit", 61.7879, 34.356045, 2);
 		//provider.addPointDesc("Point 3", "Point 3 description", "http://example.com", "Category 1", 61.79, 34.352);
 		addPointsProvider(provider);
 
