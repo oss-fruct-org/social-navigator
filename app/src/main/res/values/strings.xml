@@ -16,9 +16,11 @@
     <string name="action_route">Route</string>
     <string name="action_create">Create point</string>
     <string name="str_not_implemented">Not implemented yet</string>
+
     <string name="action_route_safe">Safe</string>
     <string name="action_route_half_safe">Medium</string>
     <string name="action_route_unsafe">Unsafe</string>
+
     <string name="str_path_length">Distance: </string>
     <string name="action_place_here">Place here</string>
     <string name="action_close_route">Close route</string>

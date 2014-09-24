@@ -143,6 +143,10 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private void showPathInfo(RoutingService.Path path) {
 		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
 		lengthTextView.setText(Utils.stringDistance(getResources(), path.getResponse().getDistance()));
+
+		TextView titleTextView = (TextView) view.findViewById(R.id.title_text);
+		titleTextView.setText(path.getRoutingType().getStringId());
+
 		mapView.invalidate();
 	}
 
