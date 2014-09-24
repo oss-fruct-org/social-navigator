@@ -123,23 +123,4 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 			onPointsServiceDisconnected();
 		}
 	}
-
-
-	private class EventOverlay extends Overlay {
-		public EventOverlay(Context ctx) {
-			super(ctx);
-		}
-
-		@Override
-		protected void draw(Canvas c, MapView osmv, boolean shadow) {
-		}
-
-		@Override
-		public boolean onLongPress(MotionEvent e, MapView mapView) {
-			Projection proj = mapView.getProjection();
-			IGeoPoint point = proj.fromPixels((int) e.getX(), (int) e.getY());
-
-			return super.onLongPress(e, mapView);
-		}
-	}
 }

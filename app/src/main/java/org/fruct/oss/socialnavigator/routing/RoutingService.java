@@ -191,7 +191,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public void sendLastResult() {
 		synchronized (mutex) {
 			if (currentPaths != null) {
-				notifyPathsUpdated(currentPaths);
+				notifyPathsUpdated(targetPoint, currentPaths);
 			}
 		}
 	}
@@ -275,7 +275,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 							return;
 
 						currentPaths = newRoutes;
-						notifyPathsUpdated(currentPaths);
+						notifyPathsUpdated(targetPoint, currentPaths);
 					}
 				} else {
 					for (Path path : currentPaths) {
@@ -289,7 +289,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 					if (Thread.currentThread().isInterrupted())
 						return;
 
-					notifyPathsUpdated(currentPaths);
+					notifyPathsUpdated(targetPoint, currentPaths);
 				}
 			}
 		});
@@ -373,12 +373,12 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public void onDataUpdateFailed(Throwable throwable) {
 	}
 
-	private void notifyPathsUpdated(final List<Path> results) {
+	private void notifyPathsUpdated(final GeoPoint targetPoint, final List<Path> results) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
 				for (Listener listener : listeners) {
-					listener.pathsUpdated(results);
+					listener.pathsUpdated(targetPoint, results);
 				}
 			}
 		});
@@ -458,7 +458,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	public static interface Listener {
-		void pathsUpdated(List<Path> paths);
+		void pathsUpdated(GeoPoint targetPoint, List<Path> paths);
 		void pathsCleared();
 	}
 

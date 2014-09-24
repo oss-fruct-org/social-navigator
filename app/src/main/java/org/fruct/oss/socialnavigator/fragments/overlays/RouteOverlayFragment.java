@@ -4,16 +4,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -32,15 +29,13 @@ import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.Projection;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.PathOverlay;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener {
 	private final RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
@@ -52,6 +47,8 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private int servicesBoundCount;
 
 	private final List<PathOverlay> pathOverlays = new ArrayList<PathOverlay>();
+	private ItemizedIconOverlay<TargetPointItem> targetPointOverlay;
+	private GeoPoint targetPoint;
 
 	private EnumMap<RoutingType, RoutingService.Path> paths = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
 	private RoutingType activeRoutingType = RoutingType.SAFE;
@@ -59,6 +56,8 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private MapView mapView;
 	private ResourceProxy resourceProxy;
 	private View view;
+
+	private Drawable targetPointDrawable;
 
 	private View.OnClickListener typeListener = new View.OnClickListener() {
 		@Override
@@ -100,6 +99,13 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			getActivity().startService(intent);
 		}
 	};
+
+	@Override
+	public void onCreate(Bundle in) {
+		super.onCreate(in);
+
+		targetPointDrawable = getResources().getDrawable(R.drawable.star);
+	}
 
 	@Override
 	public void onMapViewReady(MapView mapView) {
@@ -212,6 +218,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private void updateOverlays() {
 		mapView.getOverlayManager().removeAll(pathOverlays);
+		mapView.getOverlayManager().remove(targetPointOverlay);
 		pathOverlays.clear();
 
 		RoutingService.Path currentPath = paths.get(activeRoutingType);
@@ -225,13 +232,19 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		createOverlay(currentPath);
 		showPathInfo(currentPath);
 
+		// Create target point overlay
+		targetPointOverlay = new ItemizedIconOverlay<TargetPointItem>(new ArrayList<TargetPointItem>(),
+				null, new DefaultResourceProxyImpl(getActivity()));
+		targetPointOverlay.addItem(new TargetPointItem(targetPoint, targetPointDrawable));
+		mapView.getOverlayManager().add(targetPointOverlay);
+
 		mapView.invalidate();
 	}
 
 	@Override
-	public void pathsUpdated(List<RoutingService.Path> paths) {
+	public void pathsUpdated(GeoPoint targetPoint, List<RoutingService.Path> paths) {
 		EnumMap<RoutingType, RoutingService.Path> pathsMap = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
-
+		this.targetPoint = targetPoint;
 		for (RoutingService.Path path : paths) {
 			pathsMap.put(path.getRoutingType(), path);
 		}
@@ -248,10 +261,15 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	@Override
 	public void pathsCleared() {
 		mapView.getOverlayManager().removeAll(pathOverlays);
+		mapView.getOverlayManager().remove(targetPointOverlay);
+
 		mapView.invalidate();
 
 		pathOverlays.clear();
 		paths.clear();
+		targetPoint = null;
+		targetPointOverlay = null;
+
 		hidePanel();
 	}
 
@@ -284,6 +302,13 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			if (servicesBoundCount < 2) {
 				onServicesDisconnected();
 			}
+		}
+	}
+
+	public static class TargetPointItem extends OverlayItem {
+		public TargetPointItem(GeoPoint aGeoPoint, Drawable drawable) {
+			super("target-point", "target-point", aGeoPoint);
+			setMarker(drawable);
 		}
 	}
 
