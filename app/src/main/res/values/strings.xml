@@ -27,6 +27,7 @@
     <string name="str_hint_title">Title</string>
     <string name="str_hint_description">Description</string>
     <string name="str_hint_url">URL</string>
+    <string name="str_point_action_mode">Place point</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d meter</item>

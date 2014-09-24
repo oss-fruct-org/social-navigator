@@ -11,7 +11,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.PopupMenu;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -39,6 +43,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 	private PointsConnection pointsServiceConnection;
 	private PointsService pointsService;
+	private CreatePointActionMode actionModeCallback;
 
 	@Override
 	public void onCreate(Bundle in) {
@@ -113,9 +118,13 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	}
 
 	private void createPoint() {
+		/*
 		CreatePointDialog dialog = CreatePointDialog.newInstance(selectedPoint);
 		dialog.setListener(this);
 		dialog.show(getFragmentManager(), "create-point-dialog");
+		*/
+
+		((ActionBarActivity) getActivity()).startSupportActionMode(actionModeCallback = new CreatePointActionMode());
 	}
 
 	@Override
@@ -144,6 +153,52 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	public void pointCreated(org.fruct.oss.socialnavigator.points.Point point) {
 		if (pointsService != null) {
 			pointsService.addPoint(point);
+		}
+	}
+
+	private class CreatePointActionMode implements ActionMode.Callback {
+		private boolean isCancelled = false;
+
+		@Override
+		public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+			MenuInflater inflater = actionMode.getMenuInflater();
+			inflater.inflate(R.menu.action_mode_create_point, menu);
+			actionMode.setTitle(R.string.str_point_action_mode);
+			return true;
+		}
+
+		@Override
+		public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+			return true;
+		}
+
+		@Override
+		public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+			if (menuItem.getItemId() == R.id.action_cancel) {
+				isCancelled = true;
+			}
+			actionMode.finish();
+			return false;
+		}
+
+		@Override
+		public void onDestroyActionMode(ActionMode actionMode) {
+			if (isCancelled) {
+				Toast.makeText(getActivity(), "Cancelled", Toast.LENGTH_LONG).show();
+			} else {
+				Toast.makeText(getActivity(), "Accepted", Toast.LENGTH_LONG).show();
+			}
+		}
+	}
+
+	private class PlaceOverlay extends Overlay {
+		public PlaceOverlay(Context ctx) {
+			super(ctx);
+		}
+
+		@Override
+		protected void draw(Canvas c, MapView mapView, boolean shadow) {
+
 		}
 	}
 
