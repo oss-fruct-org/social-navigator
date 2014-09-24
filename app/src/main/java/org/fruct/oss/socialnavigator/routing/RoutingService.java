@@ -258,7 +258,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 					for (Path path : currentPaths) {
 						Path newPath = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
 								targetPoint.getLatitude(), targetPoint.getLongitude(),
-								path.vehicle, path.weighting);
+								path.getRoutingType());
 						path.pointList = newPath.getPointList();
 						path.response = newPath.getResponse();
 					}
@@ -395,12 +395,14 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		private final String vehicle;
 		private final String weighting;
 		private boolean isActive;
+		private RoutingType routingType;
 
-		Path(GHResponse response, String vehicle, String weighting) {
+		public Path(GHResponse response, RoutingType routingType) {
 			this.pointList = response.getPoints();
 			this.response = response;
-			this.vehicle = vehicle;
-			this.weighting = weighting;
+			this.routingType = routingType;
+			this.vehicle = routingType.getVehicle();
+			this.weighting = routingType.getWeighting();
 		}
 
 		void setActive(boolean isActive) {
@@ -425,6 +427,10 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 		public boolean isActive() {
 			return isActive;
+		}
+
+		public RoutingType getRoutingType() {
+			return routingType;
 		}
 	}
 

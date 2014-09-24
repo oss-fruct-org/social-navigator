@@ -26,6 +26,7 @@ import com.graphhopper.util.PointList;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
+import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
@@ -36,7 +37,10 @@ import org.osmdroid.views.overlay.PathOverlay;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener {
 	private final RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
@@ -49,7 +53,8 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private final List<PathOverlay> pathOverlays = new ArrayList<PathOverlay>();
 
-	private List<RoutingService.Path> paths = Collections.emptyList();
+	private EnumMap<RoutingType, RoutingService.Path> paths = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
+	private RoutingType activeRoutingType = RoutingType.SAFE;
 
 	private MapView mapView;
 	private ResourceProxy resourceProxy;
@@ -65,22 +70,22 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
 				@Override
 				public boolean onMenuItemClick(MenuItem menuItem) {
-					int idx;
+					RoutingType routingType;
 					switch (menuItem.getItemId()) {
 					case R.id.action_safe:
-						idx = 0;
+						routingType = RoutingType.SAFE;
 						break;
 					case R.id.action_half_save:
-						idx = 1;
+						routingType = RoutingType.NORMAL;
 						break;
 					case R.id.action_unsafe:
-						idx = 2;
+						routingType = RoutingType.FASTEST;
 						break;
 					default:
 						return false;
 					}
 
-					pathSelected(idx);
+					pathSelected(routingType);
 
 					return true;
 				}
@@ -135,14 +140,12 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		mapView.invalidate();
 	}
 
-	private void pathSelected(int idx) {
-		for (int i = 0; i < pathOverlays.size(); i++) {
-			pathOverlays.get(i).setAlpha(i == idx ? 255 : 50);
-		}
+	private void pathSelected(RoutingType routingType) {
+		activeRoutingType = routingType;
 
-		RoutingService.Path currentPath = paths.get(idx);
+		RoutingService.Path currentPath = paths.get(routingType);
 		routingService.setPathActive(currentPath);
-		showPathInfo(currentPath);
+		updateOverlays();
 	}
 
 	private void showPanel() {
@@ -193,37 +196,53 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		routingService.removeListener(this);
 	}
 
-	@Override
-	public void pathsUpdated(List<RoutingService.Path> paths) {
+	private void createOverlay(RoutingService.Path path) {
+		PathOverlay pathOverlay = new PathOverlay(getColorByPathType(path), 8, resourceProxy);
+		pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
+		PointList pointList = path.getPointList();
+
+		for (int i = 0; i < pointList.size(); i++) {
+			pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
+					(int) (pointList.getLongitude(i) * 1e6));
+		}
+
+		pathOverlays.add(pathOverlay);
+		mapView.getOverlayManager().add(pathOverlay);
+	}
+
+	private void updateOverlays() {
 		mapView.getOverlayManager().removeAll(pathOverlays);
 		pathOverlays.clear();
 
-		for (RoutingService.Path path : paths) {
-			PointList pointList = path.getPointList();
+		RoutingService.Path currentPath = paths.get(activeRoutingType);
+		for (RoutingService.Path path : paths.values()) {
+			if (path == currentPath)
+				continue;
 
-			PathOverlay pathOverlay = new PathOverlay(0xff1177ff, 8, resourceProxy);
-			pathOverlay.setAlpha(path.isActive() ? 255 : 50);
-
-			for (int i = 0; i < pointList.size(); i++) {
-				pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
-						(int) (pointList.getLongitude(i) * 1e6));
-			}
-
-			pathOverlays.add(pathOverlay);
-			mapView.getOverlayManager().add(pathOverlay);
-
-			if (path.isActive()) {
-				showPathInfo(path);
-			}
+			createOverlay(path);
 		}
 
-		mapView.invalidate();
+		createOverlay(currentPath);
+		showPathInfo(currentPath);
 
-		this.paths = paths;
+		mapView.invalidate();
+	}
+
+	@Override
+	public void pathsUpdated(List<RoutingService.Path> paths) {
+		EnumMap<RoutingType, RoutingService.Path> pathsMap = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
+
+		for (RoutingService.Path path : paths) {
+			pathsMap.put(path.getRoutingType(), path);
+		}
+
+		this.paths = pathsMap;
 
 		if (!paths.isEmpty()) {
 			showPanel();
 		}
+
+		updateOverlays();
 	}
 
 	@Override
@@ -232,8 +251,18 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		mapView.invalidate();
 
 		pathOverlays.clear();
-		paths = Collections.emptyList();
+		paths.clear();
 		hidePanel();
+	}
+
+	private int getColorByPathType(RoutingService.Path path) {
+		if (path.getWeighting().equalsIgnoreCase("fastest")) {
+			return getResources().getColor(R.color.color_path_danger);
+		} else if (path.getWeighting().equals("half-blocking")) {
+			return getResources().getColor(R.color.color_path_half_safe);
+		} else {
+			return getResources().getColor(R.color.color_path_safe);
+		}
 	}
 
 	private class RoutingServiceConnection implements ServiceConnection {

@@ -6,4 +6,8 @@
     <color name="color_base_4">#ff7f00ff</color>
 
     <color name="color_blue">#ff0099cc</color>
+
+    <color name="color_path_safe">#ff0099cc</color>
+    <color name="color_path_half_safe">#ffffff11</color>
+    <color name="color_path_danger">#ffee1100</color>
 </resources>

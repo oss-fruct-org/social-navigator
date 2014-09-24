@@ -80,19 +80,19 @@ public class Routing {
 	public List<RoutingService.Path> route(final double fromLat, final double fromLon, final double toLat, final double toLon) {
 		return new ArrayList<RoutingService.Path>(3) {
 			{
-				add(route(fromLat, fromLon, toLat, toLon, "PFOOT", "blocking"));
-				add(route(fromLat, fromLon, toLat, toLon, "PFOOT", "half-blocking"));
-				add(route(fromLat, fromLon, toLat, toLon, "FOOT", "fastest"));
+				add(route(fromLat, fromLon, toLat, toLon, RoutingType.SAFE));
+				add(route(fromLat, fromLon, toLat, toLon, RoutingType.NORMAL));
+				add(route(fromLat, fromLon, toLat, toLon, RoutingType.FASTEST));
 			}
 		};
 	}
 
-	public RoutingService.Path route(double fromLat, double fromLon, double toLat, double toLon, String vehicle, String weighting) {
+	public RoutingService.Path route(double fromLat, double fromLon, double toLat, double toLon, RoutingType routingType) {
 		GHRequest request = new GHRequest(fromLat, fromLon, toLat, toLon);
-		request.setVehicle(vehicle);
-		request.setWeighting(weighting);
+		request.setVehicle(routingType.getVehicle());
+		request.setWeighting(routingType.getWeighting());
 		GHResponse response = gh.route(request);
-		return new RoutingService.Path(response, vehicle, weighting);
+		return new RoutingService.Path(response, routingType);
 	}
 
 	public void setObstacles(List<Point> points) {
