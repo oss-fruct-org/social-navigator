@@ -2,6 +2,7 @@ package org.fruct.oss.socialnavigator.routing;
 
 import com.graphhopper.routing.util.FastestWeighting;
 import com.graphhopper.routing.util.FlagEncoder;
+import com.graphhopper.routing.util.FootPriorityWeighting;
 import com.graphhopper.routing.util.Weighting;
 import com.graphhopper.util.EdgeIteratorState;
 
@@ -12,7 +13,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
-public class BlockingWeighting extends FastestWeighting {
+public class BlockingWeighting extends FootPriorityWeighting {
 	private final boolean half;
 	private final TIntIntMap blockedEdgesMap;
 

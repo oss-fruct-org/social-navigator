@@ -83,7 +83,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			@Override
 			public Routing call() throws Exception {
 				Routing routing = new Routing();
-				routing.loadFromAsset(RoutingService.this, "map.osm.pbf.ghz", 0);
+				routing.loadFromAsset(RoutingService.this, "map.osm.pbf.ghz", 1);
 				return routing;
 			}
 		});
@@ -234,8 +234,14 @@ public class RoutingService extends Service implements PointsService.Listener, L
 				}
 
 				if (currentPaths == null) {
-					List<Path> newRoutes = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
-							targetPoint.getLatitude(), targetPoint.getLongitude());
+					List<Path> newRoutes = null;
+					try {
+						newRoutes = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
+								targetPoint.getLatitude(), targetPoint.getLongitude());
+					} catch (Exception ex) {
+						log.error("Can't find path", ex);
+						return;
+					}
 
 					if (newRoutes.size() > 0) {
 						newRoutes.get(0).setActive(true);
