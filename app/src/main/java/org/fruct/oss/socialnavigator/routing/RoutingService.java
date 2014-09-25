@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator.routing;
 
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -14,6 +15,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Toast;
 
 import com.graphhopper.GHResponse;
 import com.graphhopper.util.PointList;
@@ -40,6 +42,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	public static final String ACTION_ROUTE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_ROUTE";
 	public static final String ACTION_PLACE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_PLACE";
+	public static final String ACTION_GEO_FENCE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_GEOFENCE";
 
 	public static final String ARG_POINT = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_POINT";
 	public static final String ARG_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_LOCATION";
@@ -170,6 +173,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		} else if (action.equals(ACTION_PLACE)) {
 			GeoPoint targetPoint = intent.getParcelableExtra(ARG_POINT);
 			setCurrentLocation(targetPoint);
+		} else if (action.equals(ACTION_GEO_FENCE)) {
+			log.debug("Geofence");
+			Toast.makeText(this, "Geofence", Toast.LENGTH_SHORT).show();
 		}
 
 		return RoutingService.START_NOT_STICKY;
@@ -338,8 +344,17 @@ public class RoutingService extends Service implements PointsService.Listener, L
 					return;
 				}
 
+				// Set obstacles
 				List<Point> obstaclesPoints = pointsService.queryList(pointsService.requestPoints(null));
 				routing.setObstacles(obstaclesPoints);
+
+				// Set geofences
+				Intent intent = new Intent(ACTION_GEO_FENCE, null, RoutingService.this, RoutingService.class);
+				int idx = 0;
+				for (Point point : obstaclesPoints) {
+					PendingIntent pendingIntent = PendingIntent.getService(RoutingService.this, idx++, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+					locationManager.addProximityAlert(point.getLat(), point.getLon(), 30, 30000, pendingIntent);
+				}
 			}
 		});
 	}

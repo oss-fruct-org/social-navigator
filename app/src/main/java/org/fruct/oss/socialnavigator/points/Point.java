@@ -81,6 +81,15 @@ public class Point implements Parcelable{
 		return lonE6;
 	}
 
+	public double getLat() {
+		return latE6 / 1e6;
+	}
+
+	public double getLon() {
+		return lonE6 / 1e6;
+	}
+
+
 	public int getCategoryId() {
 		return categoryId;
 	}

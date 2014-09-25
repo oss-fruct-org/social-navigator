@@ -54,7 +54,7 @@ public class LocationReceiver implements LocationListener {
 		try {
 			locationManager.setTestProviderLocation(MOCK_PROVIDER, location);
 			log.trace("Location successfully mocked using LocationManager");
-		} catch (SecurityException ex) {
+		} catch (Exception ex) {
 			log.warn("Can't mock location using LocationManager", ex);
 			newLocation(location);
 		}
