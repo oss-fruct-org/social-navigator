@@ -1,20 +1,22 @@
 package org.fruct.oss.socialnavigator.routing;
 
 import android.content.Context;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Looper;
+import android.os.PowerManager;
 
+import org.fruct.oss.socialnavigator.BuildConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LocationReceiver implements LocationListener {
 	private static Logger log = LoggerFactory.getLogger(LocationReceiver.class);
 
-	public interface Listener {
-		void newLocation(Location location);
-	}
+	public static final String MOCK_PROVIDER = "org.fruct.oss.socialnavigator.MockProvider";
 
 	private String vehicle = "CAR";
 	private LocationManager locationManager;
@@ -28,6 +30,20 @@ public class LocationReceiver implements LocationListener {
 
 	public LocationReceiver(Context context) {
 		this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+		if (BuildConfig.DEBUG) {
+			try {
+				locationManager.addTestProvider(MOCK_PROVIDER, false, false, false, false, true, false, false, Criteria.POWER_LOW, Criteria.ACCURACY_FINE);
+			} catch (SecurityException ignore) {
+			} catch (IllegalArgumentException ignore) {
+			}
+
+			/*try {
+				locationManager.setTestProviderEnabled(MOCK_PROVIDER, true);
+			} catch (SecurityException ignore) {
+			} catch (IllegalArgumentException ignore) {
+			}*/
+		}
 	}
 
 	public void setListener(Listener listener) {
@@ -35,34 +51,50 @@ public class LocationReceiver implements LocationListener {
 	}
 
 	public void mockLocation(Location location) {
-		newLocation(location);
+		try {
+			locationManager.setTestProviderLocation(MOCK_PROVIDER, location);
+			log.trace("Location successfully mocked using LocationManager");
+		} catch (SecurityException ex) {
+			log.warn("Can't mock location using LocationManager", ex);
+			newLocation(location);
+		}
+
 	}
 
 	public void start() {
-		setupUpdates();
 		isStarted = true;
+
+		setupUpdates();
 	}
 
 	private void setupUpdates() {
 		try {
 			if (!isDisableRealLocation) {
-				try {
-					locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 3000, 20, this);
-				} catch (IllegalArgumentException ex) {
-				}
+				Criteria criteria = new Criteria();
+				criteria.setAccuracy(Criteria.ACCURACY_FINE);
 
-				try {
-					locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, getMillsFreq(vehicle), getMeterFreq(vehicle), this);
-				} catch (IllegalArgumentException ex) {
+				locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, getMillsFreq(vehicle), getMeterFreq(vehicle), this, Looper.getMainLooper());
+				locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, getMillsFreq(vehicle), getMeterFreq(vehicle), this, Looper.getMainLooper());
+
+				if (BuildConfig.DEBUG) {
+					if (locationManager.isProviderEnabled(MOCK_PROVIDER))
+						locationManager.requestLocationUpdates(MOCK_PROVIDER, 0, 0, this, Looper.getMainLooper());
 				}
 			}
-		} catch (SecurityException ex) {
-			ex.printStackTrace();
+		} catch (Exception ex) {
+			log.error("Can't setup location providers", ex);
 		}
 	}
 
 	public void stop() {
 		locationManager.removeUpdates(this);
+
+		if (BuildConfig.DEBUG) {
+			try {
+				locationManager.removeTestProvider(MOCK_PROVIDER);
+			} catch (SecurityException ignore) {
+			}
+		}
 
 		isStarted = false;
 	}
@@ -213,5 +245,9 @@ public class LocationReceiver implements LocationListener {
 			locationManager.removeUpdates(this);
 			setupUpdates();
 		}
+	}
+
+	public interface Listener {
+		void newLocation(Location location);
 	}
 }

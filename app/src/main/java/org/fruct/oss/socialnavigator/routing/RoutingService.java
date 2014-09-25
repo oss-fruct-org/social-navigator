@@ -204,7 +204,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		if (locationReceiver == null)
 			return;
 
-		Location location = new Location("test-provider");
+		Location location = new Location(LocationReceiver.MOCK_PROVIDER);
 		location.setLatitude(currentLocation.getLatitude());
 		location.setLongitude(currentLocation.getLongitude());
 		location.setTime(System.currentTimeMillis());
