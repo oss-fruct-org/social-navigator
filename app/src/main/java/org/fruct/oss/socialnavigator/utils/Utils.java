@@ -1,7 +1,9 @@
 package org.fruct.oss.socialnavigator.utils;
 
 import android.content.res.Resources;
+import android.util.TypedValue;
 
+import org.fruct.oss.socialnavigator.App;
 import org.fruct.oss.socialnavigator.R;
 
 import java.io.IOException;
@@ -31,5 +33,15 @@ public class Utils {
 		while ((read = input.read(buf)) > 0) {
 			output.write(buf, 0, read);
 		}
+	}
+
+	public static int getDP(int px) {
+		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, px,
+				App.getContext().getResources().getDisplayMetrics());
+	}
+
+	public static float getSP(int px) {
+		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, px,
+				App.getContext().getResources().getDisplayMetrics());
 	}
 }

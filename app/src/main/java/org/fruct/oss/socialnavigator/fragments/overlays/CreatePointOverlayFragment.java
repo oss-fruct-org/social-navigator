@@ -12,7 +12,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.PopupMenu;
@@ -21,12 +20,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.dialogs.CreatePointDialog;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
+import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -38,14 +37,14 @@ import org.slf4j.LoggerFactory;
 public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, CreatePointDialog.Listener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
 
-	private EventOverlay overlay;
+	private EventOverlay eventOverlay;
+	private PlaceOverlay placeOverlay;
 
 	private GeoPoint selectedPoint;
 	private MapView mapView;
 
 	private PointsConnection pointsServiceConnection;
 	private PointsService pointsService;
-	private CreatePointActionMode actionModeCallback;
 
 	@Override
 	public void onCreate(Bundle in) {
@@ -72,8 +71,8 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		this.mapView = mapView;
 
 		Context context = getActivity();
-		overlay = new EventOverlay(context);
-		mapView.getOverlayManager().add(overlay);
+		eventOverlay = new EventOverlay(context);
+		mapView.getOverlayManager().add(eventOverlay);
 
 
 		getActivity().bindService(new Intent(getActivity(), PointsService.class),
@@ -120,14 +119,9 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	}
 
 	private void createPoint() {
-		/*
-		CreatePointDialog dialog = CreatePointDialog.newInstance(selectedPoint);
-		dialog.setListener(this);
-		dialog.show(getFragmentManager(), "create-point-dialog");
-		*/
-
-		((ActionBarActivity) getActivity()).startSupportActionMode(actionModeCallback = new CreatePointActionMode());
-		mapView.getOverlayManager().add(new PlaceOverlay(getActivity(), selectedPoint));
+		((ActionBarActivity) getActivity()).startSupportActionMode(new CreatePointActionMode());
+		mapView.getOverlayManager().add(placeOverlay = new PlaceOverlay(getActivity(), selectedPoint));
+		mapView.invalidate();
 	}
 
 	@Override
@@ -186,21 +180,24 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 		@Override
 		public void onDestroyActionMode(ActionMode actionMode) {
-			if (isCancelled) {
-				Toast.makeText(getActivity(), "Cancelled", Toast.LENGTH_LONG).show();
-			} else {
-				Toast.makeText(getActivity(), "Accepted", Toast.LENGTH_LONG).show();
+			mapView.getOverlayManager().remove(placeOverlay);
+
+			if (!isCancelled) {
+				selectedPoint = placeOverlay.geoPoint;
+				CreatePointDialog dialog = CreatePointDialog.newInstance(selectedPoint);
+				dialog.setListener(CreatePointOverlayFragment.this);
+				dialog.show(getFragmentManager(), "create-point-dialog");
 			}
 		}
 	}
 
 	private class PlaceOverlay extends Overlay {
-		private final int ITEM_SIZE = 64;
+		private final int ITEM_SIZE = Utils.getDP(32);
+
 		private final GeoPoint geoPoint;
 		private final Drawable drawable;
 
 		private final Point point = new Point();
-		private final GeoPoint rGeoPoint = new GeoPoint(0, 0);
 
 		private boolean isDragging;
 		private int hookX;
@@ -221,7 +218,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 			Projection proj = mapView.getProjection();
 			proj.toPixels(geoPoint, point);
 
-			drawable.setBounds(point.x - ITEM_SIZE, point.y - ITEM_SIZE, point.x + ITEM_SIZE, point.y + ITEM_SIZE);
+			drawable.setBounds(point.x - ITEM_SIZE, point.y - 2 * ITEM_SIZE, point.x + ITEM_SIZE, point.y);
 			drawable.draw(c);
 		}
 
@@ -238,6 +235,11 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 				final int absY = screenRect.top + dragStartY;
 
 				proj.toPixels(geoPoint, point);
+
+				if (dragStartX < point.x - ITEM_SIZE || dragStartY < point.y - 2 * ITEM_SIZE
+						|| dragStartX > point.x + ITEM_SIZE || dragStartY > point.y) {
+					return false;
+				}
 
 				hookX = point.x - absX;
 				hookY = point.y - absY;
