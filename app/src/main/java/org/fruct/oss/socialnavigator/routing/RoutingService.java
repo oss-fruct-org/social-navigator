@@ -1,6 +1,5 @@
 package org.fruct.oss.socialnavigator.routing;
 
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -19,6 +18,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
 
 import com.graphhopper.GHResponse;
+import com.graphhopper.util.Instruction;
 import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.annotations.Blocking;
@@ -50,6 +50,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
 	public static final int END_ROUTE_DISTANCE = 20;
+	public static final int PROXIMITY_RADIUS = 20;
 
 	private int GEOFENCE_TOKEN_OBSTACLES;
 	private int GEOFENCE_TOKEN_INFO;
@@ -310,12 +311,18 @@ public class RoutingService extends Service implements PointsService.Listener, L
 								path.getRoutingType());
 						path.pointList = newPath.getPointList();
 						path.response = newPath.getResponse();
+
+						if (path.isActive()) {
+							updateActivePathWayInformation(path);
+						}
 					}
 
 					if (Thread.currentThread().isInterrupted())
 						return;
 
-					notifyPathsUpdated(targetPoint, currentPaths);
+					synchronized (mutex) {
+						notifyPathsUpdated(targetPoint, currentPaths);
+					}
 				}
 			}
 		});
@@ -375,7 +382,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 						Bundle data = new Bundle(1);
 						data.putParcelable("point", point);
 
-						geofencesManager.addGeofence(GEOFENCE_TOKEN_OBSTACLES, point.getLat(), point.getLon(), 20, data);
+						geofencesManager.addGeofence(GEOFENCE_TOKEN_OBSTACLES, point.getLat(), point.getLon(), PROXIMITY_RADIUS, data);
 					}
 				}
 			}
@@ -434,11 +441,35 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	public void setPathActive(Path currentPath) {
-		for (Path path : currentPaths) {
-			if (path.equals(currentPath)) {
-				path.setActive(true);
-			} else {
-				path.setActive(false);
+		synchronized (mutex) {
+			for (Path path : currentPaths) {
+				if (path.equals(currentPath)) {
+					path.setActive(true);
+				} else {
+					path.setActive(false);
+				}
+			}
+		}
+
+		updateActivePathWayInformation(currentPath);
+	}
+
+	public void updateActivePathWayInformation(Path activePath) {
+		synchronized (geofencesManager) {
+			geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
+
+			for (Instruction instruction : activePath.response.getInstructions()) {
+				int sign = instruction.getSign();
+
+				if (sign != Instruction.CONTINUE_ON_STREET && sign != Instruction.FINISH && sign != Instruction.REACHED_VIA) {
+					double lat = instruction.getPoints().getLatitude(0);
+					double lon = instruction.getPoints().getLongitude(0);
+
+					Bundle data = new Bundle();
+					geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO, lat, lon, PROXIMITY_RADIUS, data);
+
+					break;
+				}
 			}
 		}
 	}
@@ -448,7 +479,11 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				Toast.makeText(RoutingService.this, "Geofence " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
+				if (data.containsKey("point")) {
+					Toast.makeText(RoutingService.this, "Geofence " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(RoutingService.this, "Geofence instruction", Toast.LENGTH_SHORT).show();
+				}
 			}
 		});
 	}
