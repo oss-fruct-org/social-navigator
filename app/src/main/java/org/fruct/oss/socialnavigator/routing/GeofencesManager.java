@@ -11,6 +11,8 @@ public interface GeofencesManager {
 	void addGeofence(int token, double lat, double lon, double radius, Bundle data);
 	void removeGeofences(int token);
 
+	void setLocation(Location location);
+
 	public static interface GeofencesListener {
 		void geofenceEntered(Bundle data);
 		void geofenceExited(Bundle data);
