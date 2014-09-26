@@ -9,7 +9,7 @@ public interface GeofencesManager {
 
 	int createToken();
 	void addGeofence(int token, double lat, double lon, double radius, Bundle data);
-	void removeGeofences(int token);
+	boolean removeGeofences(int token);
 
 	void setLocation(Location location);
 

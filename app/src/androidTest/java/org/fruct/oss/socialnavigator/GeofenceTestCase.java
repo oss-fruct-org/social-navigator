@@ -6,6 +6,7 @@ import android.test.AndroidTestCase;
 import static android.test.MoreAsserts.*;
 
 import org.fruct.oss.socialnavigator.routing.GeofencesManager;
+import org.fruct.oss.socialnavigator.routing.SimpleGeofencesManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +107,7 @@ public class GeofenceTestCase extends AndroidTestCase implements GeofencesManage
 	}
 
 	private GeofencesManager createManager() {
-		return null;
+		return new SimpleGeofencesManager();
 	}
 
 	private Bundle createBundle(int value) {
