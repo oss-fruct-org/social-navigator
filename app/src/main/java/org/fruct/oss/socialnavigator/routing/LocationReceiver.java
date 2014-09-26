@@ -30,20 +30,6 @@ public class LocationReceiver implements LocationListener {
 
 	public LocationReceiver(Context context) {
 		this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-
-		if (BuildConfig.DEBUG) {
-			try {
-				locationManager.addTestProvider(MOCK_PROVIDER, false, false, false, false, true, false, false, Criteria.POWER_LOW, Criteria.ACCURACY_FINE);
-			} catch (SecurityException ignore) {
-			} catch (IllegalArgumentException ignore) {
-			}
-
-			/*try {
-				locationManager.setTestProviderEnabled(MOCK_PROVIDER, true);
-			} catch (SecurityException ignore) {
-			} catch (IllegalArgumentException ignore) {
-			}*/
-		}
 	}
 
 	public void setListener(Listener listener) {
@@ -51,14 +37,7 @@ public class LocationReceiver implements LocationListener {
 	}
 
 	public void mockLocation(Location location) {
-		try {
-			locationManager.setTestProviderLocation(MOCK_PROVIDER, location);
-			log.trace("Location successfully mocked using LocationManager");
-		} catch (Exception ex) {
-			log.warn("Can't mock location using LocationManager", ex);
-			newLocation(location);
-		}
-
+		newLocation(location);
 	}
 
 	public void start() {
@@ -75,11 +54,6 @@ public class LocationReceiver implements LocationListener {
 
 				locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, getMillsFreq(vehicle), getMeterFreq(vehicle), this, Looper.getMainLooper());
 				locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, getMillsFreq(vehicle), getMeterFreq(vehicle), this, Looper.getMainLooper());
-
-				if (BuildConfig.DEBUG) {
-					if (locationManager.isProviderEnabled(MOCK_PROVIDER))
-						locationManager.requestLocationUpdates(MOCK_PROVIDER, 0, 0, this, Looper.getMainLooper());
-				}
 			}
 		} catch (Exception ex) {
 			log.error("Can't setup location providers", ex);
@@ -88,13 +62,6 @@ public class LocationReceiver implements LocationListener {
 
 	public void stop() {
 		locationManager.removeUpdates(this);
-
-		if (BuildConfig.DEBUG) {
-			try {
-				locationManager.removeTestProvider(MOCK_PROVIDER);
-			} catch (SecurityException ignore) {
-			}
-		}
 
 		isStarted = false;
 	}

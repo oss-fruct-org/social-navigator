@@ -237,7 +237,19 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		intent.putExtra(ARG_LOCATION, location);
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
+		checkGeofences(location);
 		recalculatePaths();
+	}
+
+	private void checkGeofences(final Location location) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				synchronized (geofencesManager) {
+					geofencesManager.setLocation(location);
+				}
+			}
+		});
 	}
 
 	private void recalculatePaths() {
@@ -432,13 +444,17 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	@Override
-	public void geofenceEntered(Bundle data) {
-		Toast.makeText(this, "Geofence " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
+	public void geofenceEntered(final Bundle data) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(RoutingService.this, "Geofence " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 
 	@Override
 	public void geofenceExited(Bundle data) {
-		Toast.makeText(this, "Geofence exit " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
 	}
 
 	public class Binder extends android.os.Binder {
