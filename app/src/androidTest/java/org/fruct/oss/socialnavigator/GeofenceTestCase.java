@@ -257,6 +257,21 @@ public class GeofenceTestCase extends AndroidTestCase implements GeofencesManage
 		assertNotNull(lastEnter);
 	}
 
+	public void testRemove() {
+		GeofencesManager gm = createManager();
+		gm.addListener(this);
+
+		int t1 = gm.createToken();
+		int t2 = gm.createToken();
+		gm.addGeofence(t1, 10, 10, 100, new Bundle());
+		gm.addGeofence(t2, 20, 20, 100, new Bundle());
+
+		gm.setLocation(createLocation(10, 10));
+		gm.removeGeofences(t1);
+
+		gm.addGeofence(t1, 10, 10, 100, new Bundle());
+	}
+
 	@Override
 	public void geofenceEntered(Bundle data) {
 		lastEnter = data;

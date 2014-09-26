@@ -10,6 +10,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -37,7 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class RoutingService extends Service implements PointsService.Listener, LocationReceiver.Listener {
+public class RoutingService extends Service implements PointsService.Listener, LocationReceiver.Listener, GeofencesManager.GeofencesListener {
 	private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
 
 	public static final String ACTION_ROUTE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_ROUTE";
@@ -49,6 +50,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
 	public static final int END_ROUTE_DISTANCE = 20;
+
+	private int GEOFENCE_TOKEN_OBSTACLES;
+	private int GEOFENCE_TOKEN_INFO;
 
 	private final Binder binder = new Binder();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -71,6 +75,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private PointsService pointsService;
 
 	private LocationReceiver locationReceiver;
+	private GeofencesManager geofencesManager;
 
 	private Handler handler;
 
@@ -94,6 +99,12 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		locationReceiver = new LocationReceiver(this);
 		locationReceiver.setListener(this);
 		locationReceiver.start();
+
+		geofencesManager = new SimpleGeofencesManager();
+		geofencesManager.addListener(this);
+
+		GEOFENCE_TOKEN_OBSTACLES = geofencesManager.createToken();
+		GEOFENCE_TOKEN_INFO = geofencesManager.createToken();
 
 		bindService(new Intent(this, PointsService.class),
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
@@ -173,9 +184,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		} else if (action.equals(ACTION_PLACE)) {
 			GeoPoint targetPoint = intent.getParcelableExtra(ARG_POINT);
 			setCurrentLocation(targetPoint);
-		} else if (action.equals(ACTION_GEO_FENCE)) {
-			log.debug("Geofence");
-			Toast.makeText(this, "Geofence", Toast.LENGTH_SHORT).show();
 		}
 
 		return RoutingService.START_NOT_STICKY;
@@ -349,11 +357,14 @@ public class RoutingService extends Service implements PointsService.Listener, L
 				routing.setObstacles(obstaclesPoints);
 
 				// Set geofences
-				Intent intent = new Intent(ACTION_GEO_FENCE, null, RoutingService.this, RoutingService.class);
-				int idx = 0;
-				for (Point point : obstaclesPoints) {
-					PendingIntent pendingIntent = PendingIntent.getService(RoutingService.this, idx++, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-					locationManager.addProximityAlert(point.getLat(), point.getLon(), 30, 30000, pendingIntent);
+				synchronized (geofencesManager) {
+					geofencesManager.removeGeofences(GEOFENCE_TOKEN_OBSTACLES);
+					for (Point point : obstaclesPoints) {
+						Bundle data = new Bundle(1);
+						data.putParcelable("point", point);
+
+						geofencesManager.addGeofence(GEOFENCE_TOKEN_OBSTACLES, point.getLat(), point.getLon(), 20, data);
+					}
 				}
 			}
 		});
@@ -418,6 +429,16 @@ public class RoutingService extends Service implements PointsService.Listener, L
 				path.setActive(false);
 			}
 		}
+	}
+
+	@Override
+	public void geofenceEntered(Bundle data) {
+		Toast.makeText(this, "Geofence " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void geofenceExited(Bundle data) {
+		Toast.makeText(this, "Geofence exit " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
 	}
 
 	public class Binder extends android.os.Binder {

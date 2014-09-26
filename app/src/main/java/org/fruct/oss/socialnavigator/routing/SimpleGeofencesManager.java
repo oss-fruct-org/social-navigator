@@ -55,7 +55,12 @@ public class SimpleGeofencesManager implements GeofencesManager {
 			return false;
 		}
 
-		geofences.set(token, null);
+		List<Geofence> geofencesList = geofences.get(token);
+		for (Geofence geofence : geofencesList) {
+			geofencesInRange.remove(geofence);
+		}
+		geofencesList.clear();
+
 		return true;
 	}
 
