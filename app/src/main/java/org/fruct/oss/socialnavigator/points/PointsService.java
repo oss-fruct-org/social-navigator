@@ -39,6 +39,8 @@ public class PointsService extends Service {
 	// Tasks
 	private Future<?> refreshProvidersTask;
 
+	private boolean isTestMode;
+
 	public PointsService() {
     }
 
@@ -57,7 +59,9 @@ public class PointsService extends Service {
 		handler.postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				setupTestProviders();
+				if (!isTestMode) {
+					setupTestProviders();
+				}
 			}
 		}, 1000);
 
@@ -66,6 +70,10 @@ public class PointsService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		if (intent != null) {
+			isTestMode = intent.getBooleanExtra("test", false);
+		}
+
 		handler.removeCallbacks(stopRunnable);
 		return START_NOT_STICKY;
 	}
@@ -135,14 +143,6 @@ public class PointsService extends Service {
 		synchronized (providerMap) {
 			providerMap.put(pointsProvider.getProviderName(), pointsProvider);
 		}
-
-		/*executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				refreshProvider(pointsProvider.getProviderName());
-				notifyDataUpdated();
-			}
-		});*/
 	}
 
 	private void notifyDataUpdated() {

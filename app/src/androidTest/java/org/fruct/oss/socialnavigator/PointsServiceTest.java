@@ -3,6 +3,7 @@ package org.fruct.oss.socialnavigator;
 import android.content.Intent;
 import android.database.Cursor;
 import android.test.MoreAsserts;
+import android.test.RenamingDelegatingContext;
 import android.test.ServiceTestCase;
 
 import org.fruct.oss.socialnavigator.points.ArrayPointsProvider;
@@ -19,12 +20,12 @@ public class PointsServiceTest extends ServiceTestCase<PointsService> {
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
+		getContext().deleteDatabase("points-db");
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
 		super.tearDown();
-		getContext().deleteDatabase("points-db");
 
 		if (cursor != null) {
 			assertTrue(cursor.isClosed());
@@ -57,6 +58,7 @@ public class PointsServiceTest extends ServiceTestCase<PointsService> {
 		ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
 		provider.setCategories("aaa", "bbb", "ccc");
 		service.addPointsProvider(provider);
+		service.refreshProviders();
 		service.awaitBackgroundTasks();
 
 		List<Category> categories = service.queryList(service.requestCategories());
