@@ -65,7 +65,7 @@ public class PathPointList {
 				p2.getLatitude(), p2.getLongitude(), tmpInt, tmpDouble);
 
 		// Location pass second point of current segment
-		if (tmpInt[0] == 2) {
+		if (tmpInt[0] == 2 || p2.distanceTo(currentLocation) < DISTANCE_NEAR) {
 			p1 = null;
 			setLocation(location);
 		}
