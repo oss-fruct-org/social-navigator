@@ -80,4 +80,19 @@ public class PointListTest extends AndroidTestCase {
 		assertFalse(pointList.isDeviated());
 	}
 
+	public void testPathDeviation() {
+		PathPointList pointList = createTestPath1();
+
+		pointList.setLocation(createLocation(61.787354, 34.354231));
+		assertFalse(pointList.isDeviated());
+
+		pointList.setLocation(createLocation(61.788486, 34.358044));
+		assertFalse(pointList.isDeviated());
+
+		pointList.setLocation(createLocation(61.789724,34.356134));
+		assertFalse(pointList.isDeviated());
+
+		pointList.setLocation(createLocation(61.719724,34.356134));
+		assertTrue(pointList.isDeviated());
+	}
 }
