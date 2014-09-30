@@ -23,6 +23,8 @@ import com.graphhopper.util.Instruction;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.utils.Turn;
+import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -295,6 +297,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 					if (newRoutes.size() > 0) {
 						newRoutes.get(0).setActive(true);
+						updateActivePathWayInformation(newRoutes.get(0));
 					}
 
 					synchronized (mutex) {
@@ -315,7 +318,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 						path.response = newPath.getResponse();
 
 						if (path.isActive()) {
-							//updateActivePathWayInformation(path);
+							updateActivePathWayInformation(path);
 						}
 					}
 
@@ -472,28 +475,18 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			}
 		}
 
-		//updateActivePathWayInformation(currentPath);
+		updateActivePathWayInformation(currentPath);
 	}
 
-	/*public void updateActivePathWayInformation(Path activePath) {
+	public void updateActivePathWayInformation(Path activePath) {
 		synchronized (geofencesManager) {
 			geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
 
-			for (Instruction instruction : activePath.response.getInstructions()) {
-				int sign = instruction.getSign();
-
-				if (sign != Instruction.CONTINUE_ON_STREET && sign != Instruction.FINISH && sign != Instruction.REACHED_VIA) {
-					double lat = instruction.getPoints().getLatitude(0);
-					double lon = instruction.getPoints().getLongitude(0);
-
-					Bundle data = new Bundle();
-					geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO, lat, lon, PROXIMITY_RADIUS, data);
-
-					break;
-				}
+			for (Turn turn : Utils.findTurns(Utils.toList(activePath.getResponse().getPoints()))) {
+				geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO, turn.getGeoPoint().getLatitude(), turn.getGeoPoint().getLongitude(), PROXIMITY_RADIUS, new Bundle());
 			}
 		}
-	}*/
+	}
 
 	@Override
 	public void geofenceEntered(final Bundle data) {
@@ -503,7 +496,8 @@ public class RoutingService extends Service implements PointsService.Listener, L
 				if (data.containsKey("point")) {
 					Toast.makeText(RoutingService.this, "Geofence " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
 				} else {
-					Toast.makeText(RoutingService.this, "Geofence instruction", Toast.LENGTH_SHORT).show();
+					Toast.makeText(RoutingService.this, "Geofence instruction " + data.getString("name") + " " + data.getInt("type"),
+							Toast.LENGTH_SHORT).show();
 				}
 			}
 		});

@@ -4,13 +4,19 @@ import android.content.res.Resources;
 import android.util.TypedValue;
 
 import com.graphhopper.util.DistanceCalcEarth;
+import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.App;
 import org.fruct.oss.socialnavigator.R;
+import org.osmdroid.util.GeoPoint;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.toRadians;
@@ -102,5 +108,46 @@ public class Utils {
 		outCoord[1] = c_lon / shrink_factor;
 
 		return distanceCalc.calcDist(c_lat, c_lon / shrink_factor, r_lat_deg, r_lon_deg);
+	}
+
+	public static List<Turn> findTurns(List<GeoPoint> points) {
+		// Two point line can't has turns
+		if (points.size() < 3)
+			return Collections.emptyList();
+
+		double lastBearing = points.get(0).bearingTo(points.get(1));
+
+		ArrayList<Turn> turns = new ArrayList<Turn>();
+		for (int i = 1; i < points.size() - 1; i++) {
+			double bearing = points.get(i).bearingTo(points.get(i + 1));
+			double diff = Math.abs(lastBearing - bearing);
+			lastBearing = bearing;
+
+			int turnSharpness;
+			if (diff < 11) {
+				continue;
+			} else if (diff < 40) {
+				turnSharpness = 1;
+			} else if (diff < 103) {
+				turnSharpness = 2;
+			} else {
+				turnSharpness = 3;
+			}
+
+			int turnDirection = bearing > 0 ? 1 : -1;
+
+			turns.add(new Turn(points.get(i), turnSharpness, turnDirection));
+		}
+		return turns;
+	}
+
+	public static List<GeoPoint> toList(PointList pointList) {
+		ArrayList<GeoPoint> ret = new ArrayList<GeoPoint>(pointList.size());
+
+		for (int i = 0; i < pointList.size(); i++) {
+			ret.add(new GeoPoint(pointList.getLatitude(i), pointList.getLongitude(i)));
+		}
+
+		return ret;
 	}
 }
