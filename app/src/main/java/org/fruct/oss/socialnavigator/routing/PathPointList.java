@@ -47,15 +47,19 @@ public class PathPointList {
 		return lastDeviation >= DISTANCE_DEVIATE;
 	}
 
+	public boolean isCompleted() {
+		return !isDeviated() && points.size() == 1;
+	}
+
 	public void setLocation(Location location) {
 		currentLocation = new GeoPoint(location);
 
-		if (points.size() < 2) {
-			return;
-		}
-
 		if (p1 == null) {
 			p1 = points.pollFirst();
+
+			if (points.size() < 2) {
+				return;
+			}
 		}
 
 		GeoPoint p2 = points.peekFirst();
@@ -65,7 +69,7 @@ public class PathPointList {
 				p2.getLatitude(), p2.getLongitude(), tmpInt, tmpDouble);
 
 		// Location pass second point of current segment
-		if (tmpInt[0] == 2 || p2.distanceTo(currentLocation) < DISTANCE_NEAR) {
+		if ((tmpInt[0] == 2 || p2.distanceTo(currentLocation) < DISTANCE_NEAR) && points.size() > 1) {
 			p1 = null;
 			setLocation(location);
 		}

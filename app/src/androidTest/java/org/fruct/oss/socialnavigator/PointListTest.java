@@ -46,6 +46,7 @@ public class PointListTest extends AndroidTestCase {
 
 		pointList.setLocation(createLocation(61.790226, 34.357761));
 		assertFalse(pointList.isDeviated());
+		assertTrue(pointList.isCompleted());
 	}
 
 	public void testNormalPathSmallDeviations() {
@@ -62,6 +63,7 @@ public class PointListTest extends AndroidTestCase {
 
 		pointList.setLocation(createLocation(61.790226, 34.357826));
 		assertFalse(pointList.isDeviated());
+		assertTrue(pointList.isCompleted());
 	}
 
 	public void testNormalPathSmallDeviationsAfter() {
@@ -78,6 +80,7 @@ public class PointListTest extends AndroidTestCase {
 
 		pointList.setLocation(createLocation(61.790232,34.357926));
 		assertFalse(pointList.isDeviated());
+		assertTrue(pointList.isCompleted());
 	}
 
 	public void testPathDeviation() {
@@ -93,6 +96,20 @@ public class PointListTest extends AndroidTestCase {
 		assertFalse(pointList.isDeviated());
 
 		pointList.setLocation(createLocation(61.719724,34.356134));
+		assertTrue(pointList.isDeviated());
+		assertFalse(pointList.isCompleted());
+	}
+
+	public void testOnLine() {
+		PathPointList pointList = createTestPath1();
+
+		pointList.setLocation(createLocation(61.787389,34.354460));
+		assertFalse(pointList.isDeviated());
+
+		pointList.setLocation(createLocation(61.788497,34.357872));
+		assertFalse(pointList.isDeviated());
+
+		pointList.setLocation(createLocation(61.788766,34.358698));
 		assertTrue(pointList.isDeviated());
 	}
 }
