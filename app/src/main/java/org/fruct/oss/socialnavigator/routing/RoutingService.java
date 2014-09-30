@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import com.graphhopper.GHResponse;
 import com.graphhopper.util.Instruction;
-import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.points.Point;
@@ -239,7 +238,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
 		checkGeofences(location);
-		recalculatePaths();
+		recalculatePaths(false);
 	}
 
 	private void checkGeofences(final Location location) {
@@ -253,7 +252,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		});
 	}
 
-	private void recalculatePaths() {
+	private void recalculatePaths(final boolean forceRecalc) {
 		if (routeFuture != null) {
 			routeFuture.cancel(true);
 		}
@@ -284,6 +283,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 				}
 
 				if (currentPaths == null) {
+					// No current path set
 					List<Path> newRoutes = null;
 					try {
 						newRoutes = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
@@ -304,7 +304,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 						currentPaths = newRoutes;
 						notifyPathsUpdated(targetPoint, currentPaths);
 					}
-				} else {
+				} else if (forceRecalc) {
+					// Existing path set and new target point
+
 					for (Path path : currentPaths) {
 						Path newPath = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
 								targetPoint.getLatitude(), targetPoint.getLongitude(),
@@ -313,14 +315,33 @@ public class RoutingService extends Service implements PointsService.Listener, L
 						path.response = newPath.getResponse();
 
 						if (path.isActive()) {
-							updateActivePathWayInformation(path);
+							//updateActivePathWayInformation(path);
 						}
 					}
 
-					if (Thread.currentThread().isInterrupted())
-						return;
+					synchronized (mutex) {
+						if (Thread.currentThread().isInterrupted())
+							return;
+
+						notifyPathsUpdated(targetPoint, currentPaths);
+					}
+				} else {
+					// New location with existing path set and same target point
+					for (Path path : currentPaths) {
+						path.pointList.setLocation(currentLocation);
+						if (path.pointList.isDeviated()) {
+							Path newPath = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
+									targetPoint.getLatitude(), targetPoint.getLongitude(),
+									path.getRoutingType());
+							path.pointList = newPath.getPointList();
+							path.response = newPath.getResponse();
+						}
+					}
 
 					synchronized (mutex) {
+						if (Thread.currentThread().isInterrupted())
+							return;
+
 						notifyPathsUpdated(targetPoint, currentPaths);
 					}
 				}
@@ -336,7 +357,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 		this.targetPoint = targetPoint;
 
-		recalculatePaths();
+		recalculatePaths(true);
 	}
 
 	@Blocking
@@ -451,10 +472,10 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			}
 		}
 
-		updateActivePathWayInformation(currentPath);
+		//updateActivePathWayInformation(currentPath);
 	}
 
-	public void updateActivePathWayInformation(Path activePath) {
+	/*public void updateActivePathWayInformation(Path activePath) {
 		synchronized (geofencesManager) {
 			geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
 
@@ -472,7 +493,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 				}
 			}
 		}
-	}
+	}*/
 
 	@Override
 	public void geofenceEntered(final Bundle data) {
@@ -500,7 +521,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	public static class Path {
 		private GHResponse response;
-		private PointList pointList;
+		private PathPointList pointList;
 
 		private final String vehicle;
 		private final String weighting;
@@ -508,7 +529,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		private RoutingType routingType;
 
 		public Path(GHResponse response, RoutingType routingType) {
-			this.pointList = response.getPoints();
+			this.pointList = new PathPointList(response);
 			this.response = response;
 			this.routingType = routingType;
 			this.vehicle = routingType.getVehicle();
@@ -519,7 +540,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			this.isActive = isActive;
 		}
 
-		public PointList getPointList() {
+		public PathPointList getPointList() {
 			return pointList;
 		}
 

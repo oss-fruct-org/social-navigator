@@ -22,6 +22,7 @@ import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.utils.Utils;
@@ -209,11 +210,10 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private void createOverlay(RoutingService.Path path) {
 		PathOverlay pathOverlay = new PathOverlay(getColorByPathType(path), 8, resourceProxy);
 		pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
-		PointList pointList = path.getPointList();
+		PathPointList pointList = path.getPointList();
 
-		for (int i = 0; i < pointList.size(); i++) {
-			pathOverlay.addPoint((int) (pointList.getLatitude(i) * 1e6),
-					(int) (pointList.getLongitude(i) * 1e6));
+		for (GeoPoint geoPoint : pointList) {
+			pathOverlay.addPoint(geoPoint);
 		}
 
 		pathOverlays.add(pathOverlay);
