@@ -464,6 +464,28 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		});
 	}
 
+	private void notifyProximityEvent(final Point point) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (Listener listener : listeners) {
+					listener.proximityEvent(point);
+				}
+			}
+		});
+	}
+
+	private void notifyProximityEvent(final Turn turn) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (Listener listener : listeners) {
+					listener.proximityEvent(turn);
+				}
+			}
+		});
+	}
+
 	public void setPathActive(Path currentPath) {
 		synchronized (mutex) {
 			for (Path path : currentPaths) {
@@ -483,7 +505,11 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
 
 			for (Turn turn : Utils.findTurns(Utils.toList(activePath.getResponse().getPoints()))) {
-				geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO, turn.getGeoPoint().getLatitude(), turn.getGeoPoint().getLongitude(), PROXIMITY_RADIUS, new Bundle());
+				Bundle data = new Bundle(1);
+				data.putParcelable("turn", turn);
+
+				geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO,
+						turn.getGeoPoint().getLatitude(), turn.getGeoPoint().getLongitude(), PROXIMITY_RADIUS, data);
 			}
 		}
 	}
@@ -494,10 +520,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			@Override
 			public void run() {
 				if (data.containsKey("point")) {
-					Toast.makeText(RoutingService.this, "Geofence " + ((Point) data.getParcelable("point")).getName(), Toast.LENGTH_SHORT).show();
-				} else {
-					Toast.makeText(RoutingService.this, "Geofence instruction " + data.getString("name") + " " + data.getInt("type"),
-							Toast.LENGTH_SHORT).show();
+					notifyProximityEvent((Point) data.getParcelable("point"));
+				} else if (data.containsKey("turn")) {
+					notifyProximityEvent((Turn) data.getParcelable("turn"));
 				}
 			}
 		});
@@ -560,6 +585,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	public static interface Listener {
+		void proximityEvent(Point point);
+		void proximityEvent(Turn turn);
+
 		void pathsUpdated(GeoPoint targetPoint, List<Path> paths);
 		void pathsCleared();
 	}

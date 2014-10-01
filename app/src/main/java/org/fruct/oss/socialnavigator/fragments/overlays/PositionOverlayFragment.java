@@ -17,7 +17,9 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
+import org.fruct.oss.socialnavigator.utils.Turn;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
@@ -133,6 +135,16 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	private void onRoutingServiceDisconnected() {
 		routingService = null;
+	}
+
+	@Override
+	public void proximityEvent(Point point) {
+
+	}
+
+	@Override
+	public void proximityEvent(Turn turn) {
+
 	}
 
 	@Override

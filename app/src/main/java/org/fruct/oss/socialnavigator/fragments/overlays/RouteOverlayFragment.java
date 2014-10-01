@@ -1,5 +1,8 @@
 package org.fruct.oss.socialnavigator.fragments.overlays;
 
+import android.app.AlertDialog;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -21,10 +25,12 @@ import android.widget.TextView;
 import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
+import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
@@ -243,6 +249,45 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		mapView.getOverlayManager().add(targetPointOverlay);
 
 		mapView.invalidate();
+	}
+
+	private void showEventNotification(String notification) {
+		/*PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity());
+		builder.setContentTitle("Social navigator")
+				.setContentText(notification)
+				.setSmallIcon(R.drawable.ic_launcher)
+				.setContentIntent(pendingIntent);
+
+		NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+		notificationManager.notify("event", 0, builder.build());*/
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+		builder.setCancelable(false)
+				.setTitle("Notification")
+				.setMessage(notification);
+
+		final AlertDialog alertDialog = builder.create();
+		alertDialog.show();
+
+		view.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				alertDialog.dismiss();
+			}
+		}, 1000);
+	}
+
+	@Override
+	public void proximityEvent(Point point) {
+		showEventNotification("Approaching obstacle " + point.getName());
+
+	}
+
+	@Override
+	public void proximityEvent(Turn turn) {
+		showEventNotification("Turn " + (turn.getTurnDirection() > 0 ? "left " : "right "));
 	}
 
 	@Override
