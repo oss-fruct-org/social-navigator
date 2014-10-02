@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface PointsProvider {
 	String getProviderName();
-	List<Category> loadCategories();
-	List<Point> loadPoints(Category category);
+	List<Category> loadCategories() throws PointsException;
+	List<Point> loadPoints(Category category) throws PointsException;
 }

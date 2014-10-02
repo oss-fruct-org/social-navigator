@@ -31,6 +31,10 @@ public class PointsDatabase implements Closeable {
 	}
 
 	public void insertCategory(Category category) {
+		if (category == null) {
+			throw new IllegalArgumentException("Category can't be null");
+		}
+
 		ContentValues cv = new ContentValues(4);
 		cv.put("name", category.getName());
 		cv.put("description", category.getDescription());
@@ -45,6 +49,10 @@ public class PointsDatabase implements Closeable {
 	}
 
 	public void insertPoint(Point point) {
+		if (point == null) {
+			throw new IllegalArgumentException("Point can't be null");
+		}
+
 		ContentValues cv = new ContentValues(8);
 		cv.put("name", point.getName());
 		cv.put("description", point.getDescription());

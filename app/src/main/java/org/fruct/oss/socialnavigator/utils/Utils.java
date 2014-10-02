@@ -9,10 +9,20 @@ import com.graphhopper.util.PointList;
 import org.fruct.oss.socialnavigator.App;
 import org.fruct.oss.socialnavigator.R;
 import org.osmdroid.util.GeoPoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,6 +32,7 @@ import static java.lang.Math.cos;
 import static java.lang.Math.toRadians;
 
 public class Utils {
+	private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
 	public static String stringDistance(Resources res, double meters) {
 		int kmPart = (int) (meters / 1000);
@@ -149,5 +160,83 @@ public class Utils {
 		}
 
 		return ret;
+	}
+
+	public static void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
+		int depth = 1;
+
+		if (parser.getEventType() != XmlPullParser.START_TAG) {
+			throw new IllegalStateException("Parser must be on start tag");
+		}
+
+		while (depth > 0) {
+			switch (parser.next()) {
+			case XmlPullParser.START_TAG:
+				depth++;
+				break;
+			case XmlPullParser.END_TAG:
+				depth--;
+				break;
+			}
+		}
+	}
+
+	public static String inputStreamToString(InputStream stream) throws IOException {
+		InputStreamReader reader = new InputStreamReader(stream, "UTF-8");
+		return readerToString(reader);
+	}
+
+	public static String readerToString(Reader reader) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		int bufferSize = 4096;
+		char[] buf = new char[bufferSize];
+
+		int readed;
+		while ((readed = reader.read(buf)) > 0) {
+			builder.append(buf, 0, readed);
+		}
+
+		return builder.toString();
+	}
+
+	public static String downloadUrl(String urlString, String postQuery) throws IOException {
+		HttpURLConnection conn = null;
+		InputStream responseStream = null;
+
+		try {
+			URL url = new URL(urlString);
+			conn = (HttpURLConnection) url.openConnection();
+			conn.setReadTimeout(10000);
+			conn.setConnectTimeout(10000);
+			conn.setRequestMethod(postQuery == null ? "GET" : "POST");
+			conn.setDoInput(true);
+			conn.setDoOutput(postQuery != null);
+			conn.setRequestProperty("User-Agent", "RoadSigns/0.2 (http://oss.fruct.org/projects/roadsigns/)");
+			conn.setRequestProperty("Content-Type", "Content-Type: text/xml;charset=utf-8");
+
+			if (postQuery != null) {
+				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream(), "UTF-8"));
+				writer.write(postQuery);
+				writer.flush();
+				writer.close();
+			}
+
+			log.trace("Request url {} data {}", urlString, postQuery);
+			conn.connect();
+
+			int responseCode = conn.getResponseCode();
+			responseStream = conn.getInputStream();
+			String response = Utils.inputStreamToString(responseStream);
+
+			log.trace("Response code {}, response {}", responseCode, response);
+
+			return response;
+		} finally {
+			if (conn != null)
+				conn.disconnect();
+
+			if (responseStream != null)
+				responseStream.close();
+		}
 	}
 }

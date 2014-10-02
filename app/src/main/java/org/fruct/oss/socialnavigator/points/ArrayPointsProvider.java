@@ -48,7 +48,7 @@ public class ArrayPointsProvider implements PointsProvider {
 	}
 
 	@Override
-	public List<Point> loadPoints(Category category) {
+	public List<Point> loadPoints(Category category) throws PointsException {
 		List<Point> catPoints = new ArrayList<Point>();
 		for (Point point : pointList) {
 			if (point.getCategoryId() == category.getId()) {
@@ -62,7 +62,7 @@ public class ArrayPointsProvider implements PointsProvider {
 		}
 
 		if (Math.random() > 0.8)
-			throw new RuntimeException("Test");
+			throw new PointsException("Test");
 
 		return catPoints;
 	}

@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -60,7 +59,7 @@ public class PointsService extends Service {
 			@Override
 			public void run() {
 				if (!isTestMode) {
-					setupTestProviders();
+					setupProviders();
 				}
 			}
 		}, 1000);
@@ -242,34 +241,38 @@ public class PointsService extends Service {
 	}
 
 	@Blocking
-	private void refreshProvider(String providerName) {
+	private void refreshProvider(String providerName) throws PointsException {
 		PointsProvider provider = providerMap.get(providerName);
 		if (provider == null) {
 			throw new IllegalArgumentException("Trying to refresh non-existing provider");
 		}
 
-		List<Category> categories = provider.loadCategories();
+		try {
+			List<Category> categories = provider.loadCategories();
 
-		for (Category category : categories) {
-			log.trace("Category received: {}", category.getName());
-			List<Point> points = provider.loadPoints(category);
-			database.insertCategory(category);
+			for (Category category : categories) {
+				log.trace("Category received: {}", category.getName());
+				List<Point> points = provider.loadPoints(category);
+				database.insertCategory(category);
 
-			for (Point point : points) {
-				log.trace(" Point received: {}", point.getName());
+				for (Point point : points) {
+					log.trace(" Point received: {}", point.getName());
 
-				if (point.getCategoryId() != category.getId()) {
-					log.error(" Point's category doesn't equals category it loaded from: '{}' != '{}'",
-							point.getName(), category.getName());
-					continue;
-				}
+					if (point.getCategoryId() != category.getId()) {
+						log.error(" Point's category doesn't equals category it loaded from: '{}' != '{}'",
+								point.getCategoryId(), category.getId());
+						continue;
+					}
 
-				database.insertPoint(point);
+					database.insertPoint(point);
 
-				if (Thread.currentThread().isInterrupted()) {
-					return;
+					if (Thread.currentThread().isInterrupted()) {
+						return;
+					}
 				}
 			}
+		} catch (PointsException e) {
+			// TODO: report user
 		}
 	}
 
@@ -295,13 +298,16 @@ public class PointsService extends Service {
 		listeners.remove(listener);
 	}
 
-	private void setupTestProviders() {
-		ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
+	private void setupProviders() {
+		/*ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
 		provider.setCategories("Pit", "Category 2", "Category 3");
 		provider.addPointDesc("Point 1", "Point 1 description", "http://example.com", "Pit", 61.78751, 34.35507, 2);
 		provider.addPointDesc("Point 2", "Point 2 description", "http://example.com", "Pit", 61.7879, 34.356045, 2);
 		//provider.addPointDesc("Point 3", "Point 3 description", "http://example.com", "Category 1", 61.79, 34.352);
-		addPointsProvider(provider);
+		addPointsProvider(provider);*/
+
+		GetsProvider getsProvider = new GetsProvider();
+		addPointsProvider(getsProvider);
 
 		refreshProviders();
 	}

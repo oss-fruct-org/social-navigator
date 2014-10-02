@@ -4,7 +4,14 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.fruct.oss.socialnavigator.parsers.GetsResponse;
+import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.util.GeoPoint;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.util.StringTokenizer;
 
 public class Point implements Parcelable{
 	public static final String LOCAL_PROVIDER = "local_provider";
@@ -61,6 +68,10 @@ public class Point implements Parcelable{
 		this.difficulty = source.readInt();
 	}
 
+	private Point() {
+
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -106,9 +117,104 @@ public class Point implements Parcelable{
 		return difficulty;
 	}
 
+	public void setCategoryId(int categoryId) {
+		this.categoryId = categoryId;
+	}
+
 	// TODO: can be optimized
 	public GeoPoint toGeoPoint() {
 		return new GeoPoint(latE6, lonE6);
+	}
+
+	public void setCoordinates(String coordinates) {
+		StringTokenizer tok = new StringTokenizer(coordinates, ",", false);
+
+		double longitude = Double.parseDouble(tok.nextToken());
+		double latitude = Double.parseDouble(tok.nextToken());
+		latE6 = (int) (latitude * 1e6);
+		lonE6 = (int) (longitude * 1e6);
+	}
+
+	public static Point parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+		parser.require(XmlPullParser.START_TAG, null, "Placemark");
+		Point point = new Point();
+
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG)
+				continue;
+
+			String tagName = parser.getName();
+			if (tagName.equals("name")) {
+				point.name = GetsResponse.readText(parser);
+				parser.require(XmlPullParser.END_TAG, null, "name");
+			} else if (tagName.equals("description")) {
+				point.description = GetsResponse.readText(parser);
+				parser.require(XmlPullParser.END_TAG, null, "description");
+			} else if (tagName.equals("Point")) {
+				parser.nextTag();
+				parser.require(XmlPullParser.START_TAG, null, "coordinates");
+
+				point.setCoordinates(GetsResponse.readText(parser));
+
+				parser.nextTag();
+				parser.require(XmlPullParser.END_TAG, null, "Point");
+			} else if (tagName.equals("ExtendedData")) {
+				readExtendedData(parser, point);
+				parser.require(XmlPullParser.END_TAG, null, "ExtendedData");
+			} else {
+				Utils.skip(parser);
+			}
+		}
+
+		if (point.uuid == null) {
+			point.uuid = "kml-point-" + point.name + "-" + point.getLatE6() + "-" + point.getLonE6();
+		}
+
+		return point;
+	}
+
+	private static void readExtendedData(XmlPullParser parser, Point point) throws IOException, XmlPullParserException {
+		parser.require(XmlPullParser.START_TAG, null, "ExtendedData");
+
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG)
+				continue;
+
+			String tagName = parser.getName();
+			if (tagName.equals("Data")) {
+				String key = parser.getAttributeValue(null, "name");
+				if (key == null)
+					throw new XmlPullParserException("Data tag have to have attribute 'name'");
+
+				parser.nextTag();
+				parser.require(XmlPullParser.START_TAG, null, "value");
+				String value = GetsResponse.readText(parser);
+
+				if (key.equals("uuid"))
+					point.uuid = value;
+				else if (key.equals("difficulty")) {
+					try {
+						point.difficulty = Integer.parseInt(value);
+					} catch (NumberFormatException ignored) {
+					}
+				}
+				/*else if (key.equals("time"))
+					point.time = value;
+				else if (key.equals("photo"))
+					point.photoUrl = value;
+				else if (key.equals("audio"))
+					point.audioUrl = value;
+				else if (key.equals("access"))
+					point.setPrivate(value.equals("rw"));
+				else if (key.equals("idx"))
+					point.setIdx(Long.parseLong(value));*/
+
+				parser.nextTag();
+				parser.require(XmlPullParser.END_TAG, null, "Data");
+			} else {
+				Utils.skip(parser);
+			}
+		}
 	}
 
 	@Override
