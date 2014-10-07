@@ -21,6 +21,7 @@
     <string name="str_point_action_mode">Установите точку</string>
     <string name="str_turn_left">Поверните налево через %s</string>
     <string name="str_turn_right">Поверните направо через %s</string>
+    <string name="str_approaching">Приближается %s</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d метр</item>

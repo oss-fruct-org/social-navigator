@@ -282,8 +282,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	@Override
 	public void proximityEvent(Point point) {
-		showEventNotification("Approaching obstacle " + point.getName());
-
+		showEventNotification(getResources().getString(R.string.str_approaching, point.getName()));
 	}
 
 	@Override
