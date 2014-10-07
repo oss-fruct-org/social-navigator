@@ -28,6 +28,8 @@
     <string name="str_hint_description">Description</string>
     <string name="str_hint_url">URL</string>
     <string name="str_point_action_mode">Place point</string>
+    <string name="str_turn_left">Turn left after %s</string>
+    <string name="str_turn_right">Turn right after %s</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d meter</item>

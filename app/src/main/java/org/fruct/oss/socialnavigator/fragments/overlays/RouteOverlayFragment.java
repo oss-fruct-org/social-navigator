@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -287,7 +288,21 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	@Override
 	public void proximityEvent(Turn turn) {
-		showEventNotification("Turn " + (turn.getTurnDirection() > 0 ? "left " : "right "));
+		float[] dist = new float[1];
+
+		int turnStrRes = turn.getTurnDirection() > 0
+				? R.string.str_turn_left
+				: R.string.str_turn_right;
+
+		Location currentLocation = routingService.getLastLocation();
+		Location.distanceBetween(turn.getGeoPoint().getLatitude(), turn.getGeoPoint().getLongitude(),
+				currentLocation.getLatitude(), currentLocation.getLongitude(), dist);
+
+		int intDist = (int) dist[0];
+		String str = getResources().getString(turnStrRes,
+				getResources().getQuantityString(R.plurals.plural_meters, intDist, intDist));
+
+		showEventNotification(str);
 	}
 
 	@Override

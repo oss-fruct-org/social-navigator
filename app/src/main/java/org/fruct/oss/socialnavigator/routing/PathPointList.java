@@ -51,7 +51,7 @@ public class PathPointList implements Iterable<GeoPoint> {
 	}
 
 	public boolean isCompleted() {
-		return !isDeviated() && points.size() == 1;
+		return !isDeviated() && points.size() == 1 && currentLocation.distanceTo(points.getFirst()) < DISTANCE_NEAR;
 	}
 
 	public void setLocation(Location location) {

@@ -243,6 +243,11 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		recalculatePaths(false);
 	}
 
+	public Location getLastLocation() {
+		return locationReceiver.getOldLocation();
+	}
+
+
 	private void checkGeofences(final Location location) {
 		executor.execute(new Runnable() {
 			@Override
@@ -267,11 +272,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		final Location currentLocation = locationReceiver.getOldLocation();
 		if (currentLocation == null) {
 			log.warn("No location");
-			return;
-		}
-
-		if (new GeoPoint(currentLocation).distanceTo(targetPoint) < END_ROUTE_DISTANCE) {
-			clearTargetPoint();
 			return;
 		}
 
@@ -338,6 +338,16 @@ public class RoutingService extends Service implements PointsService.Listener, L
 									path.getRoutingType());
 							path.pointList = newPath.getPointList();
 							path.response = newPath.getResponse();
+						}
+
+						if (path.pointList.isCompleted()) {
+							synchronized (mutex) {
+								currentPaths = null;
+								RoutingService.this.targetPoint = null;
+							}
+
+							notifyPathsCleared();
+							return;
 						}
 					}
 
