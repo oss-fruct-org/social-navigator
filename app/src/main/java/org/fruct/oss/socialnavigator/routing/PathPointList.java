@@ -6,7 +6,9 @@ import com.graphhopper.GHResponse;
 import com.graphhopper.util.InstructionList;
 import com.graphhopper.util.PointList;
 
+import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.util.GeoPoint;
 
 import java.util.ArrayDeque;

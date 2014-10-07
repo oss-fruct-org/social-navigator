@@ -158,6 +158,11 @@ public class Utils {
 		return (StrictMath.IEEEremainder(degree, 360));
 	}
 
+	public static double normalizeAngleRad(double radian) {
+		return (StrictMath.IEEEremainder(radian, Math.PI));
+	}
+
+
 	public static List<GeoPoint> toList(PointList pointList) {
 		ArrayList<GeoPoint> ret = new ArrayList<GeoPoint>(pointList.size());
 

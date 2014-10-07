@@ -2,10 +2,27 @@ package org.fruct.oss.socialnavigator;
 
 import android.location.Location;
 import android.test.AndroidTestCase;
+import android.test.MoreAsserts;
+
+import junit.framework.AssertionFailedError;
 
 import org.fruct.oss.socialnavigator.routing.PathPointList;
+import org.osmdroid.util.GeoPoint;
 
 public class PointListTest extends AndroidTestCase {
+
+	public static final double LAT1 = 61.78737738003173;
+	public static final double LON1 = 34.35430537579452;
+
+	public static final double LAT2 = 61.78848092541959;
+	public static final double LON2 = 34.35792604332007;
+
+	public static final double LAT3 = 61.78968952490908;
+	public static final double LON3 = 34.35622687040238;
+
+	public static final double LAT4 = 61.79015493564046;
+	public static final double LON4 = 34.35775136199208;
+
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
@@ -25,11 +42,31 @@ public class PointListTest extends AndroidTestCase {
 
 	private PathPointList createTestPath1() {
 		PathPointList pointList = new PathPointList();
-		pointList.addPoint(61.787401, 34.354328);
-		pointList.addPoint(61.788529, 34.357847);
-		pointList.addPoint(61.789728, 34.356259);
-		pointList.addPoint(61.790226, 34.357761);
+
+		pointList.addPoint(LAT1, LON1);
+		pointList.addPoint(LAT2, LON2);
+		pointList.addPoint(LAT3, LON3);
+		pointList.addPoint(LAT4, LON4);
+
 		return pointList;
+	}
+
+	private void assertPath(PathPointList list, Double... coords) {
+		int idx = 0;
+
+		for (GeoPoint point : list) {
+			try {
+				assertEquals(coords[idx], point.getLatitude(), 0.0001);
+				assertEquals(coords[idx + 1], point.getLongitude(), 0.0001);
+			} catch (AssertionFailedError ass) {
+				throw new AssertionFailedError("Failed on point " + (idx / 2) + ". Was " +
+						"(" + point.getLatitude() + " " + point.getLongitude() + "), expected" +
+						"(" + coords[idx] + " " + coords[idx + 1] + ")"
+				);
+			}
+
+			idx += 2;
+		}
 	}
 
 	public void testNormalPath() {
@@ -112,4 +149,21 @@ public class PointListTest extends AndroidTestCase {
 		pointList.setLocation(createLocation(61.788766,34.358698));
 		assertTrue(pointList.isDeviated());
 	}
+
+	/*public void testPathIterator() {
+		PathPointList pointList = createTestPath1();
+
+		// way1.gpx
+		pointList.setLocation(createLocation(61.78737738003173, 34.35403541374217));
+		pointList.setLocation(createLocation(61.7876851755867, 34.35460709808831));
+		pointList.setLocation(createLocation(61.78791038989373, 34.35584574750495));
+		pointList.setLocation(createLocation(61.78806803892682, 34.35686207523142));
+		pointList.setLocation(createLocation(61.788408878012234, 34.35768968771927));
+
+		assertFalse(pointList.isDeviated());
+		assertFalse(pointList.isCompleted());
+
+		assertPath(pointList, 61.788408878012234, 34.35768968771927,
+								 LAT3, LON3, LAT4, LON4);
+	}*/
 }
