@@ -131,8 +131,10 @@ public class Utils {
 		ArrayList<Turn> turns = new ArrayList<Turn>();
 		for (int i = 1; i < points.size() - 1; i++) {
 			double bearing = points.get(i).bearingTo(points.get(i + 1));
-			double diff = Math.abs(lastBearing - bearing);
-			int turnDirection = lastBearing > bearing ? -1 : 1;
+			double relBearing = Utils.normalizeAngle(bearing - lastBearing);
+
+			double diff = Math.abs(relBearing);
+			int turnDirection = relBearing > 0 ? -1 : 1;
 
 			int turnSharpness;
 			if (diff < 11) {
@@ -150,6 +152,10 @@ public class Utils {
 			turns.add(new Turn(points.get(i), turnSharpness, turnDirection));
 		}
 		return turns;
+	}
+
+	public static double normalizeAngle(double degree) {
+		return (StrictMath.IEEEremainder(degree, 360));
 	}
 
 	public static List<GeoPoint> toList(PointList pointList) {
