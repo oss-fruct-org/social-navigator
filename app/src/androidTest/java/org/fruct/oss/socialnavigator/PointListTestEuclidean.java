@@ -23,7 +23,7 @@ public class PointListTestEuclidean extends AndroidTestCase {
 	}
 
 	private PointList createTestPath1() {
-		PointList pointList = new PointList(space, 2, 2);
+		PointList pointList = new PointList(space, 2);
 
 		pointList.addPoint(0, 0);
 		pointList.addPoint(10, 0);
@@ -176,6 +176,36 @@ public class PointListTestEuclidean extends AndroidTestCase {
 		pointList.setLocation(10, 1);
 		assertFalse(pointList.isDeviated());
 	}
+
+	public void testDeviateAfterLastPoint() {
+		PointList pointList = createTestPath1();
+
+		pointList.setLocation(0, 0);
+		pointList.setLocation(10, 0);
+		pointList.setLocation(11, 10);
+		pointList.setLocation(20, 10);
+		assertFalse(pointList.isDeviated());
+
+		pointList.setLocation(21, 10);
+		pointList.setLocation(23, 10);
+		assertTrue(pointList.isDeviated());
+	}
+
+	public void testDeviateAfterLastPointBack() {
+		PointList pointList = createTestPath1();
+
+		pointList.setLocation(0, 0);
+		pointList.setLocation(10, 0);
+		pointList.setLocation(11, 10);
+		pointList.setLocation(20, 10);
+		assertFalse(pointList.isDeviated());
+		assertTrue(pointList.isCompleted());
+
+		pointList.setLocation(19, 10);
+		pointList.setLocation(17, 10);
+		assertTrue(pointList.isDeviated());
+	}
+
 
 	private class Space2D implements Space {
 
