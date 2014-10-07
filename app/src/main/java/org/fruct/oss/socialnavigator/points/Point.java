@@ -186,6 +186,7 @@ public class Point implements Parcelable{
 				if (key == null)
 					throw new XmlPullParserException("Data tag have to have attribute 'name'");
 
+
 				parser.nextTag();
 				parser.require(XmlPullParser.START_TAG, null, "value");
 				String value = GetsResponse.readText(parser);

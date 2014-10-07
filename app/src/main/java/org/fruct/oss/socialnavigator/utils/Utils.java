@@ -132,7 +132,7 @@ public class Utils {
 		for (int i = 1; i < points.size() - 1; i++) {
 			double bearing = points.get(i).bearingTo(points.get(i + 1));
 			double diff = Math.abs(lastBearing - bearing);
-			lastBearing = bearing;
+			int turnDirection = lastBearing > bearing ? -1 : 1;
 
 			int turnSharpness;
 			if (diff < 11) {
@@ -145,7 +145,7 @@ public class Utils {
 				turnSharpness = 3;
 			}
 
-			int turnDirection = bearing > 0 ? 1 : -1;
+			lastBearing = bearing;
 
 			turns.add(new Turn(points.get(i), turnSharpness, turnDirection));
 		}
