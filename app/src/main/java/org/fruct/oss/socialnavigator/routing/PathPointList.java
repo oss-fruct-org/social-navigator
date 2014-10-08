@@ -30,7 +30,7 @@ public class PathPointList implements Iterable<GeoPoint> {
 		PointList ghPointList = response.getPoints();
 
 		for (int i = 0; i < ghPointList.size(); i++) {
-			pointList.addPoint(ghPointList.getLatitude(i), ghPointList.getLon(i));
+			pointList.addPoint(ghPointList.getLatitude(i), ghPointList.getLongitude(i));
 		}
 	}
 

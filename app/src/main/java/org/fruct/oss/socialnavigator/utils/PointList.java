@@ -1,6 +1,7 @@
 package org.fruct.oss.socialnavigator.utils;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
 
@@ -8,18 +9,24 @@ public class PointList implements Iterable<Space.Point> {
 	private final Space space;
 	private final double nearDistance;
 
-	private final Deque<Space.Point> points = new ArrayDeque<Space.Point>();
+	private final ArrayList<Space.Point> points = new ArrayList<Space.Point>();
+	private final ArrayList<Segment> segments = new ArrayList<Segment>();
+	private int segmentIdx = 0;
+
 	private double lastDeviation;
 
 	private Space.Point currentLocation;
 
-	private Space.Point segmentStartPoint;
-	private boolean onTurnPoint;
-
 
 	private final int[] tmpInt = new int[1];
 	private final Space.Point tmpPoint = new Space.Point(0, 0);
+
+	private final int[] tmpInt2 = new int[1];
+	private final Space.Point tmpPoint2 = new Space.Point(0, 0);
+
 	private Space.Point matchedPoint = new Space.Point(0, 0);
+
+	private boolean isInitialized;
 
 	public PointList(Space space, double nearDistance) {
 		this.space = space;
@@ -27,7 +34,22 @@ public class PointList implements Iterable<Space.Point> {
 	}
 
 	public void addPoint(double x, double y) {
+		if (isInitialized)
+			throw new IllegalStateException("Can't add point to started path");
+
 		points.add(new Space.Point(x, y));
+	}
+
+	public void initialize() {
+		if (isInitialized) {
+			return;
+		}
+
+		for (int i = 1; i < points.size(); i++) {
+			segments.add(new Segment(points.get(i - 1), points.get(i)));
+		}
+
+		isInitialized = true;
 	}
 
 	public boolean isDeviated() {
@@ -35,64 +57,73 @@ public class PointList implements Iterable<Space.Point> {
 	}
 
 	public boolean isCompleted() {
-		return !isDeviated() && points.size() == 1
-				&& space.dist(matchedPoint, points.getFirst()) < nearDistance;
+		return segmentIdx == segments.size() - 1 && space.dist(currentLocation, segments.get(segmentIdx).p2) < nearDistance;
 	}
 
 	public void setLocation(double x, double y) {
+		initialize();
+
 		currentLocation = new Space.Point(x, y);
 
-		if (segmentStartPoint == null) {
-			segmentStartPoint = points.pollFirst();
+		Segment currentSegment = segments.get(segmentIdx);
+		Segment nextSegment = segmentIdx + 1 < segments.size() ? segments.get(segmentIdx + 1) : null;
 
-			if (points.size() < 1) {
-				return;
-			}
+		double dist1 = space.projectedDist(currentLocation, currentSegment.p1, currentSegment.p2, tmpInt, tmpPoint);
+		double dist2 = 0;
+		if (nextSegment != null) {
+			dist2 = space.projectedDist(currentLocation, nextSegment.p1, nextSegment.p2, tmpInt2, tmpPoint2);
 		}
 
-		Space.Point segmentEndPoint = points.peekFirst();
+		if (nextSegment != null && (dist2 < dist1 || tmpInt[0] == 2)) {
+			segmentIdx++;
+			matchedPoint.x = tmpPoint2.x;
+			matchedPoint.y = tmpPoint2.y;
+			lastDeviation = dist2;
+		} else {
+			matchedPoint.x = tmpPoint.x;
+			matchedPoint.y = tmpPoint.y;
+			lastDeviation = dist1;
+		}
+	}
 
-		if (onTurnPoint) {
-			lastDeviation = space.dist(currentLocation, segmentEndPoint);
-			if (lastDeviation > nearDistance) {
-				segmentStartPoint = null;
-				onTurnPoint = false;
-				setLocation(x, y);
-				return;
-			}
+	private class Segment {
+		private Segment(Space.Point p1, Space.Point p2) {
+			this.p1 = p1;
+			this.p2 = p2;
 		}
 
-		lastDeviation = space.projectedDist(currentLocation, segmentStartPoint, segmentEndPoint, tmpInt, tmpPoint);
-
-		matchedPoint.x = tmpPoint.x;
-		matchedPoint.y = tmpPoint.y;
-
-		// Location near second point of current segment
-		if (space.dist(segmentEndPoint, matchedPoint) < nearDistance || tmpInt[0] == 2) {
-			onTurnPoint = true;
-		}
+		Space.Point p1;
+		Space.Point p2;
 	}
 
 	@Override
 	public Iterator<Space.Point> iterator() {
-		return new Iterator<Space.Point>() {
-			private boolean first = segmentStartPoint != null;
+		final boolean isNoFix = !isInitialized;
+		initialize();
 
-			private Iterator<Space.Point> iter = points.iterator();
+		return new Iterator<Space.Point>() {
+			private Space.Point firstPoint = isNoFix ? segments.get(0).p1 : matchedPoint;
+
+			private int idx = segmentIdx;
+
+			{
+				//firstPoint = null;
+			}
 
 			@Override
 			public boolean hasNext() {
-				return first ||  iter.hasNext();
+				return firstPoint != null || idx < segments.size();
 			}
 
 			@Override
 			public Space.Point next() {
-				if (first) {
-					first = false;
-					return matchedPoint;
+				if (firstPoint != null) {
+					Space.Point ret = firstPoint;
+					firstPoint = null;
+					return ret;
 				}
 
-				return iter.next();
+				return segments.get(idx++).p2;
 			}
 
 			@Override
