@@ -206,6 +206,19 @@ public class PointListTestEuclidean extends AndroidTestCase {
 		assertTrue(pointList.isDeviated());
 	}
 
+	public void testSegmentedPathIterable() {
+		PointList pointList = new PointList(space, 2);
+
+		pointList.addPoint(0, 0);
+		pointList.addPoint(10, 0);
+		pointList.addPoint(20, 1);
+
+		pointList.setLocation(7, 1);
+		pointList.setLocation(8, 1);
+		pointList.setLocation(9, 1);
+
+		assertPath(pointList, 9.0, 0.0,  10.0, 0.0,  20.0, 1.0);
+	}
 
 	private class Space2D implements Space {
 

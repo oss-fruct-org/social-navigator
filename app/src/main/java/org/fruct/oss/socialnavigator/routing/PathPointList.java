@@ -21,7 +21,6 @@ import java.util.Iterator;
  * Point list with deviation handling
  */
 public class PathPointList implements Iterable<GeoPoint> {
-	public static final double DISTANCE_DEVIATE = 20;
 	public static final double DISTANCE_NEAR = 20;
 
 	private org.fruct.oss.socialnavigator.utils.PointList pointList

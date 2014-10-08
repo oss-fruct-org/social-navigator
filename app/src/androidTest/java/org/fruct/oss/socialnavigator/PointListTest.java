@@ -7,6 +7,8 @@ import android.test.MoreAsserts;
 import junit.framework.AssertionFailedError;
 
 import org.fruct.oss.socialnavigator.routing.PathPointList;
+import org.fruct.oss.socialnavigator.utils.EarthSpace;
+import org.fruct.oss.socialnavigator.utils.Space;
 import org.osmdroid.util.GeoPoint;
 
 public class PointListTest extends AndroidTestCase {
@@ -148,6 +150,31 @@ public class PointListTest extends AndroidTestCase {
 
 		pointList.setLocation(createLocation(61.788766,34.358698));
 		assertTrue(pointList.isDeviated());
+	}
+
+	public void testProjection() {
+		EarthSpace space = new EarthSpace();
+		Space.Point point = new Space.Point(0, 0);
+		int[] out = new int[1];
+
+		double dist1 = space.projectedDist(new Space.Point(61.7870133096446,34.35200572013855),
+				new Space.Point(61.786158655196346,34.35045540332794),
+				new Space.Point(61.78736327997947,34.354360699653625), out, point);
+		assertEquals(35, dist1, 2);
+		assertEquals(0, out[0]);
+
+		double dist2 = space.projectedDist(new Space.Point(61.78618908840369,34.34966683387756),
+				new Space.Point(61.786158655196346,34.35045540332794),
+				new Space.Point(61.78736327997947,34.354360699653625), out, point);
+		assertEquals(42, dist2, 2);
+		assertEquals(1, out[0]);
+
+		double dist3 = space.projectedDist(new Space.Point(61.787802005277925,34.35453236103058),
+				new Space.Point(61.786158655196346,34.35045540332794),
+				new Space.Point(61.78736327997947,34.354360699653625), out, point);
+		assertEquals(50, dist3, 2);
+		assertEquals(2, out[0]);
+
 	}
 
 	/*public void testPathIterator() {
