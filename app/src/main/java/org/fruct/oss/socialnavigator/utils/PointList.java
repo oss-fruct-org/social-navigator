@@ -63,14 +63,15 @@ public class PointList implements Iterable<Space.Point> {
 	public Turn checkTurn() {
 		initialize();
 
-		if (segmentIdx + 1 >= segments.size()) {
-			return null;
+		for (int i = segmentIdx; i < segments.size() - 1; i++) {
+			Segment currentSegment = segments.get(i);
+			Segment nextSegment = segments.get(i + 1);
+			Turn turn = checkTurn(currentSegment.p1, nextSegment.p1, nextSegment.p2);
+			if (turn != null)
+				return turn;
 		}
 
-		Segment currentSegment = segments.get(segmentIdx);
-		Segment nextSegment = segments.get(segmentIdx + 1);
-
-		return checkTurn(currentSegment.p1, nextSegment.p1, nextSegment.p2);
+		return null;
 	}
 
 	public void setLocation(double x, double y) {
