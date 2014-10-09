@@ -1,8 +1,6 @@
 package org.fruct.oss.socialnavigator.fragments.overlays;
 
 import android.app.AlertDialog;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +10,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -22,8 +19,6 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.TextView;
-
-import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
@@ -294,7 +289,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 				: R.string.str_turn_right;
 
 		Location currentLocation = routingService.getLastLocation();
-		Location.distanceBetween(turn.getGeoPoint().getLatitude(), turn.getGeoPoint().getLongitude(),
+		Location.distanceBetween(turn.getPoint().x, turn.getPoint().y,
 				currentLocation.getLatitude(), currentLocation.getLongitude(), dist);
 
 		int intDist = (int) dist[0];

@@ -53,6 +53,10 @@ public class PathPointList implements Iterable<GeoPoint> {
 		pointList.setLocation(location.getLatitude(), location.getLongitude());
 	}
 
+	public Turn checkTurn() {
+		return pointList.checkTurn();
+	}
+
 	@Override
 	public Iterator<GeoPoint> iterator() {
 		return new Iterator<GeoPoint>() {

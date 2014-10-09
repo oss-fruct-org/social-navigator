@@ -257,6 +257,19 @@ public class PointListTestEuclidean extends AndroidTestCase {
 		assertPath(pointList, 0.0,0.0,  10.0,0.0,  10.0,10.0,  20.0,10.0);
 	}
 
+	public void testInitialPathIterableAfterTurnCheck() {
+		PointList pointList = new PointList(space, 2);
+
+		pointList.addPoint(1, 1);
+		pointList.addPoint(10, 0);
+		pointList.addPoint(10, 10);
+		pointList.addPoint(20, 10);
+
+		pointList.checkTurn();
+		assertPath(pointList, 1.0,1.0,  10.0,0.0,  10.0,10.0,  20.0,10.0);
+	}
+
+
 	private class Space2D implements Space {
 
 		@Override

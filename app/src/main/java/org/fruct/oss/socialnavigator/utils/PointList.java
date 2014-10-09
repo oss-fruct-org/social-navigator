@@ -17,7 +17,6 @@ public class PointList implements Iterable<Space.Point> {
 
 	private Space.Point currentLocation;
 
-
 	private final int[] tmpInt = new int[1];
 	private final Space.Point tmpPoint = new Space.Point(0, 0);
 
@@ -27,6 +26,7 @@ public class PointList implements Iterable<Space.Point> {
 	private Space.Point matchedPoint = new Space.Point(0, 0);
 
 	private boolean isInitialized;
+	private boolean isHasFix;
 
 	public PointList(Space space, double nearDistance) {
 		this.space = space;
@@ -60,10 +60,24 @@ public class PointList implements Iterable<Space.Point> {
 		return segmentIdx == segments.size() - 1 && space.dist(currentLocation, segments.get(segmentIdx).p2) < nearDistance;
 	}
 
+	public Turn checkTurn() {
+		initialize();
+
+		if (segmentIdx + 1 >= segments.size()) {
+			return null;
+		}
+
+		Segment currentSegment = segments.get(segmentIdx);
+		Segment nextSegment = segments.get(segmentIdx + 1);
+
+		return checkTurn(currentSegment.p1, nextSegment.p1, nextSegment.p2);
+	}
+
 	public void setLocation(double x, double y) {
 		initialize();
 
 		currentLocation = new Space.Point(x, y);
+		isHasFix = true;
 
 		Segment currentSegment = segments.get(segmentIdx);
 		Segment nextSegment = segmentIdx + 1 < segments.size() ? segments.get(segmentIdx + 1) : null;
@@ -86,6 +100,29 @@ public class PointList implements Iterable<Space.Point> {
 		}
 	}
 
+
+	private Turn checkTurn(Space.Point a, Space.Point b, Space.Point c) {
+		double bearing1 = space.bearing(a, b);
+		double bearing2 = space.bearing(b, c);
+
+		double relBearing = Utils.normalizeAngleRad(bearing2 - bearing1);
+		double diff = Math.abs(relBearing);
+		int turnDirection = relBearing > 0 ? -1 : 1;
+
+		int turnSharpness;
+		if (diff < 0.2) {
+			return null;
+		} else if (diff < 0.8) {
+			turnSharpness = 1;
+		} else if (diff < 1.8) {
+			turnSharpness = 2;
+		} else {
+			turnSharpness = 3;
+		}
+
+		return new Turn(b, turnSharpness, turnDirection);
+	}
+
 	private class Segment {
 		private Segment(Space.Point p1, Space.Point p2) {
 			this.p1 = p1;
@@ -98,11 +135,10 @@ public class PointList implements Iterable<Space.Point> {
 
 	@Override
 	public Iterator<Space.Point> iterator() {
-		final boolean isNoFix = !isInitialized;
 		initialize();
 
 		return new Iterator<Space.Point>() {
-			private Space.Point firstPoint = isNoFix ? segments.get(0).p1 : matchedPoint;
+			private Space.Point firstPoint = !isHasFix ? segments.get(0).p1 : matchedPoint;
 
 			private int idx = segmentIdx;
 

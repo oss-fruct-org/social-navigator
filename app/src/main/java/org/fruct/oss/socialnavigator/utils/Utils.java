@@ -121,7 +121,7 @@ public class Utils {
 		return distanceCalc.calcDist(c_lat, c_lon / shrink_factor, r_lat_deg, r_lon_deg);
 	}
 
-	public static List<Turn> findTurns(List<GeoPoint> points) {
+	/*public static List<Turn> findTurns(List<GeoPoint> points) {
 		// Two point line can't has turns
 		if (points.size() < 3)
 			return Collections.emptyList();
@@ -152,7 +152,7 @@ public class Utils {
 			turns.add(new Turn(points.get(i), turnSharpness, turnDirection));
 		}
 		return turns;
-	}
+	}*/
 
 	public static double normalizeAngle(double degree) {
 		return (StrictMath.IEEEremainder(degree, 360));

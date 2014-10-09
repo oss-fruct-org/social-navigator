@@ -15,10 +15,8 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
-import android.widget.Toast;
 
 import com.graphhopper.GHResponse;
-import com.graphhopper.util.Instruction;
 
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.points.Point;
@@ -72,6 +70,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	private GeoPoint targetPoint;
 	private List<Path> currentPaths;
+	private Turn currentTurn;
 
 	private PointsServiceConnection pointsServiceConnection;
 	private PointsService pointsService;
@@ -284,6 +283,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 					return;
 				}
 
+				// FIXME: rewrite and add synchronizations
 				if (currentPaths == null) {
 					// No current path set
 					List<Path> newRoutes = null;
@@ -348,6 +348,10 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 							notifyPathsCleared();
 							return;
+						}
+
+						if (path.isActive()) {
+							updateActivePathWayInformation(path);
 						}
 					}
 
@@ -512,14 +516,19 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	public void updateActivePathWayInformation(Path activePath) {
 		synchronized (geofencesManager) {
-			geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
 
-			for (Turn turn : Utils.findTurns(Utils.toList(activePath.getResponse().getPoints()))) {
-				Bundle data = new Bundle(1);
-				data.putParcelable("turn", turn);
-
-				geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO,
-						turn.getGeoPoint().getLatitude(), turn.getGeoPoint().getLongitude(), PROXIMITY_RADIUS, data);
+			Turn newTurn = activePath.getPointList().checkTurn();
+			if (newTurn != null) {
+				if (currentTurn == null || !currentTurn.equals(newTurn)) {
+					currentTurn = newTurn;
+					Bundle data = new Bundle(1);
+					data.putParcelable("turn", newTurn);
+					geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
+					geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO,
+							newTurn.getPoint().x, newTurn.getPoint().y, PROXIMITY_RADIUS, data);
+				}
+			} else {
+				geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
 			}
 		}
 	}
