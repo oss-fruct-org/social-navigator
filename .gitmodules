@@ -1,0 +1,3 @@
+[submodule "resources-module"]
+	path = resources-module
+	url = git@github.com:ivashov/resources-module.git
