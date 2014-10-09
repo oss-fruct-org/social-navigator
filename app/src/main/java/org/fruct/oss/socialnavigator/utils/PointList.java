@@ -67,7 +67,7 @@ public class PointList implements Iterable<Space.Point> {
 			Segment currentSegment = segments.get(i);
 			Segment nextSegment = segments.get(i + 1);
 			Turn turn = checkTurn(currentSegment.p1, nextSegment.p1, nextSegment.p2);
-			if (turn != null)
+			if (turn != null && turn.getTurnSharpness() > 1)
 				return turn;
 		}
 

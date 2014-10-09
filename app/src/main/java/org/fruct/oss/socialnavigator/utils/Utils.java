@@ -159,7 +159,7 @@ public class Utils {
 	}
 
 	public static double normalizeAngleRad(double radian) {
-		return (StrictMath.IEEEremainder(radian, Math.PI));
+		return (StrictMath.IEEEremainder(radian, 2 * Math.PI));
 	}
 
 
