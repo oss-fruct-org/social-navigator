@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 
 import org.slf4j.impl.StaticLoggerBinder;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 public class App extends Application {
 	private static Context context;
