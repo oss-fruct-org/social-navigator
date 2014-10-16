@@ -1,6 +1,8 @@
 package org.fruct.oss.socialnavigator.utils;
 
+import android.content.Context;
 import android.content.res.Resources;
+import android.os.Environment;
 import android.util.TypedValue;
 
 import com.graphhopper.util.DistanceCalcEarth;
@@ -15,6 +17,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -192,6 +195,24 @@ public class Utils {
 		}
 	}
 
+	public static String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
+		String result = "";
+		if (parser.next() == XmlPullParser.TEXT) {
+			result = parser.getText();
+			parser.nextTag();
+		}
+		return result;
+	}
+
+	public static int readNumber(XmlPullParser parser) throws IOException, XmlPullParserException {
+		try {
+			String text = readText(parser);
+			return Integer.parseInt(text);
+		} catch (NumberFormatException ex) {
+			throw new XmlPullParserException("Expected number");
+		}
+	}
+
 	public static String inputStreamToString(InputStream stream) throws IOException {
 		InputStreamReader reader = new InputStreamReader(stream, "UTF-8");
 		return readerToString(reader);
@@ -250,4 +271,79 @@ public class Utils {
 				responseStream.close();
 		}
 	}
+
+	public static String[] getSecondaryDirs() {
+		List<String> ret = new ArrayList<String>();
+		String secondaryStorageString = System.getenv("SECONDARY_STORAGE");
+		if (secondaryStorageString != null && !secondaryStorageString.trim().isEmpty()) {
+			String[] dirs = secondaryStorageString.split(":");
+
+			for (String dir : dirs) {
+				File file = new File(dir);
+				if (file.isDirectory() && file.canWrite()) {
+					ret.add(dir);
+				}
+			}
+
+			if (ret.isEmpty())
+				return null;
+			else
+				return ret.toArray(new String[ret.size()]);
+
+		} else {
+			return null;
+		}
+	}
+
+	public static String[] getExternalDirs(Context context) {
+		List<String> paths = new ArrayList<String>();
+		String[] secondaryDirs = getSecondaryDirs();
+		if (secondaryDirs != null) {
+			for (String secondaryDir : secondaryDirs) {
+				paths.add(secondaryDir + "/roadsigns");
+			}
+		}
+
+		File externalStorageDir = Environment.getExternalStorageDirectory();
+		if (externalStorageDir != null && externalStorageDir.isDirectory()) {
+			paths.add(Environment.getExternalStorageDirectory().getPath() + "/roadsigns");
+		}
+
+		return paths.toArray(new String[paths.size()]);
+	}
+
+
+	public static StorageDirDesc[] getPrivateStorageDirs(Context context) {
+		List<StorageDirDesc> ret = new ArrayList<StorageDirDesc>();
+
+		// Secondary external storage
+		String[] secondaryDirs = getSecondaryDirs();
+		if (secondaryDirs != null) {
+			for (String secondaryStoragePath : secondaryDirs) {
+				ret.add(new StorageDirDesc(R.string.storage_path_sd_card, secondaryStoragePath + "/Android/data/" + context.getPackageName() + "/files"));
+			}
+		}
+
+		// External storage
+		File externalDir = context.getExternalFilesDir(null);
+		if (externalDir != null)
+			ret.add(new StorageDirDesc(R.string.storage_path_external, externalDir.getPath()));
+
+		// Internal storage
+		ret.add(new StorageDirDesc(R.string.storage_path_internal, context.getDir("other", 0).getPath()));
+
+		return ret.toArray(new StorageDirDesc[ret.size()]);
+	}
+
+	public static class StorageDirDesc {
+		public final int nameRes;
+		public final String path;
+
+		public StorageDirDesc(int nameRes, String path) {
+			this.nameRes = nameRes;
+			this.path = path;
+		}
+	}
+
+
 }

@@ -31,6 +31,9 @@
     <string name="str_turn_left">Turn left after %s</string>
     <string name="str_turn_right">Turn right after %s</string>
     <string name="str_approaching">Approaching %s</string>
+    <string name="storage_path_sd_card">SD Card</string>
+    <string name="storage_path_external">External</string>
+    <string name="storage_path_internal">Internal</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d meter</item>

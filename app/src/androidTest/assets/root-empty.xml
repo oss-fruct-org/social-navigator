@@ -1,0 +1,13 @@
+<content>
+    <file>
+        <type></type>
+        <name></name>
+        <description></description>
+        <size>123123123</size>
+        <url compression="gzip" size="4049899">
+            https://dl.dropbox.com/sh/fww6efgazlmyb7i/AADNLIQKJMe8bWWW9LWyJAKwa/adygeya.osm.pbf.map.gz
+        </url>
+        <hash algo="sha1">f04bd34ff1552b6db68d697e2d91b0bd6735ea15</hash>
+        <region-id>1beae076da5059af890fbfbf39fa8aacf00a65e6</region-id>
+    </file>
+</content>

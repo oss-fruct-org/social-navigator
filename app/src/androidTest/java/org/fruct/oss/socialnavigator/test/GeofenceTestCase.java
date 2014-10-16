@@ -1,4 +1,4 @@
-package org.fruct.oss.socialnavigator;
+package org.fruct.oss.socialnavigator.test;
 
 import android.location.Location;
 import android.os.Bundle;

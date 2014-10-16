@@ -1,0 +1,24 @@
+<content>
+    <file>
+        <type>mapsforge-map</type>
+        <name>adygeya.osm.pbf.map</name>
+        <description>Республика Адыгея</description>
+        <size><size>
+        <url compression="gzip" size="4049899">
+            https://dl.dropbox.com/sh/fww6efgazlmyb7i/AADNLIQKJMe8bWWW9LWyJAKwa/adygeya.osm.pbf.map.gz
+        </url>
+        <hash algo="sha1">f04bd34ff1552b6db68d697e2d91b0bd6735ea15</hash>
+        <region-id>1beae076da5059af890fbfbf39fa8aacf00a65e6</region-id>
+    </file>
+    <file>
+        <type>graphhopper-map</type>
+        <name>adygeya.osm.pbf.ghz</name>
+        <description>Республика Адыгея</description>
+        <size>1537653</size>
+        <url>
+            https://dl.dropbox.com/sh/fww6efgazlmyb7i/AABGM4U0YlukjUwPA4nmElUea/adygeya.osm.pbf.ghz
+        </url>
+        <hash algo="sha1">3d6f0aa27353dad7155a71c185487a07b32847a8</hash>
+        <region-id>1beae076da5059af890fbfbf39fa8aacf00a65e6</region-id>
+    </file>
+</content>

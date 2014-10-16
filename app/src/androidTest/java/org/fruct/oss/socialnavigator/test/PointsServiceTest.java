@@ -1,4 +1,4 @@
-package org.fruct.oss.socialnavigator;
+package org.fruct.oss.socialnavigator.test;
 
 import android.content.Intent;
 import android.database.Cursor;
