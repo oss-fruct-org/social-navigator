@@ -93,7 +93,6 @@
     <orderEntry type="library" exported="" name="appcompat-v7-20.0.0" level="project" />
     <orderEntry type="library" exported="" name="slf4j-api-1.7.7" level="project" />
     <orderEntry type="library" exported="" name="kxml2-2.3.0" level="project" />
-    <orderEntry type="module" module-name="resources-module" exported="" />
   </component>
 </module>
 

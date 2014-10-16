@@ -1,5 +1,1 @@
-ext {
-    androidBuild = true
-}
-
-include ':app', ':resources-module'
+include ':app'
