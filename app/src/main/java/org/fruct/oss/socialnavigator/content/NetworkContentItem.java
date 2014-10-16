@@ -1,18 +1,13 @@
 package org.fruct.oss.socialnavigator.content;
 
-import android.util.Xml;
-
-import static org.fruct.oss.socialnavigator.utils.Utils.readText;
-import static org.fruct.oss.socialnavigator.utils.Utils.readNumber;
-import static org.fruct.oss.socialnavigator.utils.Utils.skip;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
+
+import static org.fruct.oss.socialnavigator.utils.Utils.readNumber;
+import static org.fruct.oss.socialnavigator.utils.Utils.readText;
 
 public class NetworkContentItem implements ContentItem {
 	private String name;
@@ -28,6 +23,8 @@ public class NetworkContentItem implements ContentItem {
 	private String description;
 
 	private String regionId;
+
+	private NetworkStorage storage;
 
 	public int getDownloadSize() {
 		return url.size == -1 ? size : url.size;
@@ -86,45 +83,14 @@ public class NetworkContentItem implements ContentItem {
 
 	@Override
 	public InputStream loadContentItem() throws IOException {
-		return null;
+		return storage.loadContentItem(getUrl());
 	}
 
-	public static NetworkContentItem[] parse(InputStreamReader reader) {
-		try {
-			XmlPullParser parser = Xml.newPullParser();
-			parser.setInput(reader);
-			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-
-			parser.nextTag();
-			return readContent(parser);
-		} catch (XmlPullParserException ex) {
-			throw new RuntimeException("Can't parser content data", ex);
-		} catch (IOException ex) {
-			throw new RuntimeException("Can't parser content data", ex);
-		}
+	void setNetworkStorage(NetworkStorage storage) {
+		this.storage = storage;
 	}
 
-	private static NetworkContentItem[] readContent(XmlPullParser parser) throws IOException, XmlPullParserException {
-		ArrayList<NetworkContentItem> items = new ArrayList<NetworkContentItem>();
-
-		parser.require(XmlPullParser.START_TAG, null, "content");
-		while (parser.next() != XmlPullParser.END_TAG) {
-			if (parser.getEventType() != XmlPullParser.START_TAG)
-				continue;
-
-			String name = parser.getName();
-			if (name.equals("file")) {
-				items.add(readFile(parser));
-			} else {
-				skip(parser);
-			}
-		}
-		parser.require(XmlPullParser.END_TAG, null, "content");
-
-		return items.toArray(new NetworkContentItem[items.size()]);
-	}
-
-	private static NetworkContentItem readFile(XmlPullParser parser) throws IOException, XmlPullParserException {
+	static NetworkContentItem readFile(XmlPullParser parser) throws IOException, XmlPullParserException {
 		NetworkContentItem item = new NetworkContentItem();
 
 		parser.require(XmlPullParser.START_TAG, null, "file");

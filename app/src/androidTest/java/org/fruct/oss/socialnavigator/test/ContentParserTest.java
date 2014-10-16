@@ -3,6 +3,7 @@ package org.fruct.oss.socialnavigator.test;
 import android.content.Context;
 import android.test.AndroidTestCase;
 
+import org.fruct.oss.socialnavigator.content.NetworkContent;
 import org.fruct.oss.socialnavigator.content.NetworkContentItem;
 
 import java.io.IOException;
@@ -22,10 +23,13 @@ public class ContentParserTest extends AndroidTestCase {
 	public void testCorrectFile() throws IOException {
 		InputStream input = context.getAssets().open("root-correct.xml");
 
-		NetworkContentItem[] items = NetworkContentItem.parse(new InputStreamReader(input));
+		NetworkContent content = NetworkContent.parse(new InputStreamReader(input));
+
+		NetworkContentItem[] items = content.getItems();
 		input.close();
 
 		assertEquals(2, items.length);
+		assertEquals(0, content.getIncludes().length);
 
 		NetworkContentItem item1 = items[0];
 		assertEquals("mapsforge-map", item1.getType());
@@ -49,7 +53,7 @@ public class ContentParserTest extends AndroidTestCase {
 
 		boolean thrown = false;
 		try {
-			NetworkContentItem[] items = NetworkContentItem.parse(new InputStreamReader(input));
+			NetworkContent content = NetworkContent.parse(new InputStreamReader(input));
 		} catch (Exception ex) {
 			thrown = true;
 		}
@@ -62,14 +66,27 @@ public class ContentParserTest extends AndroidTestCase {
 	public void testEmptyFile() throws IOException {
 		InputStream input = context.getAssets().open("root-empty.xml");
 
-		NetworkContentItem[] items = NetworkContentItem.parse(new InputStreamReader(input));
+		NetworkContent content = NetworkContent.parse(new InputStreamReader(input));
 		input.close();
 
-		assertEquals(1, items.length);
+		assertEquals(1, content.getItems().length);
 
-		NetworkContentItem item1 = items[0];
+		NetworkContentItem item1 = content.getItems()[0];
 		assertEquals("", item1.getType());
 		assertEquals("", item1.getName());
 		assertEquals("", item1.getDescription());
 	}
+
+	public void testIncludes() throws IOException {
+		InputStream input = context.getAssets().open("root-includes.xml");
+
+		NetworkContent content = NetworkContent.parse(new InputStreamReader(input));
+		input.close();
+
+		assertEquals(2, content.getIncludes().length);
+
+		assertEquals("qwe", content.getIncludes()[0]);
+		assertEquals("asd", content.getIncludes()[1]);
+	}
+
 }
