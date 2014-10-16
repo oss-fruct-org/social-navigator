@@ -8,6 +8,7 @@ import java.io.InputStream;
 
 import static org.fruct.oss.socialnavigator.utils.Utils.readNumber;
 import static org.fruct.oss.socialnavigator.utils.Utils.readText;
+import static org.fruct.oss.socialnavigator.utils.Utils.skip;
 
 public class NetworkContentItem implements ContentItem {
 	private String name;
@@ -114,6 +115,8 @@ public class NetworkContentItem implements ContentItem {
 				item.hash = readText(parser);
 			} else if (tag.equals("region-id")) {
 				item.regionId = readText(parser);
+			} else {
+				skip(parser);
 			}
 		}
 

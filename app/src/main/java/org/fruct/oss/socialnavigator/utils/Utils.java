@@ -26,6 +26,8 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -123,6 +125,55 @@ public class Utils {
 		outCoord[1] = c_lon / shrink_factor;
 
 		return distanceCalc.calcDist(c_lat, c_lon / shrink_factor, r_lat_deg, r_lon_deg);
+	}
+
+	private static final char[] hexDigits = "0123456789abcdef".toCharArray();
+	public static String toHex(byte[] arr) {
+		final char[] str = new char[arr.length * 2];
+
+		for (int i = 0; i < arr.length; i++) {
+			final int v = arr[i] & 0xff;
+			str[2 * i] = hexDigits[v >>> 4];
+			str[2 * i + 1] = hexDigits[v & 0x0f];
+		}
+
+		return new String(str);
+	}
+
+	public static String hashString(String input) {
+		MessageDigest md5;
+		try {
+			md5 = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			return String.valueOf(input.hashCode());
+		}
+		md5.update(input.getBytes());
+		byte[] hash = md5.digest();
+		return toHex(hash);
+	}
+
+	public static String hashStream(InputStream in, String hash) throws IOException {
+		MessageDigest md5 = null;
+		try {
+			md5 = MessageDigest.getInstance(hash);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+
+		int bsize = 4096;
+		byte[] buffer = new byte[bsize];
+		int length;
+
+		while ((length = in.read(buffer, 0, bsize)) > 0) {
+			md5.update(buffer, 0, length);
+		}
+
+		return toHex(md5.digest());
+	}
+
+	public static String hashStream(InputStream in) throws IOException {
+		return hashStream(in, "MD5");
 	}
 
 	/*public static List<Turn> findTurns(List<GeoPoint> points) {
