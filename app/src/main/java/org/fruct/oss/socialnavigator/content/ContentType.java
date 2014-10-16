@@ -105,6 +105,7 @@ public abstract class ContentType {
 	}
 
 	synchronized void commitContentItems() {
+		// Current item hash stored but corresponding item didn't loaded
 		if (currentItemHash != null && currentItem == null) {
 			currentItemHash = null;
 			deactivateCurrentItem();
@@ -115,7 +116,6 @@ public abstract class ContentType {
 
 	protected abstract void activateItem(ContentItem item);
 	protected abstract boolean isCurrentItemActive(ContentItem item);
-	protected abstract void invalidateCurrentContent();
 
 	boolean acceptsContentItem(ContentItem contentItem) {
 		return id.equals(contentItem.getType());

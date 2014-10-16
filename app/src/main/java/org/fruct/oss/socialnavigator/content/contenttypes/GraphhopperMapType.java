@@ -91,23 +91,17 @@ public class GraphhopperMapType extends ContentType {
 	}
 
 	@Override
-	public void invalidateCurrentContent() {
+	protected void deactivateCurrentItem() {
 		String navigationPath = pref.getString(Settings.NAVIGATION_DATA, null);
 		if (navigationPath != null) {
 			Utils.deleteDir(new File(navigationPath));
 		}
 
-		currentItem = null;
-		pref.edit().remove(Settings.NAVIGATION_DATA)
-				.remove(configKey)
-				.apply();
-	}
 
-	@Override
-	protected void deactivateCurrentItem() {
 		pref.edit().remove(Settings.NAVIGATION_DATA)
 				.remove(configKey)
 				.apply();
+
 		super.deactivateCurrentItem();
 	}
 }

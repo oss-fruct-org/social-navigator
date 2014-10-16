@@ -81,14 +81,6 @@ public class MapsforgeMapType extends ContentType {
 	}
 
 	@Override
-	public void invalidateCurrentContent() {
-		currentItem = null;
-		pref.edit().remove(Settings.OFFLINE_MAP)
-				.remove(configKey)
-				.apply();
-	}
-
-	@Override
 	protected void deactivateCurrentItem() {
 		pref.edit().remove(Settings.OFFLINE_MAP)
 				.remove(configKey)
