@@ -285,7 +285,7 @@ public class DataService extends Service implements SharedPreferences.OnSharedPr
 	}
 
 	public class Binder extends android.os.Binder {
-		public Service getService() {
+		public DataService getService() {
 			return DataService.this;
 		}
 	}

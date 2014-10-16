@@ -7,13 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ikm.Qwerty;
-
 public class TestTest extends AndroidTestCase {
-	public void testQwertyModule() {
-		Qwerty qwerty = new Qwerty();
-		assertEquals(4, qwerty.random());
-	}
 
 	public void testExecutorTest() throws Exception {
 		ExecutorService executor = Executors.newSingleThreadExecutor();

@@ -359,6 +359,20 @@ public class Utils {
 		return conn;
 	}
 
+	public static void deleteDir(File dir) {
+		if (!dir.exists() && !dir.isDirectory())
+			return;
+
+		File[] listFiles = dir.listFiles();
+		for (File file : listFiles) {
+			if (!file.isDirectory()) {
+				file.delete();
+			}
+		}
+
+		dir.delete();
+	}
+
 	public static String[] getSecondaryDirs() {
 		List<String> ret = new ArrayList<String>();
 		String secondaryStorageString = System.getenv("SECONDARY_STORAGE");
