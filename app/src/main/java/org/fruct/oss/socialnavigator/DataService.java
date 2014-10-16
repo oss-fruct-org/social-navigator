@@ -53,6 +53,7 @@ public class DataService extends Service implements SharedPreferences.OnSharedPr
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		log.trace("onCreate");
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
 
 		pref.registerOnSharedPreferenceChangeListener(this);
@@ -69,6 +70,7 @@ public class DataService extends Service implements SharedPreferences.OnSharedPr
 
 	@Override
 	public void onDestroy() {
+		log.trace("onDestroy");
 		pref.unregisterOnSharedPreferenceChangeListener(this);
 		super.onDestroy();
 	}

@@ -3,5 +3,12 @@
     <string-array name="drawer_sections">
         <item>Map</item>
         <item>Points</item>
+        <item>Content</item>
+    </string-array>
+
+    <string-array name="content_spinner">
+        <item>All</item>
+        <item>Local</item>
+        <item>Updates</item>
     </string-array>
 </resources>

@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.fruct.oss.socialnavigator.fragments.root.ContentFragment;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
@@ -79,6 +80,10 @@ public class MainActivity extends ActionBarActivity
 
 		case 1:
 			fragment = PointFragment.newInstance();
+			break;
+
+		case 2:
+			fragment = ContentFragment.newInstance();
 			break;
 
 		default:

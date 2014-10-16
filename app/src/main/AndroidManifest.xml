@@ -41,6 +41,11 @@
             android:enabled="true"
             android:exported="false" >
         </service>
+        <service
+            android:name="org.fruct.oss.socialnavigator.DataService"
+            android:enabled="true"
+            android:exported="false" >
+        </service>
     </application>
 
 </manifest>

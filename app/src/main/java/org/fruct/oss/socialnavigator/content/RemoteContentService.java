@@ -99,6 +99,7 @@ public class RemoteContentService extends Service implements DataService.DataLis
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		log.trace("onCreate");
 
 		handler = new Handler(getMainLooper());
 		bindService(new Intent(this, DataService.class), dataServiceConnection, BIND_AUTO_CREATE);
@@ -115,11 +116,11 @@ public class RemoteContentService extends Service implements DataService.DataLis
 	@Override
 	public void onDestroy() {
 		unbindService(dataServiceConnection);
-
-		digestCache.close();
+		log.trace("onDestroy");
 
 		if (dataService != null) {
 			dataService.removeDataListener(this);
+			digestCache.close();
 		}
 
 		LocalBroadcastManager.getInstance(this).unregisterReceiver(locationReceiver);
@@ -552,8 +553,8 @@ public class RemoteContentService extends Service implements DataService.DataLis
 		});
 	}
 
-	private class Binder extends android.os.Binder {
-		RemoteContentService getService() {
+	public class Binder extends android.os.Binder {
+		public RemoteContentService getService() {
 			return RemoteContentService.this;
 		}
 	}
