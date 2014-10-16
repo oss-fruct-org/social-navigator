@@ -55,7 +55,7 @@ public class ArrayPointsProvider implements PointsProvider {
 				catPoints.add(point);
 			}
 		}
-
+/*
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException ignored) {
@@ -63,7 +63,7 @@ public class ArrayPointsProvider implements PointsProvider {
 
 		if (Math.random() > 0.8)
 			throw new PointsException("Test");
-
+*/
 		return catPoints;
 	}
 }

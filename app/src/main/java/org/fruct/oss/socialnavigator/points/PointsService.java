@@ -22,6 +22,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class PointsService extends Service {
 	private static final Logger log = LoggerFactory.getLogger(PointsService.class);
@@ -285,7 +287,9 @@ public class PointsService extends Service {
 			}
 		});
 		try {
-			latch.await();
+			if (!latch.await(100, TimeUnit.MILLISECONDS)) {
+				throw new RuntimeException("Too long wait");
+			}
 		} catch (InterruptedException ignore) {
 		}
 	}
