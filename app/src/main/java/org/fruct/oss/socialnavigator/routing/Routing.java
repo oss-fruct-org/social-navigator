@@ -8,7 +8,10 @@ import android.preference.PreferenceManager;
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 
+import org.fruct.oss.socialnavigator.DataService;
+import org.fruct.oss.socialnavigator.content.RemoteContentService;
 import org.fruct.oss.socialnavigator.points.Point;
+import org.fruct.oss.socialnavigator.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,17 +26,40 @@ import java.util.zip.ZipInputStream;
 public class Routing {
 	private static final Logger log = LoggerFactory.getLogger(Routing.class);
 
-	private final CustomGraphHopper gh;
+	private CustomGraphHopper gh;
+	private boolean isReady;
 
 	Routing() {
+	}
+
+	public void loadFromPref(Context context, String storagePath) {
+		if (gh != null) {
+			gh.close();
+			isReady = false;
+		}
+
 		gh = (CustomGraphHopper) new CustomGraphHopper().forMobile();
 		gh.disableCHShortcuts();
+
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+
+		String ghDirectory = pref.getString(Settings.NAVIGATION_DATA, null);
+		if (ghDirectory != null) {
+			String ghPath = storagePath + "/graphhopper/" + ghDirectory;
+			if (!gh.load(ghPath)) {
+				gh.close();
+				gh = null;
+				throw new RuntimeException("Can't initialize graphhopper in " + ghPath);
+			}
+			isReady = true;
+		}
 	}
 
-	public void load(String directory) {
-		gh.load(directory);
+	public boolean isReady() {
+		return isReady;
 	}
 
+	@Deprecated
 	public void loadFromAsset(Context context, String assetFile, int version) throws IOException {
 		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
 		int storedVersion = pref.getInt("pref-routing-stored-version", -1);
@@ -74,7 +100,11 @@ public class Routing {
 	}
 
 	public void close() {
-		gh.close();
+		if (gh != null) {
+			isReady = false;
+			gh.close();
+			gh = null;
+		}
 	}
 
 	public List<RoutingService.Path> route(final double fromLat, final double fromLon, final double toLat, final double toLon) {

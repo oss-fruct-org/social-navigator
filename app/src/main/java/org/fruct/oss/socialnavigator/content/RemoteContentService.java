@@ -48,7 +48,9 @@ import java.util.zip.GZIPInputStream;
 public class RemoteContentService extends Service implements DataService.DataListener {
 	private static final Logger log = LoggerFactory.getLogger(RemoteContentService.class);
 
-	public static final String[] REMOTE_CONTENT_URLS = {"http://oss.fruct.org/projects/roadsigns/root.xml"};
+	public static final String[] REMOTE_CONTENT_URLS = {
+			"http://kappa.cs.petrsu.ru/~ivashov/mordor.xml",
+			"http://oss.fruct.org/projects/roadsigns/root.xml"};
 
 	public static final String GRAPHHOPPER_MAP = "graphhopper-map";
 	public static final String MAPSFORGE_MAP = "mapsforge-map";
@@ -83,6 +85,8 @@ public class RemoteContentService extends Service implements DataService.DataLis
 	private Location location;
 	private String currentStoragePath;
 
+	private GraphhopperMapType graphhopperMapType;
+
 	public RemoteContentService() {
 	}
 
@@ -111,6 +115,9 @@ public class RemoteContentService extends Service implements DataService.DataLis
 				newLocation(location);
 			}
 		}, new IntentFilter(RoutingService.BC_LOCATION));
+
+		contentTypes.put(GRAPHHOPPER_MAP, graphhopperMapType = new GraphhopperMapType(this, null, regions));
+		contentTypes.put(MAPSFORGE_MAP, new MapsforgeMapType(this, regions));
 	}
 
 	@Override
@@ -384,6 +391,7 @@ public class RemoteContentService extends Service implements DataService.DataLis
 					executor = Executors.newSingleThreadExecutor();
 
 					currentStoragePath = newDataPath;
+					graphhopperMapType.setDataPath(currentStoragePath);
 					mainLocalStorage.migrate(newDataPath + "/storage");
 					dataService.dataListenerReady();
 				}
@@ -425,15 +433,15 @@ public class RemoteContentService extends Service implements DataService.DataLis
 			@Override
 			public void run() {
 				for (ContentType contentType : contentTypes.values()) {
-					if (contentType.getCurrentItem() != null && !contentType.checkLocation(location, contentType.getCurrentItem())) {
+					/*if (contentType.getCurrentItem() != null && !contentType.checkLocation(location, contentType.getCurrentItem())) {
 						contentType.deactivateCurrentItem();
 					}
 
 					// TODO: check region not always
 					if (contentType.getCurrentItem() == null) {
-						log.debug("RemoteContentService applyLocation from newLocation");
-						contentType.applyLocation(location);
-					}
+						log.debug("RemoteContentService applyLocation from newLocation");*/
+					contentType.applyLocation(location);
+					//}
 				}
 			}
 		});
@@ -578,8 +586,8 @@ public class RemoteContentService extends Service implements DataService.DataLis
 				localStorages.add(storage);
 			}
 
-			contentTypes.put(GRAPHHOPPER_MAP, new GraphhopperMapType(context, dataService, regions));
-			contentTypes.put(MAPSFORGE_MAP, new MapsforgeMapType(context, regions));
+			currentStoragePath = dataService.getDataPath();
+			graphhopperMapType.setDataPath(currentStoragePath);
 
 			refresh();
 		}

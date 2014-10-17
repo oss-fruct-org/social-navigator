@@ -18,7 +18,10 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.graphhopper.GHResponse;
 
+import org.fruct.oss.socialnavigator.DataService;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
+import org.fruct.oss.socialnavigator.content.ContentItem;
+import org.fruct.oss.socialnavigator.content.RemoteContentService;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.Turn;
@@ -31,13 +34,14 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class RoutingService extends Service implements PointsService.Listener, LocationReceiver.Listener, GeofencesManager.GeofencesListener {
+public class RoutingService extends Service implements PointsService.Listener, LocationReceiver.Listener, GeofencesManager.GeofencesListener, RemoteContentService.ContentStateListener, DataService.DataListener {
 	private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
 
 	public static final String ACTION_ROUTE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_ROUTE";
@@ -61,7 +65,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private final Object mutex = new Object();
 
 	// Tasks
-	private Future<Routing> initializeFuture;
 	private Future<?> routeFuture;
 
 	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
@@ -72,8 +75,17 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private List<Path> currentPaths;
 	private Turn currentTurn;
 
+	// Locks services assignment
+	private final Object serviceMutex = new Object();
+
 	private PointsServiceConnection pointsServiceConnection;
 	private PointsService pointsService;
+
+	private ContentServiceConnection remoteContentServiceConnection;
+	private RemoteContentService remoteContentService;
+
+	private DataServiceConnection dataServiceConnection;
+	private DataService dataService;
 
 	private LocationReceiver locationReceiver;
 	private GeofencesManager geofencesManager;
@@ -88,15 +100,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-		initializeFuture = executor.submit(new Callable<Routing>() {
-			@Override
-			public Routing call() throws Exception {
-				Routing routing = new Routing();
-				routing.loadFromAsset(RoutingService.this, "map.osm.pbf.ghz", 1);
-				return routing;
-			}
-		});
-
 		locationReceiver = new LocationReceiver(this);
 		locationReceiver.setListener(this);
 		locationReceiver.start();
@@ -104,11 +107,18 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		geofencesManager = new SimpleGeofencesManager();
 		geofencesManager.addListener(this);
 
+		routing = new Routing();
+
 		GEOFENCE_TOKEN_OBSTACLES = geofencesManager.createToken();
 		GEOFENCE_TOKEN_INFO = geofencesManager.createToken();
 
 		bindService(new Intent(this, PointsService.class),
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
+		bindService(new Intent(this, RemoteContentService.class),
+				remoteContentServiceConnection = new ContentServiceConnection(), BIND_AUTO_CREATE);
+		bindService(new Intent(this, DataService.class),
+				dataServiceConnection = new DataServiceConnection(), BIND_AUTO_CREATE);
+
 		log.info("created");
 	}
 
@@ -133,12 +143,26 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			}
 		}.execute();
 
-		unbindService(pointsServiceConnection);
-		pointsServiceConnection = null;
-
 		if (pointsService != null) {
 			pointsService.removeListener(this);
 		}
+
+		if (remoteContentService != null) {
+			remoteContentService.removeContentStateListener(RemoteContentService.GRAPHHOPPER_MAP);
+		}
+
+		if (dataService != null) {
+			dataService.removeDataListener(this);
+		}
+
+		unbindService(pointsServiceConnection);
+		pointsServiceConnection = null;
+
+		unbindService(remoteContentServiceConnection);
+		remoteContentServiceConnection = null;
+
+		unbindService(dataServiceConnection);
+		dataServiceConnection = null;
 
 		locationReceiver.stop();
 		locationReceiver.setListener(null);
@@ -278,8 +302,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		routeFuture = executor.submit(new Runnable() {
 			@Override
 			public void run() {
-				if (!ensureRoutingReady()) {
-					// TODO: notify user that routing haven't been initialized
+				if (!routing.isReady()) {
 					return;
 				}
 
@@ -378,22 +401,25 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	@Blocking
-	private boolean ensureRoutingReady() {
-		if (initializeFuture != null) {
-			try {
-				routing = initializeFuture.get();
-			} catch (InterruptedException e) {
-				return false;
-			} catch (ExecutionException e) {
-				return false;
-			} catch (CancellationException e) {
+	private boolean initializeRouting() {
+		String storagePath;
+		synchronized (serviceMutex) {
+			if (dataService == null) {
 				return false;
 			}
 
-			return true;
-		} else {
+			storagePath = dataService.getDataPath();
+		}
+
+		try {
+			routing.loadFromPref(this, storagePath);
+			setObstaclesPoints();
+		} catch (Exception ex) {
+			// TODO: report user
 			return false;
 		}
+
+		return true;
 	}
 
 	@Override
@@ -405,7 +431,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (!ensureRoutingReady()) {
+				if (!routing.isReady() || pointsService == null) {
 					return;
 				}
 
@@ -428,15 +454,51 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	private void onPointsServiceReady(PointsService pointsService) {
-		this.pointsService = pointsService;
-
+		synchronized (serviceMutex) {
+			this.pointsService = pointsService;
+		}
 		pointsService.addListener(this);
-
-		setObstaclesPoints();
 	}
 
 	private void onPointsServiceDisconnected() {
-		this.pointsService = null;
+		synchronized (serviceMutex) {
+			this.pointsService = null;
+		}
+	}
+	private void onContentServiceReady(RemoteContentService contentService) {
+		synchronized (serviceMutex) {
+			this.remoteContentService = contentService;
+		}
+		remoteContentService.setContentStateListener(RemoteContentService.GRAPHHOPPER_MAP, this);
+	}
+
+	private void onContentServiceDisconnected() {
+		synchronized (serviceMutex) {
+			this.remoteContentService = null;
+		}
+	}
+
+	private void onDataServiceReady(DataService dataService) {
+		synchronized (serviceMutex) {
+			this.dataService = dataService;
+		}
+
+		dataService.addDataListener(this);
+
+		if (!routing.isReady()) {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					initializeRouting();
+				}
+			});
+		}
+	}
+
+	private void onDataServiceDisconnected() {
+		synchronized (serviceMutex) {
+			this.dataService = null;
+		}
 	}
 
 	public void addListener(Listener listener) {
@@ -551,6 +613,51 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public void geofenceExited(Bundle data) {
 	}
 
+	@Override
+	public void contentItemReady(ContentItem contentItem) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				initializeRouting();
+			}
+		});
+	}
+
+	@Override
+	public void contentItemDeactivated() {
+		final CountDownLatch latch = new CountDownLatch(1);
+
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				routing.close();
+				latch.countDown();
+			}
+		});
+
+		try {
+			latch.await();
+		} catch (InterruptedException ignored) {
+		}
+	}
+
+	@Override
+	public void dataPathChanged(String newDataPath) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				initializeRouting();
+				dataService.dataListenerReady();
+			}
+		});
+	}
+
+	@Override
+	public int getPriority() {
+		return 1;
+	}
+
+
 	public class Binder extends android.os.Binder {
 		public RoutingService getService() {
 			return RoutingService.this;
@@ -623,4 +730,31 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			onPointsServiceDisconnected();
 		}
 	}
+
+	private class ContentServiceConnection implements ServiceConnection {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			RemoteContentService remoteContentService = ((RemoteContentService.Binder) service).getService();
+			onContentServiceReady(remoteContentService);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			onContentServiceDisconnected();
+		}
+	}
+
+	private class DataServiceConnection implements ServiceConnection {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			DataService remoteContentService = ((DataService.Binder) service).getService();
+			onDataServiceReady(remoteContentService);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			onDataServiceDisconnected();
+		}
+	}
+
 }

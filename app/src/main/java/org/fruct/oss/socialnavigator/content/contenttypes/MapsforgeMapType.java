@@ -74,7 +74,6 @@ public class MapsforgeMapType extends ContentType {
 		pref.edit().putString(Settings.OFFLINE_MAP, item.getName()).apply();
 	}
 
-
 	@Override
 	protected boolean isCurrentItemActive(ContentItem item) {
 		return true;
@@ -82,9 +81,10 @@ public class MapsforgeMapType extends ContentType {
 
 	@Override
 	protected void deactivateCurrentItem() {
+		super.deactivateCurrentItem();
+
 		pref.edit().remove(Settings.OFFLINE_MAP)
 				.remove(configKey)
 				.apply();
-		super.deactivateCurrentItem();
 	}
 }

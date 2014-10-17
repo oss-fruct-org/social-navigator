@@ -26,12 +26,12 @@ import java.util.zip.ZipFile;
 public class GraphhopperMapType extends ContentType {
 	private static final Logger log = LoggerFactory.getLogger(GraphhopperMapType.class);
 
-	private final DataService dataService;
+	private String dataPath;
 	private Map<String, Region> regions;
 
-	public GraphhopperMapType(Context context, DataService dataService, Map<String, Region> regions) {
+	public GraphhopperMapType(Context context, String dataPath, Map<String, Region> regions) {
 		super(context, RemoteContentService.GRAPHHOPPER_MAP, "graphhopper-map-current-hash");
-		this.dataService = dataService;
+		this.dataPath = dataPath;
 		this.regions = regions;
 	}
 
@@ -64,9 +64,12 @@ public class GraphhopperMapType extends ContentType {
 
 	@Override
 	protected void activateItem(ContentItem item) {
+		if (dataPath == null) {
+			return;
+		}
+
 		DirectoryContentItem dItem = (DirectoryContentItem) item;
 
-		String dataPath = dataService.getDataPath();
 		String ghPath = dataPath + "/graphhopper";
 
 		String regionName = "gh-" + item.getHash();
@@ -92,16 +95,19 @@ public class GraphhopperMapType extends ContentType {
 
 	@Override
 	protected void deactivateCurrentItem() {
+		super.deactivateCurrentItem();
+
 		String navigationPath = pref.getString(Settings.NAVIGATION_DATA, null);
 		if (navigationPath != null) {
 			Utils.deleteDir(new File(navigationPath));
 		}
 
-
 		pref.edit().remove(Settings.NAVIGATION_DATA)
 				.remove(configKey)
 				.apply();
+	}
 
-		super.deactivateCurrentItem();
+	public void setDataPath(String currentStoragePath) {
+		this.dataPath = currentStoragePath;
 	}
 }

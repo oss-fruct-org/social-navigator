@@ -36,10 +36,11 @@ public abstract class ContentType {
 
 	synchronized void applyLocation(Location location) {
 		for (ContentItem contentItem : contentItems) {
-			if (checkLocation(location, contentItem)) {
+			if (currentItem!= contentItem && checkLocation(location, contentItem)) {
 				deactivateCurrentItem();
 				setCurrentItem(contentItem);
 				activateItem(contentItem);
+
 				log.debug("Notifying about contentItemReady");
 				if (listener != null) {
 					log.debug("Notifying about contentItemReady: listener active");
