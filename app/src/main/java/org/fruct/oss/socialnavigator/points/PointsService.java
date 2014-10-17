@@ -274,7 +274,7 @@ public class PointsService extends Service {
 				}
 			}
 		} catch (PointsException e) {
-			// TODO: report user
+			notifyDataUpdateFailed(e);
 		}
 	}
 

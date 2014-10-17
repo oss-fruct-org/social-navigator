@@ -55,6 +55,8 @@ public class RemoteContentService extends Service implements DataService.DataLis
 	public static final String GRAPHHOPPER_MAP = "graphhopper-map";
 	public static final String MAPSFORGE_MAP = "mapsforge-map";
 
+	private static final float LOCATION_UPDATE_DIST = 1000;
+
 	private Binder binder = new Binder();
 
 	private DataService dataService;
@@ -111,8 +113,12 @@ public class RemoteContentService extends Service implements DataService.DataLis
 		LocalBroadcastManager.getInstance(this).registerReceiver(locationReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
-				location = intent.getParcelableExtra(RoutingService.ARG_LOCATION);
-				newLocation(location);
+				Location newLocation = intent.getParcelableExtra(RoutingService.ARG_LOCATION);
+
+				if (location == null || newLocation.distanceTo(location) > LOCATION_UPDATE_DIST) {
+					location = newLocation;
+					newLocation(location);
+				}
 			}
 		}, new IntentFilter(RoutingService.BC_LOCATION));
 
