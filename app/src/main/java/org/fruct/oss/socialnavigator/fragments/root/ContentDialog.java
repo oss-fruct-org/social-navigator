@@ -76,12 +76,6 @@ public class ContentDialog extends DialogFragment implements DialogInterface.OnC
 			active[i] = (sItem.state == ContentFragment.LocalContentState.NEEDS_UPDATE
 				|| sItem.state == ContentFragment.LocalContentState.NOT_EXISTS);
 		}
-
-		/*try {
-			listener = (Listener) activity;
-		} catch (ClassCastException ex) {
-			throw new ClassCastException(activity.toString() + "must implement " + Listener.class.toString());
-		}*/
 	}
 
 	public void setListener(Listener listener) {

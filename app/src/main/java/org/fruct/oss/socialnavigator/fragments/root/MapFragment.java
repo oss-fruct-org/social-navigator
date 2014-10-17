@@ -1,6 +1,7 @@
 package org.fruct.oss.socialnavigator.fragments.root;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,12 +12,14 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.SlidingPaneLayout;
+import android.support.v7.app.ActionBar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
+import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.fragments.overlays.CreatePointOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
@@ -68,6 +71,13 @@ public class MapFragment extends Fragment {
 
 	public static MapFragment newInstance() {
 		return new MapFragment();
+	}
+
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+
+		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section1), ActionBar.NAVIGATION_MODE_STANDARD);
 	}
 
 	@Override

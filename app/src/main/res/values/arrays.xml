@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="drawer_sections">
-        <item>Map</item>
-        <item>Points</item>
-        <item>Content</item>
+        <item>@string/title_section1</item>
+        <item>@string/title_section2</item>
+        <item>@string/title_section3</item>
     </string-array>
 
     <string-array name="content_spinner">

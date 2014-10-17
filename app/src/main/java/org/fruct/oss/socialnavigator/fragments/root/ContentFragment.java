@@ -31,6 +31,7 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.content.ContentItem;
 import org.fruct.oss.socialnavigator.content.RemoteContentService;
@@ -234,6 +235,13 @@ public class ContentFragment extends Fragment
 	private DownloadProgressFragment downloadFragment;
 
 	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+
+		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section3), ActionBar.NAVIGATION_MODE_LIST);
+	}
+
+	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 							 Bundle savedInstanceState) {
 		// Inflate the layout for this fragment
@@ -283,8 +291,6 @@ public class ContentFragment extends Fragment
 
 	private void setupSpinner() {
 		ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
-		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-
 		SpinnerAdapter spinnerAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.content_spinner,
 				android.support.v7.appcompat.R.layout.support_simple_spinner_dropdown_item);
 		actionBar.setListNavigationCallbacks(spinnerAdapter, this);
