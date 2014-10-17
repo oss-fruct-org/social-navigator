@@ -46,6 +46,15 @@
             android:enabled="true"
             android:exported="false" >
         </service>
+
+        <activity
+            android:name="org.fruct.oss.socialnavigator.settings.SettingsActivity"
+            android:label="@string/title_section4"
+            android:parentActivityName="org.fruct.oss.socialnavigator.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.fruct.oss.socialnavigator.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

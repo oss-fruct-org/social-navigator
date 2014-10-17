@@ -1,28 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Social Navigator</string>
 
+    <string name="app_name">Social Navigator</string>
     <string name="title_section1">Map</string>
     <string name="title_section2">Points</string>
     <string name="title_section3">Content</string>
+    <string name="title_section4">Preferences</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_example">Example action</string>
     <string name="action_settings">Settings</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
-
     <string name="action_refresh">Refresh</string>
     <string name="str_data_refresh_failed">Cannot load data from server</string>
     <string name="action_position">Follow</string>
     <string name="action_route">Route</string>
     <string name="action_create">Create point</string>
     <string name="str_not_implemented">Not implemented yet</string>
-
     <string name="action_route_safe">Safe</string>
     <string name="action_route_half_safe">Medium</string>
     <string name="action_route_unsafe">Unsafe</string>
-
     <string name="str_path_length">Distance: </string>
     <string name="action_place_here">Place here</string>
     <string name="action_close_route">Close route</string>
@@ -33,9 +31,11 @@
     <string name="str_turn_left">Turn left after %s</string>
     <string name="str_turn_right">Turn right after %s</string>
     <string name="str_approaching">Approaching %s</string>
+
     <string name="storage_path_sd_card">SD Card</string>
     <string name="storage_path_external">External</string>
     <string name="storage_path_internal">Internal</string>
+
     <string name="navigation_data">Navigation data</string>
     <string name="offline_map">Offline map</string>
     <string name="update_availabe">Update available</string>
@@ -50,16 +50,22 @@
     <string name="download_interrupted">Download interrupted</string>
     <string name="str_starting_download">Starting download</string>
 
+
+
     <plurals name="plural_meters">
         <item quantity="one">%d meter</item>
         <item quantity="many">%d meters</item>
         <item quantity="other">%d meters</item>
     </plurals>
-
     <plurals name="plural_kilometers">
         <item quantity="one">%d kilometer</item>
         <item quantity="many">%d kilometers</item>
         <item quantity="other">%d kilometers</item>
     </plurals>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="pref_storage_path_title">Storage</string>
+    <string name="str_local_content_moved">Local content successfully moved</string>
+    <string name="str_local_content_move_error">Cannot move local content</string>
 
 </resources>

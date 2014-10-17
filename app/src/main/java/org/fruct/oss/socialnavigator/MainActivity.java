@@ -21,6 +21,7 @@ import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.Routing;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
+import org.fruct.oss.socialnavigator.settings.SettingsActivity;
 
 
 public class MainActivity extends ActionBarActivity
@@ -86,6 +87,10 @@ public class MainActivity extends ActionBarActivity
 		case 2:
 			fragment = ContentFragment.newInstance();
 			break;
+
+		case 3:
+			startActivity(new Intent(this, SettingsActivity.class));
+			return;
 
 		default:
 			fragment = PlaceholderFragment.newInstance(position + 1);

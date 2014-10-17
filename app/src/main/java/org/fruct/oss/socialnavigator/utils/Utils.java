@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
@@ -55,12 +56,15 @@ public class Utils {
 	}
 
 	public static void copyStream(InputStream input, OutputStream output) throws IOException {
-		int bufferSize = 4096;
+		int bufferSize = 10000;
 
 		byte[] buf = new byte[bufferSize];
 		int read;
 		while ((read = input.read(buf)) > 0) {
 			output.write(buf, 0, read);
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedIOException("copyStream thread interrupted");
+			}
 		}
 	}
 

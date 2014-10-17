@@ -4,11 +4,16 @@
         <item>@string/title_section1</item>
         <item>@string/title_section2</item>
         <item>@string/title_section3</item>
+        <item>@string/title_section4</item>
     </string-array>
 
     <string-array name="content_spinner">
         <item>All</item>
         <item>Local</item>
         <item>Updates</item>
+    </string-array>
+
+    <string-array name="stub_array">
+        <item>empty</item>
     </string-array>
 </resources>

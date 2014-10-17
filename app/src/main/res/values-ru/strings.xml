@@ -38,6 +38,9 @@
     <string name="str_cant_delete_active_content">Can\'t delete active content</string>
     <string name="download_interrupted">Download interrupted</string>
     <string name="str_starting_download">Starting download</string>
+    <string name="pref_storage_path_title">Storage</string>
+    <string name="str_local_content_moved">Local content successfully moved</string>
+    <string name="str_local_content_move_error">Cannot move local content</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d метр</item>
