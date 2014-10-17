@@ -415,7 +415,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 			routing.loadFromPref(this, storagePath);
 			setObstaclesPoints();
 		} catch (Exception ex) {
-			// TODO: report user
+			if (remoteContentService != null) {
+				remoteContentService.invalidateCurrentContent(RemoteContentService.GRAPHHOPPER_MAP);
+			}
 			return false;
 		}
 

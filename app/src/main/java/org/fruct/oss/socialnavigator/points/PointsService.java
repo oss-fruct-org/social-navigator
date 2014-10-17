@@ -303,13 +303,6 @@ public class PointsService extends Service {
 	}
 
 	private void setupProviders() {
-		/*ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
-		provider.setCategories("Pit", "Category 2", "Category 3");
-		provider.addPointDesc("Point 1", "Point 1 description", "http://example.com", "Pit", 61.78751, 34.35507, 2);
-		provider.addPointDesc("Point 2", "Point 2 description", "http://example.com", "Pit", 61.7879, 34.356045, 2);
-		//provider.addPointDesc("Point 3", "Point 3 description", "http://example.com", "Category 1", 61.79, 34.352);
-		addPointsProvider(provider);*/
-
 		GetsProvider getsProvider = new GetsProvider();
 		addPointsProvider(getsProvider);
 

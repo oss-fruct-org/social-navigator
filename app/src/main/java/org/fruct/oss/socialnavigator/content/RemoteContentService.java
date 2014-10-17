@@ -462,19 +462,23 @@ public class RemoteContentService extends Service implements DataService.DataLis
 		}
 	}
 
-	/*public void invalidateCurrentContent(Location location, String type) {
+	public void invalidateCurrentContent(String type) {
 		log.debug("RemoteContentService invalidateCurrentContent");
-		ContentType contentType = contentTypes.get(type);
+		final ContentType contentType = contentTypes.get(type);
 		if (contentType == null) {
 			throw new IllegalArgumentException("No such content type: " + type);
 		}
 
-		contentType.invalidateCurrentContent();
-		if (location != null) {
-			this.location = location;
-			contentType.applyLocation(this.location);
-		}
-	}*/
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				contentType.deactivateCurrentItem();
+				if (location != null) {
+					contentType.applyLocation(location);
+				}
+			}
+		});
+	}
 
 	private void notifyLocalListReady(final List<ContentItem> items) {
 		handler.post(new Runnable() {

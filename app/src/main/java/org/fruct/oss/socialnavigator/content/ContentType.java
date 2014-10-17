@@ -125,6 +125,7 @@ public abstract class ContentType {
 			listener.contentItemDeactivated();
 		}
 		currentItem = null;
+		pref.edit().remove(configKey).apply();
 	}
 
 	ContentItem getCurrentItem() {
@@ -136,4 +137,5 @@ public abstract class ContentType {
 		currentItemHash = currentItem.getHash();
 		pref.edit().putString(configKey, currentItemHash).apply();
 	}
+
 }
