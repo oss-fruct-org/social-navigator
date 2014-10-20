@@ -99,7 +99,7 @@ public class GraphhopperMapType extends ContentType {
 
 		String navigationPath = pref.getString(Settings.NAVIGATION_DATA, null);
 		if (navigationPath != null) {
-			Utils.deleteDir(new File(navigationPath));
+			Utils.deleteDir(new File(dataPath + "/graphhopper/" + navigationPath));
 		}
 
 		pref.edit().remove(Settings.NAVIGATION_DATA)

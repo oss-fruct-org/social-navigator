@@ -49,7 +49,6 @@ public class RemoteContentService extends Service implements DataService.DataLis
 	private static final Logger log = LoggerFactory.getLogger(RemoteContentService.class);
 
 	public static final String[] REMOTE_CONTENT_URLS = {
-			"http://kappa.cs.petrsu.ru/~ivashov/mordor.xml",
 			"http://oss.fruct.org/projects/roadsigns/root.xml"};
 
 	public static final String GRAPHHOPPER_MAP = "graphhopper-map";
