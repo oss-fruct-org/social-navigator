@@ -24,6 +24,7 @@ import org.fruct.oss.socialnavigator.content.ContentItem;
 import org.fruct.oss.socialnavigator.content.RemoteContentService;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.utils.NamedThreadFactory;
 import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.util.GeoPoint;
@@ -59,10 +60,8 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private int GEOFENCE_TOKEN_INFO;
 
 	private final Binder binder = new Binder();
-	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private final ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("RoutingServiceThread"));
 	private LocationManager locationManager;
-
-	private final Object mutex = new Object();
 
 	// Tasks
 	private Future<?> routeFuture;
@@ -74,6 +73,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private GeoPoint targetPoint;
 	private List<Path> currentPaths;
 	private Turn currentTurn;
+
+	// Locks current target point ad current paths
+	private final Object mutex = new Object();
 
 	// Locks services assignment
 	private final Object serviceMutex = new Object();
@@ -275,9 +277,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				synchronized (geofencesManager) {
-					geofencesManager.setLocation(location);
-				}
+				geofencesManager.setLocation(location);
 			}
 		});
 	}
@@ -433,23 +433,24 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (!routing.isReady() || pointsService == null) {
-					return;
+				List<Point> obstaclesPoints;
+				synchronized (serviceMutex) {
+					if (!routing.isReady() || pointsService == null) {
+						return;
+					}
+
+					// Set obstacles
+					obstaclesPoints = pointsService.queryList(pointsService.requestPoints(null));
+					routing.setObstacles(obstaclesPoints);
 				}
 
-				// Set obstacles
-				List<Point> obstaclesPoints = pointsService.queryList(pointsService.requestPoints(null));
-				routing.setObstacles(obstaclesPoints);
-
 				// Set geofences
-				synchronized (geofencesManager) {
-					geofencesManager.removeGeofences(GEOFENCE_TOKEN_OBSTACLES);
-					for (Point point : obstaclesPoints) {
-						Bundle data = new Bundle(1);
-						data.putParcelable("point", point);
+				geofencesManager.removeGeofences(GEOFENCE_TOKEN_OBSTACLES);
+				for (Point point : obstaclesPoints) {
+					Bundle data = new Bundle(1);
+					data.putParcelable("point", point);
 
-						geofencesManager.addGeofence(GEOFENCE_TOKEN_OBSTACLES, point.getLat(), point.getLon(), PROXIMITY_RADIUS, data);
-					}
+					geofencesManager.addGeofence(GEOFENCE_TOKEN_OBSTACLES, point.getLat(), point.getLon(), PROXIMITY_RADIUS, data);
 				}
 			}
 		});
@@ -579,21 +580,18 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	public void updateActivePathWayInformation(Path activePath) {
-		synchronized (geofencesManager) {
-
-			Turn newTurn = activePath.getPointList().checkTurn();
-			if (newTurn != null) {
-				if (currentTurn == null || !currentTurn.equals(newTurn)) {
-					currentTurn = newTurn;
-					Bundle data = new Bundle(1);
-					data.putParcelable("turn", newTurn);
-					geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
-					geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO,
-							newTurn.getPoint().x, newTurn.getPoint().y, PROXIMITY_RADIUS, data);
-				}
-			} else {
+		Turn newTurn = activePath.getPointList().checkTurn();
+		if (newTurn != null) {
+			if (currentTurn == null || !currentTurn.equals(newTurn)) {
+				currentTurn = newTurn;
+				Bundle data = new Bundle(1);
+				data.putParcelable("turn", newTurn);
 				geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
+				geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO,
+						newTurn.getPoint().x, newTurn.getPoint().y, PROXIMITY_RADIUS, data);
 			}
+		} else {
+			geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
 		}
 	}
 
