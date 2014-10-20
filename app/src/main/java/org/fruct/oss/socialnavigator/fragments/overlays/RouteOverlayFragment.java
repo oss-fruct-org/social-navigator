@@ -145,19 +145,22 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private void showPathInfo(RoutingService.Path path) {
 		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
-		lengthTextView.setText(Utils.stringDistance(getResources(), path.getResponse().getDistance()));
-
 		TextView titleTextView = (TextView) view.findViewById(R.id.title_text);
-		titleTextView.setText(path.getRoutingType().getStringId());
 
-		mapView.invalidate();
+		if (path != null) {
+			lengthTextView.setVisibility(View.VISIBLE);
+			lengthTextView.setText(Utils.stringDistance(getResources(), path.getResponse().getDistance()));
+			titleTextView.setText(path.getRoutingType().getStringId());
+
+		} else {
+			lengthTextView.setText(getResources().getString(R.string.str_path_not_found));
+			lengthTextView.setVisibility(View.GONE);
+		}
 	}
 
 	private void pathSelected(RoutingType routingType) {
 		activeRoutingType = routingType;
-
-		RoutingService.Path currentPath = paths.get(routingType);
-		routingService.setPathActive(currentPath);
+		routingService.setRoutingTypeActive(routingType);
 		updateOverlays();
 	}
 
@@ -235,8 +238,10 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			createOverlay(path);
 		}
 
-		createOverlay(currentPath);
-		showPathInfo(currentPath);
+		if (currentPath != null) {
+			createOverlay(currentPath);
+			showPathInfo(currentPath);
+		}
 
 		// Create target point overlay
 		targetPointOverlay = new ItemizedIconOverlay<TargetPointItem>(new ArrayList<TargetPointItem>(),
@@ -300,14 +305,10 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	@Override
-	public void pathsUpdated(GeoPoint targetPoint, List<RoutingService.Path> paths) {
-		EnumMap<RoutingType, RoutingService.Path> pathsMap = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
+	public void pathsUpdated(GeoPoint targetPoint, EnumMap<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
 		this.targetPoint = targetPoint;
-		for (RoutingService.Path path : paths) {
-			pathsMap.put(path.getRoutingType(), path);
-		}
-
-		this.paths = pathsMap;
+		this.paths = paths;
+		this.activeRoutingType = activeType;
 
 		if (!paths.isEmpty()) {
 			showPanel();
@@ -332,11 +333,15 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	private int getColorByPathType(RoutingService.Path path) {
-		if (path.getWeighting().equalsIgnoreCase("fastest")) {
+		assert path.getRoutingType() != null;
+
+		switch (path.getRoutingType()) {
+		default:
+		case FASTEST:
 			return getResources().getColor(R.color.color_path_danger);
-		} else if (path.getWeighting().equals("half-blocking")) {
+		case NORMAL:
 			return getResources().getColor(R.color.color_path_half_safe);
-		} else {
+		case SAFE:
 			return getResources().getColor(R.color.color_path_safe);
 		}
 	}

@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,17 +25,14 @@ import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.NamedThreadFactory;
 import org.fruct.oss.socialnavigator.utils.Turn;
-import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.EnumMap;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -47,21 +43,20 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	public static final String ACTION_ROUTE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_ROUTE";
 	public static final String ACTION_PLACE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_PLACE";
-	public static final String ACTION_GEO_FENCE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_GEOFENCE";
 
 	public static final String ARG_POINT = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_POINT";
 	public static final String ARG_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_LOCATION";
 
 	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
-	public static final int END_ROUTE_DISTANCE = 20;
 	public static final int PROXIMITY_RADIUS = 20;
+
+	public static final RoutingType[] REQUIRED_ROUTING_TYPES = {RoutingType.SAFE, RoutingType.NORMAL, RoutingType.FASTEST};
 
 	private int GEOFENCE_TOKEN_OBSTACLES;
 	private int GEOFENCE_TOKEN_INFO;
 
 	private final Binder binder = new Binder();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("RoutingServiceThread"));
-	private LocationManager locationManager;
 
 	// Tasks
 	private Future<?> routeFuture;
@@ -71,8 +66,10 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	private Routing routing;
 
 	private GeoPoint targetPoint;
-	private List<Path> currentPaths;
+
+	private final EnumMap<RoutingType, Path> currentPathsMap = new EnumMap<RoutingType, Path>(RoutingType.class);
 	private Turn currentTurn;
+	private RoutingType currentRoutingType = RoutingType.SAFE;
 
 	// Locks current target point ad current paths
 	private final Object mutex = new Object();
@@ -100,8 +97,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 		handler = new Handler(Looper.getMainLooper());
 
-		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
 		locationReceiver = new LocationReceiver(this);
 		locationReceiver.setListener(this);
 		locationReceiver.start();
@@ -120,6 +115,8 @@ public class RoutingService extends Service implements PointsService.Listener, L
 				remoteContentServiceConnection = new ContentServiceConnection(), BIND_AUTO_CREATE);
 		bindService(new Intent(this, DataService.class),
 				dataServiceConnection = new DataServiceConnection(), BIND_AUTO_CREATE);
+
+		currentPathsMap.clear();
 
 		log.info("created");
 	}
@@ -222,7 +219,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		}
 
 		synchronized (mutex) {
-			currentPaths = null;
+			currentPathsMap.clear();
 			targetPoint = null;
 		}
 
@@ -231,9 +228,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	public void sendLastResult() {
 		synchronized (mutex) {
-			if (currentPaths != null) {
-				notifyPathsUpdated(targetPoint, currentPaths);
-			}
+			notifyPathsUpdated(targetPoint, currentPathsMap);
 		}
 	}
 
@@ -306,84 +301,46 @@ public class RoutingService extends Service implements PointsService.Listener, L
 					return;
 				}
 
-				// FIXME: rewrite and add synchronizations
-				if (currentPaths == null) {
-					// No current path set
-					List<Path> newRoutes = null;
-					try {
-						newRoutes = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
-								targetPoint.getLatitude(), targetPoint.getLongitude());
-					} catch (Exception ex) {
-						log.error("Can't find path", ex);
-						return;
+				for (RoutingType requiredRoutingType : REQUIRED_ROUTING_TYPES) {
+					Path existingPath = currentPathsMap.get(requiredRoutingType);
+
+					boolean isPathDeviated = true;
+					if (existingPath != null && !forceRecalc) {
+						existingPath.pointList.setLocation(currentLocation);
+						isPathDeviated = existingPath.pointList.isDeviated();
 					}
 
-					if (newRoutes.size() > 0) {
-						newRoutes.get(0).setActive(true);
-						updateActivePathWayInformation(newRoutes.get(0));
-					}
+					if (existingPath == null || forceRecalc || isPathDeviated) {
+						Path path = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
+								targetPoint.getLatitude(), targetPoint.getLongitude(), requiredRoutingType);
 
-					synchronized (mutex) {
-						if (Thread.currentThread().isInterrupted())
-							return;
-
-						currentPaths = newRoutes;
-						notifyPathsUpdated(targetPoint, currentPaths);
-					}
-				} else if (forceRecalc) {
-					// Existing path set and new target point
-
-					for (Path path : currentPaths) {
-						Path newPath = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
-								targetPoint.getLatitude(), targetPoint.getLongitude(),
-								path.getRoutingType());
-						path.pointList = newPath.getPointList();
-						path.response = newPath.getResponse();
-
-						if (path.isActive()) {
-							updateActivePathWayInformation(path);
+						if (path != null) {
+							currentPathsMap.put(requiredRoutingType, path);
 						}
 					}
+				}
 
-					synchronized (mutex) {
-						if (Thread.currentThread().isInterrupted())
-							return;
+				Path activePath = currentPathsMap.get(currentRoutingType);
+				if (activePath == null) {
+					currentRoutingType = RoutingType.SAFE;
+					activePath = currentPathsMap.get(currentRoutingType);
+				}
 
-						notifyPathsUpdated(targetPoint, currentPaths);
-					}
-				} else {
-					// New location with existing path set and same target point
-					for (Path path : currentPaths) {
-						path.pointList.setLocation(currentLocation);
-						if (path.pointList.isDeviated()) {
-							Path newPath = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
-									targetPoint.getLatitude(), targetPoint.getLongitude(),
-									path.getRoutingType());
-							path.pointList = newPath.getPointList();
-							path.response = newPath.getResponse();
+				if (activePath != null) {
+					if (activePath.getPointList().isCompleted()) {
+						synchronized (mutex) {
+							currentPathsMap.clear();
+							RoutingService.this.targetPoint = null;
 						}
 
-						if (path.pointList.isCompleted()) {
-							synchronized (mutex) {
-								currentPaths = null;
-								RoutingService.this.targetPoint = null;
-							}
-
-							notifyPathsCleared();
-							return;
-						}
-
-						if (path.isActive()) {
-							updateActivePathWayInformation(path);
-						}
+						notifyPathsCleared();
+					} else {
+						updateActivePathWayInformation(activePath);
 					}
+				}
 
-					synchronized (mutex) {
-						if (Thread.currentThread().isInterrupted())
-							return;
-
-						notifyPathsUpdated(targetPoint, currentPaths);
-					}
+				if (!currentPathsMap.isEmpty()) {
+					notifyPathsUpdated(targetPoint, currentPathsMap);
 				}
 			}
 		});
@@ -521,12 +478,15 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public void onDataUpdateFailed(Throwable throwable) {
 	}
 
-	private void notifyPathsUpdated(final GeoPoint targetPoint, final List<Path> results) {
+	private void notifyPathsUpdated(final GeoPoint targetPoint, final EnumMap<RoutingType, Path> paths) {
+		if (targetPoint == null)
+			return;
+
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
 				for (Listener listener : listeners) {
-					listener.pathsUpdated(targetPoint, results);
+					listener.pathsUpdated(targetPoint, paths, currentRoutingType);
 				}
 			}
 		});
@@ -565,18 +525,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		});
 	}
 
-	public void setPathActive(Path currentPath) {
-		synchronized (mutex) {
-			for (Path path : currentPaths) {
-				if (path.equals(currentPath)) {
-					path.setActive(true);
-				} else {
-					path.setActive(false);
-				}
-			}
-		}
-
-		updateActivePathWayInformation(currentPath);
+	public void setRoutingTypeActive(RoutingType activeRoutingType) {
+		this.currentRoutingType = activeRoutingType;
+		updateActivePathWayInformation(currentPathsMap.get(currentRoutingType));
 	}
 
 	public void updateActivePathWayInformation(Path activePath) {
@@ -667,43 +618,22 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public static class Path {
 		private GHResponse response;
 		private PathPointList pointList;
-
-		private final String vehicle;
-		private final String weighting;
-		private boolean isActive;
 		private RoutingType routingType;
 
 		public Path(GHResponse response, RoutingType routingType) {
 			this.pointList = new PathPointList(response);
 			this.response = response;
 			this.routingType = routingType;
-			this.vehicle = routingType.getVehicle();
-			this.weighting = routingType.getWeighting();
-		}
-
-		void setActive(boolean isActive) {
-			this.isActive = isActive;
 		}
 
 		public PathPointList getPointList() {
 			return pointList;
 		}
 
-		public String getVehicle() {
-			return vehicle;
-		}
-
-		public String getWeighting() {
-			return weighting;
-		}
-
 		public GHResponse getResponse() {
 			return response;
 		}
 
-		public boolean isActive() {
-			return isActive;
-		}
 
 		public RoutingType getRoutingType() {
 			return routingType;
@@ -713,8 +643,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public static interface Listener {
 		void proximityEvent(Point point);
 		void proximityEvent(Turn turn);
-
-		void pathsUpdated(GeoPoint targetPoint, List<Path> paths);
+		void pathsUpdated(GeoPoint targetPoint, EnumMap<RoutingType, Path> paths, RoutingType activeType);
 		void pathsCleared();
 	}
 

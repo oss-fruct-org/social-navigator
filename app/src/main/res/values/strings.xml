@@ -67,5 +67,6 @@
     <string name="pref_storage_path_title">Storage</string>
     <string name="str_local_content_moved">Local content successfully moved</string>
     <string name="str_local_content_move_error">Cannot move local content</string>
+    <string name="str_path_not_found">Path not found</string>
 
 </resources>
