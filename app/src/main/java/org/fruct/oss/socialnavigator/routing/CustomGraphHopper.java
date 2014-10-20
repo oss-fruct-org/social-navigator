@@ -14,6 +14,9 @@ import org.osmdroid.util.GeoPoint;
 
 import java.util.List;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
+
 public class CustomGraphHopper extends GraphHopper {
 	private int[] blockedEdgesIds;
 	private int[] blockedEdgesDifficulties;
@@ -21,24 +24,29 @@ public class CustomGraphHopper extends GraphHopper {
 	public void updateBlockedEdges(List<Point> points) {
 		GeoPoint tmpGeoPoint = new GeoPoint(0, 0);
 
-		blockedEdgesIds = new int[points.size()];
-		blockedEdgesDifficulties = new int[points.size()];
+		TIntList blockedEdgesIdsList = new TIntArrayList();
+		TIntList blockedEdgesDifficultiesList = new TIntArrayList();
 
 		DistanceCalc2D distanceCalc = new DistanceCalc2D();
 		LocationIndex index = getLocationIndex();
-		for (int i = 0; i < points.size(); i++) {
-			Point point = points.get(i);
+
+		for (Point point : points) {
 			GeoPoint geoPoint = point.toGeoPoint();
 			QueryResult result = index.findClosest(geoPoint.getLatitude(), geoPoint.getLongitude(), EdgeFilter.ALL_EDGES);
 
-			GHPoint3D snappedPoint = result.getSnappedPoint();
-			tmpGeoPoint.setCoordsE6((int) (snappedPoint.getLat() * 1e6), (int) (snappedPoint.getLon() * 1e6));
+			if (result.isValid()) {
+				GHPoint3D snappedPoint = result.getSnappedPoint();
+				tmpGeoPoint.setCoordsE6((int) (snappedPoint.getLat() * 1e6), (int) (snappedPoint.getLon() * 1e6));
 
-			if (tmpGeoPoint.distanceTo(geoPoint) < 10) {
-				blockedEdgesIds[i] = result.getClosestEdge().getEdge();
-				blockedEdgesDifficulties[i] = point.getDifficulty();
+				if (tmpGeoPoint.distanceTo(geoPoint) < 10) {
+					blockedEdgesIdsList.add(result.getClosestEdge().getEdge());
+					blockedEdgesDifficultiesList.add(point.getDifficulty());
+				}
 			}
 		}
+
+		blockedEdgesDifficulties = blockedEdgesDifficultiesList.toArray();
+		blockedEdgesIds = blockedEdgesIdsList.toArray();
 	}
 
 	@Override

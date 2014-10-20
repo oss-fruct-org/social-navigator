@@ -249,32 +249,40 @@ public class PointsService extends Service {
 			throw new IllegalArgumentException("Trying to refresh non-existing provider");
 		}
 
+		List<Category> categories;
 		try {
-			List<Category> categories = provider.loadCategories();
-
-			for (Category category : categories) {
-				log.trace("Category received: {}", category.getName());
-				List<Point> points = provider.loadPoints(category);
-				database.insertCategory(category);
-
-				for (Point point : points) {
-					log.trace(" Point received: {}", point.getName());
-
-					if (point.getCategoryId() != category.getId()) {
-						log.error(" Point's category doesn't equals category it loaded from: '{}' != '{}'",
-								point.getCategoryId(), category.getId());
-						continue;
-					}
-
-					database.insertPoint(point);
-
-					if (Thread.currentThread().isInterrupted()) {
-						return;
-					}
-				}
-			}
+			categories = provider.loadCategories();
 		} catch (PointsException e) {
 			notifyDataUpdateFailed(e);
+			return;
+		}
+
+		for (Category category : categories) {
+			log.trace("Category received: {}", category.getName());
+			database.insertCategory(category);
+
+			List<Point> points;
+			try {
+				points = provider.loadPoints(category);
+			} catch (PointsException ex) {
+				continue;
+			}
+
+			for (Point point : points) {
+				log.trace(" Point received: {}", point.getName());
+
+				if (point.getCategoryId() != category.getId()) {
+					log.error(" Point's category doesn't equals category it loaded from: '{}' != '{}'",
+							point.getCategoryId(), category.getId());
+					continue;
+				}
+
+				database.insertPoint(point);
+
+				if (Thread.currentThread().isInterrupted()) {
+					return;
+				}
+			}
 		}
 	}
 
