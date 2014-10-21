@@ -62,8 +62,10 @@ public class NetworkStorage implements ContentStorage {
 				NetworkContent content = NetworkContent.parse(new InputStreamReader(conn));
 
 				for (NetworkContentItem item : content.getItems()) {
-					item.setNetworkStorage(this);
-					ret.add(item);
+					if (item.getType().equals(RemoteContentService.GRAPHHOPPER_MAP)) {
+						item.setNetworkStorage(this);
+						ret.add(item);
+					}
 				}
 
 				countSuccessful++;
