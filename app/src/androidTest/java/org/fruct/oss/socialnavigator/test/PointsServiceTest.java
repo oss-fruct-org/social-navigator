@@ -3,7 +3,6 @@ package org.fruct.oss.socialnavigator.test;
 import android.content.Intent;
 import android.database.Cursor;
 import android.test.MoreAsserts;
-import android.test.RenamingDelegatingContext;
 import android.test.ServiceTestCase;
 
 import org.fruct.oss.socialnavigator.points.ArrayPointsProvider;
@@ -57,7 +56,7 @@ public class PointsServiceTest extends ServiceTestCase<PointsService> {
 		initTestService();
 		ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
 		provider.setCategories("aaa", "bbb", "ccc");
-		service.addPointsProvider(provider);
+		service.setPointsProvider(provider);
 		service.refreshProviders();
 		service.awaitBackgroundTasks();
 

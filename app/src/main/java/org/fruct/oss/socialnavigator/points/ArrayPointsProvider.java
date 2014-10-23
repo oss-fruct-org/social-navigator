@@ -43,6 +43,11 @@ public class ArrayPointsProvider implements PointsProvider {
 	}
 
 	@Override
+	public List<Disability> loadDisabilities() throws PointsException {
+		return Collections.emptyList();
+	}
+
+	@Override
 	public List<Category> loadCategories() {
 		return categories;
 	}

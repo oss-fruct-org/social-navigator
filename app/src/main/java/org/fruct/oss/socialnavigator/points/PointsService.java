@@ -23,14 +23,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class PointsService extends Service {
 	private static final Logger log = LoggerFactory.getLogger(PointsService.class);
 
 	private final Binder binder = new Binder();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
-	private final Map<String, PointsProvider> providerMap = new HashMap<String, PointsProvider>();
+
+	private PointsProvider pointsProvider = null;
+
 	private final List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 
 	private Handler handler;
@@ -117,12 +118,10 @@ public class PointsService extends Service {
 			@Override
 			public void run() {
 				try {
-					for (String providerName : providerMap.keySet()) {
-						refreshProvider(providerName);
+					refreshProvider();
 
-						if (Thread.currentThread().isInterrupted())
-							return;
-					}
+					if (Thread.currentThread().isInterrupted())
+						return;
 
 					if (!Thread.currentThread().isInterrupted()) {
 						notifyDataUpdated();
@@ -136,14 +135,12 @@ public class PointsService extends Service {
 		});
 	}
 
-	public void addPointsProvider(final PointsProvider pointsProvider) {
-		if (providerMap.containsKey(pointsProvider.getProviderName())) {
+	public void setPointsProvider(PointsProvider pointsProvider) {
+		if (this.pointsProvider != null) {
 			throw new IllegalArgumentException("Provider with name " + pointsProvider.getProviderName() + " already exists");
 		}
 
-		synchronized (providerMap) {
-			providerMap.put(pointsProvider.getProviderName(), pointsProvider);
-		}
+		this.pointsProvider = pointsProvider;
 	}
 
 	private void notifyDataUpdated() {
@@ -243,15 +240,14 @@ public class PointsService extends Service {
 	}
 
 	@Blocking
-	private void refreshProvider(String providerName) throws PointsException {
-		PointsProvider provider = providerMap.get(providerName);
-		if (provider == null) {
+	private void refreshProvider() throws PointsException {
+		if (pointsProvider == null) {
 			throw new IllegalArgumentException("Trying to refresh non-existing provider");
 		}
 
 		List<Category> categories;
 		try {
-			categories = provider.loadCategories();
+			categories = pointsProvider.loadCategories();
 		} catch (PointsException e) {
 			notifyDataUpdateFailed(e);
 			return;
@@ -263,7 +259,7 @@ public class PointsService extends Service {
 
 			List<Point> points;
 			try {
-				points = provider.loadPoints(category);
+				points = pointsProvider.loadPoints(category);
 			} catch (PointsException ex) {
 				continue;
 			}
@@ -312,7 +308,7 @@ public class PointsService extends Service {
 
 	private void setupProviders() {
 		GetsProvider getsProvider = new GetsProvider();
-		addPointsProvider(getsProvider);
+		setPointsProvider(getsProvider);
 
 		refreshProviders();
 	}

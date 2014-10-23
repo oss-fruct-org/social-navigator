@@ -31,20 +31,13 @@ public class Disability {
 		return categories;
 	}
 
-	public static List<Disability> parse(Reader reader) {
-		try {
-			XmlPullParser parser = Xml.newPullParser();
-			parser.setInput(reader);
-			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+	public static List<Disability> parse(Reader reader) throws IOException, XmlPullParserException {
+		XmlPullParser parser = Xml.newPullParser();
+		parser.setInput(reader);
+		parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
 
-			parser.nextTag();
-			return readDisabilities(parser);
-		} catch (XmlPullParserException ex) {
-			throw new RuntimeException("Can't parser content data", ex);
-		} catch (IOException ex) {
-			throw new RuntimeException("Can't parser content data", ex);
-		}
-
+		parser.nextTag();
+		return readDisabilities(parser);
 	}
 
 	private static List<Disability> readDisabilities(XmlPullParser parser) throws IOException, XmlPullParserException {

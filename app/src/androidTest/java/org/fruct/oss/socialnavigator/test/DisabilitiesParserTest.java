@@ -46,6 +46,5 @@ public class DisabilitiesParserTest extends AndroidTestCase {
 		Disability d4 = disabilities.get(4);
 		assertEquals("eee", d4.getName());
 		MoreAsserts.assertEquals(new int[] {25, 26}, d4.getCategories());
-
 	}
 }

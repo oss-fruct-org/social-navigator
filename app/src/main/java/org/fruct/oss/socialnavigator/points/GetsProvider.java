@@ -11,23 +11,37 @@ import org.fruct.oss.socialnavigator.utils.Utils;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
 
 public class GetsProvider implements PointsProvider {
 	public static final String GETS_SERVER;
+	public static final String DISABILITIES_LIST;
 
 	static {
 		if (!BuildConfig.DEBUG) {
 			GETS_SERVER = "http://gets.cs.petrsu.ru/obstacle/service";
+			DISABILITIES_LIST = "http://gets.cs.petrsu.ru/obstacle/config/disabilities.xml";
 		} else {
 			GETS_SERVER = "http://gets.cs.petrsu.ru/obstacle/service";
+			DISABILITIES_LIST = "http://gets.cs.petrsu.ru/obstacle/config/disabilities.xml";
 		}
 	}
 
 	@Override
 	public String getProviderName() {
 		return "gets-provider";
+	}
+
+	@Override
+	public List<Disability> loadDisabilities() throws PointsException {
+		try {
+			String response = Utils.downloadUrl(DISABILITIES_LIST, null);
+			return Disability.parse(new StringReader(response));
+		} catch (Exception ex) {
+			throw new PointsException("Network error during categories request", ex);
+		}
 	}
 
 	@Override
@@ -88,7 +102,6 @@ public class GetsProvider implements PointsProvider {
 			throw new PointsException("Gets server return incorrect answer during points request", ex);
 		}
 	}
-
 
 	private void createRequestTop(XmlSerializer xmlSerializer) throws IOException {
 		xmlSerializer.startDocument("UTF-8", true);
