@@ -13,7 +13,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-public class Point implements Parcelable{
+public class Point implements Parcelable {
 	public static final String LOCAL_PROVIDER = "local_provider";
 	public static final String TEST_PROVIDER = "test_provider";
 	public static final String GETS_PROVIDER = "gets_provider";

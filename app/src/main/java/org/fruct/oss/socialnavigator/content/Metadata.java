@@ -40,9 +40,9 @@ public class Metadata {
 			parser.nextTag();
 			return readMetadata(parser);
 		} catch (XmlPullParserException ex) {
-			throw new RuntimeException("Can't parser content data", ex);
+			throw new RuntimeException("Can't parse content data", ex);
 		} catch (IOException ex) {
-			throw new RuntimeException("Can't parser content data", ex);
+			throw new RuntimeException("Can't parse content data", ex);
 		}
 
 	}

@@ -10,7 +10,7 @@ import java.io.Closeable;
 import java.io.IOException;
 
 public class PointsDatabase implements Closeable {
-	public static final int VERSION = 2;
+	public static final int VERSION = 3;
 	private final Context context;
 	private final Helper helper;
 	private final SQLiteDatabase db;
@@ -68,6 +68,26 @@ public class PointsDatabase implements Closeable {
 			db.insert("point", null, cv);
 		} else {
 			db.update("point", cv, "uuid=?", toArray(point.getUuid()));
+		}
+	}
+
+	public void insertDisability(Disability disability) {
+		try {
+			db.beginTransaction();
+
+			ContentValues cv = new ContentValues(1);
+			cv.put("name", disability.getName());
+			db.insert("disability", null, cv);
+
+			for (int categoryId : disability.getCategories()) {
+				ContentValues catCv = new ContentValues(1);
+				catCv.put("categoryId", categoryId);
+				db.insert("disability_category", null, cv);
+			}
+
+			db.setTransactionSuccessful();
+		} finally {
+			db.endTransaction();
 		}
 	}
 
@@ -134,12 +154,25 @@ public class PointsDatabase implements Closeable {
 					"uuid TEXT," +
 					"difficulty INTEGER," +
 					"FOREIGN KEY(categoryId) REFERENCES category(_id));");
+
+			db.execSQL("CREATE TABLE disability " +
+					"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+					"name TEXT);");
+
+			db.execSQL("CREATE TABLE disability_category " +
+					"(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+					"categoryId INTEGER," +
+					"disabilityId INTEGER, " +
+					"FOREIGN KEY(disabilityId) REFERENCES disability(_id));");
 		}
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			db.execSQL("DROP TABLE point;");
 			db.execSQL("DROP TABLE category;");
+			db.execSQL("DROP TABLE disability;");
+			db.execSQL("DROP TABLE disability_category;");
+
 			onCreate(db);
 		}
 

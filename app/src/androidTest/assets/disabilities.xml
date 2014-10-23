@@ -1,0 +1,35 @@
+<disabilities>
+    <disability>
+        <name xml:lang="ru_RU">aaa</name>
+        <category>23</category>
+        <category>24</category>
+        <category>27</category>
+        <category>28</category>
+        <category>29</category>
+    </disability>
+    <disability>
+        <name xml:lang="ru_RU">bbb</name>
+        <category>24</category>
+        <category>25</category>
+        <category>26</category>
+        <category>29</category>
+    </disability>
+    <disability>
+        <name xml:lang="ru_RU">ccc</name>
+        <category>23</category>
+        <category>24</category>
+        <category>27</category>
+        <category>28</category>
+        <category>29</category>
+    </disability>
+    <disability>
+        <name xml:lang="ru_RU">ddd</name>
+        <category>25</category>
+        <category>26</category>
+    </disability>
+    <disability>
+        <name xml:lang="ru_RU">eee</name>
+        <category>25</category>
+        <category>26</category>
+    </disability>
+</disabilities>

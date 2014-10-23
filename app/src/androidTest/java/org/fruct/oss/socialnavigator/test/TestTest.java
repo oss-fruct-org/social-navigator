@@ -2,6 +2,10 @@ package org.fruct.oss.socialnavigator.test;
 
 import android.test.AndroidTestCase;
 
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
