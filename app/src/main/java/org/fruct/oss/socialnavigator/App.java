@@ -6,6 +6,8 @@ import android.content.Context;
 import org.slf4j.impl.StaticLoggerBinder;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.File;
+
 public class App extends Application {
 	private static Context context;
 	private static App app;
@@ -17,6 +19,16 @@ public class App extends Application {
 
 		context = getApplicationContext();
 		app = this;
+
+		try {
+			//File httpCacheDir = new File(context.getCacheDir(), "http");
+			File httpCacheDir = new File("/sdcard/testcache");
+			long httpCacheSize = 10 * 1024 * 1024; // 10 MiB
+			Class.forName("android.net.http.HttpResponseCache")
+					.getMethod("install", File.class, long.class)
+					.invoke(null, httpCacheDir, httpCacheSize);
+		} catch (Exception ignore) {
+		}
 	}
 
 	public static Context getContext() {

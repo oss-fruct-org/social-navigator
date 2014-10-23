@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator.points;
 
+import android.content.Context;
 import android.util.Xml;
 
 import org.fruct.oss.socialnavigator.BuildConfig;
@@ -10,10 +11,12 @@ import org.fruct.oss.socialnavigator.parsers.Kml;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.xmlpull.v1.XmlSerializer;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class GetsProvider implements PointsProvider {
 	public static final String GETS_SERVER;
@@ -29,6 +32,11 @@ public class GetsProvider implements PointsProvider {
 		}
 	}
 
+
+	@Override
+	public void close() {
+	}
+
 	@Override
 	public String getProviderName() {
 		return "gets-provider";
@@ -40,7 +48,7 @@ public class GetsProvider implements PointsProvider {
 			String response = Utils.downloadUrl(DISABILITIES_LIST, null);
 			return Disability.parse(new StringReader(response));
 		} catch (Exception ex) {
-			throw new PointsException("Network error during categories request", ex);
+			throw new PointsException("Network error during disabilities request", ex);
 		}
 	}
 

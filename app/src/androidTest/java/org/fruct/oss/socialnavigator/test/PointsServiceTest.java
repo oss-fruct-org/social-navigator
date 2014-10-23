@@ -57,7 +57,7 @@ public class PointsServiceTest extends ServiceTestCase<PointsService> {
 		ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
 		provider.setCategories("aaa", "bbb", "ccc");
 		service.setPointsProvider(provider);
-		service.refreshProviders();
+		service.refresh();
 		service.awaitBackgroundTasks();
 
 		List<Category> categories = service.queryList(service.requestCategories());

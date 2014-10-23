@@ -17,6 +17,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -375,6 +376,15 @@ public class Utils {
 		}
 
 		dir.delete();
+	}
+
+	public static void silentClose(Closeable closeable) {
+		if (closeable != null) {
+			try {
+				closeable.close();
+			} catch (IOException ignored) {
+			}
+		}
 	}
 
 	public static String[] getSecondaryDirs() {

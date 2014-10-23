@@ -2,6 +2,8 @@ package org.fruct.oss.socialnavigator;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.http.HttpResponseCache;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -23,10 +25,15 @@ import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.Routing;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.settings.SettingsActivity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 
 public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+	private static final Logger log = LoggerFactory.getLogger(MainActivity.class);
 
 	public static final String ACTION_SWITCH = "org.fruct.oss.socialnavigator.MainActivity.ACTION_SWITCH";
 	public static final String ARG_INDEX = "org.fruct.oss.socialnavigator.INDEX";
@@ -60,6 +67,17 @@ public class MainActivity extends ActionBarActivity
 		startService(new Intent(this, PointsService.class));
 		startService(new Intent(this, RoutingService.class));
 		startService(new Intent(this, RemoteContentService.class));
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			HttpResponseCache.getInstalled().flush();
+			log.info("HttpResponseCache network: {}", HttpResponseCache.getInstalled().getNetworkCount());
+			log.info("HttpResponseCache hits: {}", HttpResponseCache.getInstalled().getHitCount());
+		}
 	}
 
 	@Override

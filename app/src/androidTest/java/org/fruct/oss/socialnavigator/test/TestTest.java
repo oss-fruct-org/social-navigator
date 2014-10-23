@@ -2,17 +2,13 @@ package org.fruct.oss.socialnavigator.test;
 
 import android.test.AndroidTestCase;
 
-import java.text.DateFormat;
-import java.util.Calendar;
-import java.util.Locale;
-import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TestTest extends AndroidTestCase {
 
+public class TestTest extends AndroidTestCase {
 	public void testExecutorTest() throws Exception {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -40,4 +36,24 @@ public class TestTest extends AndroidTestCase {
 			assertEquals(1, integer.get());
 		}
 	}
+/*
+	public void testOk() throws Exception {
+		File cacheDirectory = new File(getContext().getCacheDir(), "test-cache");
+
+		int cacheSize = 10 * 1024 * 1024; // 10 MiB
+		Cache cache = new Cache(cacheDirectory, cacheSize);
+
+		OkHttpClient client = new OkHttpClient();
+		client.setCache(cache);
+
+		Request request = new Request.Builder()
+				.url("http://kappa.cs.petrsu.ru/~ivashov/qwe.txt")
+				.build();
+
+		Call call = client.newCall(request);
+		Response response = call.execute();
+		assertTrue(response.isSuccessful());
+		System.err.println("code " + response.cacheResponse().code());
+		assertEquals("qwee\n", response.body().string());
+	}*/
 }

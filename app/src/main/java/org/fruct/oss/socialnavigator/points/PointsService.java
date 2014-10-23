@@ -13,10 +13,9 @@ import org.fruct.oss.socialnavigator.utils.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -85,6 +84,13 @@ public class PointsService extends Service {
 		database.close();
 		database = null;
 
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				pointsProvider.close();
+			}
+		});
+
 		executor.shutdown();
 
 		log.info("destroyed");
@@ -110,7 +116,7 @@ public class PointsService extends Service {
 		}
 	};
 
-	public void refreshProviders() {
+	public void refresh() {
 		if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
 			refreshProvidersTask.cancel(true);
 
@@ -119,9 +125,6 @@ public class PointsService extends Service {
 			public void run() {
 				try {
 					refreshProvider();
-
-					if (Thread.currentThread().isInterrupted())
-						return;
 
 					if (!Thread.currentThread().isInterrupted()) {
 						notifyDataUpdated();
@@ -245,6 +248,16 @@ public class PointsService extends Service {
 			throw new IllegalArgumentException("Trying to refresh non-existing provider");
 		}
 
+		try {
+			List<Disability> disabilities = pointsProvider.loadDisabilities();
+			if (disabilities != null) {
+				database.setDisabilities(disabilities);
+			}
+		} catch (PointsException e) {
+			notifyDataUpdateFailed(e);
+			return;
+		}
+
 		List<Category> categories;
 		try {
 			categories = pointsProvider.loadCategories();
@@ -307,10 +320,10 @@ public class PointsService extends Service {
 	}
 
 	private void setupProviders() {
-		GetsProvider getsProvider = new GetsProvider();
+		GetsProvider getsProvider;
+		getsProvider = new GetsProvider();
 		setPointsProvider(getsProvider);
-
-		refreshProviders();
+		refresh();
 	}
 
 	public void addPoint(Point point) {

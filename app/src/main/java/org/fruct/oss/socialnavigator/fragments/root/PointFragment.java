@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ListFragment;
@@ -17,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -29,11 +27,6 @@ import org.fruct.oss.socialnavigator.adapters.PointAdapter;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.Function;
-import org.osmdroid.api.IGeoPoint;
-import org.osmdroid.util.GeoPoint;
-import org.osmdroid.views.MapView;
-import org.osmdroid.views.Projection;
-import org.osmdroid.views.overlay.Overlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,7 +145,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	@Override
 	public void onRefresh() {
 		if (pointsService != null) {
-			pointsService.refreshProviders();
+			pointsService.refresh();
 			refreshLayout.setRefreshing(true);
 		}
 	}

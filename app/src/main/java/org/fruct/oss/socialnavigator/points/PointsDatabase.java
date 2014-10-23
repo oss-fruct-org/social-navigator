@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
 
 public class PointsDatabase implements Closeable {
 	public static final int VERSION = 3;
@@ -71,23 +72,32 @@ public class PointsDatabase implements Closeable {
 		}
 	}
 
-	public void insertDisability(Disability disability) {
+	public void setDisabilities(List<Disability> disabilities) {
 		try {
 			db.beginTransaction();
 
-			ContentValues cv = new ContentValues(1);
-			cv.put("name", disability.getName());
-			db.insert("disability", null, cv);
+			db.execSQL("DELETE FROM disability;");
+			db.execSQL("DELETE FROM disability_category;");
 
-			for (int categoryId : disability.getCategories()) {
-				ContentValues catCv = new ContentValues(1);
-				catCv.put("categoryId", categoryId);
-				db.insert("disability_category", null, cv);
+			for (Disability disability : disabilities) {
+				insertDisability(disability);
 			}
 
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();
+		}
+	}
+
+	private void insertDisability(Disability disability) {
+		ContentValues cv = new ContentValues(1);
+		cv.put("name", disability.getName());
+		db.insert("disability", null, cv);
+
+		for (int categoryId : disability.getCategories()) {
+			ContentValues catCv = new ContentValues(1);
+			catCv.put("categoryId", categoryId);
+			db.insert("disability_category", null, cv);
 		}
 	}
 
@@ -168,12 +178,13 @@ public class PointsDatabase implements Closeable {
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			db.execSQL("DROP TABLE point;");
-			db.execSQL("DROP TABLE category;");
-			db.execSQL("DROP TABLE disability;");
-			db.execSQL("DROP TABLE disability_category;");
-
-			onCreate(db);
+			if (oldVersion != newVersion) {
+				db.execSQL("DROP TABLE point;");
+				db.execSQL("DROP TABLE category;");
+				db.execSQL("DROP TABLE disability;");
+				db.execSQL("DROP TABLE disability_category;");
+				onCreate(db);
+			}
 		}
 
 		@Override
