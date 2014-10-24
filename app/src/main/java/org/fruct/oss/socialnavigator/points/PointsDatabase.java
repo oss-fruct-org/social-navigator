@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class PointsDatabase implements Closeable {
-	public static final int VERSION = 3;
+	public static final int VERSION = 5;
 	private final Context context;
 	private final Helper helper;
 	private final SQLiteDatabase db;
@@ -109,7 +109,7 @@ public class PointsDatabase implements Closeable {
 		for (int categoryId : disability.getCategories()) {
 			ContentValues catCv = new ContentValues(1);
 			catCv.put("categoryId", categoryId);
-			db.insert("disability_category", null, cv);
+			db.insert("disability_category", null, catCv);
 		}
 	}
 
@@ -193,13 +193,13 @@ public class PointsDatabase implements Closeable {
 
 			db.execSQL("CREATE TABLE disability " +
 					"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+					"active INTEGER, " +
 					"name TEXT);");
 
 			db.execSQL("CREATE TABLE disability_category " +
 					"(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
 					"categoryId INTEGER," +
 					"disabilityId INTEGER, " +
-					"active INTEGER, " +
 					"FOREIGN KEY(disabilityId) REFERENCES disability(_id));");
 		}
 

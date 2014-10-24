@@ -12,25 +12,29 @@ import android.os.IBinder;
 import android.support.v4.app.ListFragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.adapters.PointAdapter;
+import org.fruct.oss.socialnavigator.points.Disability;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.utils.Checker;
 import org.fruct.oss.socialnavigator.utils.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PointFragment extends ListFragment implements PointsService.Listener, SwipeRefreshLayout.OnRefreshListener {
+public class PointFragment extends ListFragment implements PointsService.Listener, SwipeRefreshLayout.OnRefreshListener, Checker {
 	private static final Logger log = LoggerFactory.getLogger(PointFragment.class);
 
 	private PointAdapter adapter;
@@ -57,7 +61,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		adapter = new PointAdapter(getActivity());
+		adapter = new PointAdapter(getActivity(), this);
 		setListAdapter(adapter);
 
 		// Bind service
@@ -76,6 +80,10 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 				res.getColor(R.color.color_base_2),
 				res.getColor(R.color.color_base_3),
 				res.getColor(R.color.color_base_4));
+
+		ListView listView = (ListView) refreshLayout.findViewById(android.R.id.list);
+		listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
+
 		return refreshLayout;
 	}
 
@@ -92,6 +100,22 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		getActivity().unbindService(pointConnection);
 
 		super.onDestroy();
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+
+		if (pointsService != null) {
+			SparseBooleanArray checkedItemPositions = getListView().getCheckedItemPositions();
+			for (int i = 0; i < checkedItemPositions.size(); i++) {
+				Disability disability = new Disability(adapter.getItem(i));
+				if (disability.isActive() != checkedItemPositions.get(i)) {
+					disability.setActive(checkedItemPositions.get(i));
+					pointsService.setDisabilityState(disability, disability.isActive());
+				}
+			}
+		}
 	}
 
 	@Override
@@ -129,7 +153,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 	private void refreshList() {
 		if (pointsService != null) {
-			pointsService.queryCursor(pointsService.requestPoints(null), new Function<Cursor>() {
+			pointsService.queryCursor(pointsService.requestDisabilities(), new Function<Cursor>() {
 				@Override
 				public void call(Cursor cursor) {
 					if (adapter != null) {
@@ -151,17 +175,8 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	}
 
 	@Override
-	public void onListItemClick(ListView l, View v, int position, long id) {
-		super.onListItemClick(l, v, position, id);
-
-		Point point = new Point(adapter.getItem(position));
-		Bundle fragmentArgs = new Bundle();
-		fragmentArgs.putParcelable("point", point);
-
-		Intent intent = new Intent(MainActivity.ACTION_SWITCH, null, getActivity(), MainActivity.class);
-		intent.putExtra(MainActivity.ARG_INDEX, 0);
-		intent.putExtra(MainActivity.ARG_ARGUMENTS, fragmentArgs);
-		startActivity(intent);
+	public void setChecked(int position, boolean isChecked) {
+		getListView().setItemChecked(position, isChecked);
 	}
 
 	private class PointConnection implements ServiceConnection {
@@ -173,6 +188,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
+			pointsService = null;
 		}
 	}
 }

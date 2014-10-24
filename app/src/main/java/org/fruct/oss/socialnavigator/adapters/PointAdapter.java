@@ -7,30 +7,38 @@ import android.database.Cursor;
 import android.support.v4.widget.CursorAdapter;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CheckedTextView;
 import android.widget.TextView;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.points.Disability;
 import org.fruct.oss.socialnavigator.points.Point;
+import org.fruct.oss.socialnavigator.utils.Checker;
 
 public class PointAdapter extends CursorAdapter {
-	public PointAdapter(Context context) {
+	private final Checker checker;
+
+	public PointAdapter(Context context, Checker checker) {
 		super(context, null, false);
+
+		this.checker = checker;
 	}
 
 	@Override
 	public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
-		View view = ((Activity) context).getLayoutInflater().inflate(android.R.layout.simple_list_item_1, viewGroup, false);
 		Holder holder = new Holder();
-		holder.textView = (TextView) view.findViewById(android.R.id.text1);
-		view.setTag(holder);
-		return view;
+		holder.textView = (CheckedTextView) ((Activity) context).getLayoutInflater().inflate(android.R.layout.simple_list_item_multiple_choice, viewGroup, false);
+		holder.textView.setTag(holder);
+		return holder.textView;
 	}
 
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
-		Point point = new Point(cursor);
+		Disability disability = new Disability(cursor);
 		Holder holder = ((Holder) view.getTag());
-		holder.textView.setText(point.getName());
+		holder.textView.setText(disability.getName());
+		checker.setChecked(cursor.getPosition(), disability.isActive());
 	}
 
 	@Override
@@ -39,6 +47,6 @@ public class PointAdapter extends CursorAdapter {
 	}
 
 	private static class Holder {
-		TextView textView;
+		CheckedTextView textView;
 	}
 }

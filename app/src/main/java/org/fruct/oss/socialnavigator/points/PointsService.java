@@ -345,6 +345,10 @@ public class PointsService extends Service {
 		notifyDataUpdated();
 	}
 
+	public void setDisabilityState(Disability disability, boolean isActive) {
+		database.setDisabilityState(disability, isActive);
+	}
+
 	public class Binder extends android.os.Binder {
 		public PointsService getService() {
 			return PointsService.this;
