@@ -397,9 +397,12 @@ public class RoutingService extends Service implements PointsService.Listener, L
 					}
 
 					// Set obstacles
+					log.debug("Setting obstacles points");
 					obstaclesPoints = pointsService.queryList(pointsService.requestPoints());
 					routing.setObstacles(obstaclesPoints);
 				}
+
+				recalculatePaths(true);
 
 				// Set geofences
 				geofencesManager.removeGeofences(GEOFENCE_TOKEN_OBSTACLES);
