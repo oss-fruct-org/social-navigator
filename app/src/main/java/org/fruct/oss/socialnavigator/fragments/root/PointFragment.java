@@ -115,6 +115,8 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 					pointsService.setDisabilityState(disability, disability.isActive());
 				}
 			}
+
+			pointsService.commitDisabilityStates();
 		}
 	}
 

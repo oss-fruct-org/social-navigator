@@ -193,7 +193,7 @@ public class Point implements Parcelable {
 
 				if (key.equals("uuid"))
 					point.uuid = value;
-				else if (key.equals("difficulty")) {
+				else if (key.equals("difficulty") || key.equals("rating")) {
 					try {
 						point.difficulty = Integer.parseInt(value);
 					} catch (NumberFormatException ignored) {
