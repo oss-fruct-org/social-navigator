@@ -22,7 +22,12 @@ public class App extends Application {
 
 		try {
 			//File httpCacheDir = new File(context.getCacheDir(), "http");
-			File httpCacheDir = new File("/sdcard/testcache");
+			File httpCacheDir = new File("/sdcard/debug/sn-cache");
+
+			if (!BuildConfig.DEBUG) {
+				httpCacheDir = new File(context.getCacheDir(), "http");
+			}
+
 			long httpCacheSize = 10 * 1024 * 1024; // 10 MiB
 			Class.forName("android.net.http.HttpResponseCache")
 					.getMethod("install", File.class, long.class)
