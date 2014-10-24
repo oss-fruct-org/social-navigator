@@ -87,7 +87,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	@Override
 	public void onDataUpdated() {
-		List<Point> points = pointsService.queryList(pointsService.requestPoints(null));
+		List<Point> points = pointsService.queryList(pointsService.requestPoints());
 		overlay.removeAllItems();
 
 		List<Obstacle> obstacles = new ArrayList<Obstacle>(points.size());

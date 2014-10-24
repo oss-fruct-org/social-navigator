@@ -6,12 +6,17 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import org.fruct.oss.socialnavigator.utils.Utils;
+
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
 public class PointsDatabase implements Closeable {
-	public static final int VERSION = 5;
+	public static final int VERSION = 6;
 	private final Context context;
 	private final Helper helper;
 	private final SQLiteDatabase db;
@@ -25,6 +30,19 @@ public class PointsDatabase implements Closeable {
 		this.context = context;
 		this.helper = new Helper(context);
 		this.db = helper.getWritableDatabase();
+
+		/*File dbFile = new File(db.getPath());
+
+		try {
+			FileInputStream in = new FileInputStream(dbFile);
+			FileOutputStream out = new FileOutputStream("/sdcard/debug/points.db");
+
+			Utils.copyStream(in, out);
+
+			in.close();
+			out.close();
+		} catch (Exception ex) {
+		}*/
 	}
 
 	@Override
@@ -87,8 +105,8 @@ public class PointsDatabase implements Closeable {
 				cursor.close();
 			}
 
-			db.execSQL("DELETE FROM disability;");
 			db.execSQL("DELETE FROM disability_category;");
+			db.execSQL("DELETE FROM disability;");
 
 			for (Disability disability : disabilities) {
 				insertDisability(disability);
@@ -104,11 +122,12 @@ public class PointsDatabase implements Closeable {
 		ContentValues cv = new ContentValues(2);
 		cv.put("name", disability.getName());
 		cv.put("active", disability.isActive());
-		db.insert("disability", null, cv);
+		long insertedId = db.insert("disability", null, cv);
 
 		for (int categoryId : disability.getCategories()) {
-			ContentValues catCv = new ContentValues(1);
+			ContentValues catCv = new ContentValues(2);
 			catCv.put("categoryId", categoryId);
+			catCv.put("disabilityId", (int) insertedId);
 			db.insert("disability_category", null, catCv);
 		}
 	}
@@ -117,15 +136,15 @@ public class PointsDatabase implements Closeable {
 		return db.query("category", COLUMNS_CATEGORY, null, null, null, null, "name");
 	}
 
-	public Cursor loadPoints(Category category) {
-		if (category != null)
-			return loadPoints(category.getId());
-		else
-			return db.query("point", COLUMNS_POINT, null, null, null, null, null);
-	}
+	public Cursor loadPoints() {
+		return db.rawQuery("SELECT DISTINCT point._id, point.name, point.description, point.url, " +
+				"point.lat, point.lon, point.categoryId, point.provider, point.uuid, point.difficulty " +
+				"FROM point INNER JOIN category ON point.categoryId = category._id " +
+				"INNER JOIN disability_category ON disability_category.categoryId = category._id " +
+				"INNER JOIN disability ON disability_category.disabilityId = disability._id " +
+				"WHERE disability.active = 1", null);
 
-	public Cursor loadPoints(int categoryId) {
-		return db.query("point", COLUMNS_POINT, "categoryId=?", toArray(categoryId), null, null, null);
+		//return db.query("point", COLUMNS_POINT, null, null, null, null, null);
 	}
 
 	public Cursor loadDisabilities() {
@@ -185,7 +204,7 @@ public class PointsDatabase implements Closeable {
 					"url TEXT, " +
 					"lat INTEGER, " +
 					"lon INTEGER, " +
-					"categoryId, " +
+					"categoryId INTEGER, " +
 					"provider TEXT, " +
 					"uuid TEXT, " +
 					"difficulty INTEGER, " +

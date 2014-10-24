@@ -214,25 +214,11 @@ public class PointsService extends Service {
 		};
 	}
 
-	public Request<Point> requestPoints(final Category category) {
+	public Request<Point> requestPoints() {
 		return new Request<Point>() {
 			@Override
 			public Cursor doQuery() {
-				return database.loadPoints(category);
-			}
-
-			@Override
-			public Point cursorToObject(Cursor cursor) {
-				return new Point(cursor);
-			}
-		};
-	}
-
-	public Request<Point> requestPoints(final int categoryId) {
-		return new Request<Point>() {
-			@Override
-			public Cursor doQuery() {
-				return database.loadPoints(categoryId);
+				return database.loadPoints();
 			}
 
 			@Override
