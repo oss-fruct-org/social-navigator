@@ -16,6 +16,7 @@ public class PointsDatabase implements Closeable {
 	private final Helper helper;
 	private final SQLiteDatabase db;
 
+	private static final String[] COLUMNS_DISABILITY = { "_id", "name", "active" };
 	private static final String[] COLUMNS_ID = { "_id" };
 	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url"};
 	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId", "provider", "uuid", "difficulty" };
@@ -76,6 +77,16 @@ public class PointsDatabase implements Closeable {
 		try {
 			db.beginTransaction();
 
+			// Load current disability state
+			for (Disability disability : disabilities) {
+				Cursor cursor = db.rawQuery("SELECT active FROM disability WHERE disability.name=?;",
+						toArray(disability.getName()));
+				if (cursor.moveToFirst()) {
+					disability.setActive(cursor.getInt(0) != 0);
+				}
+				cursor.close();
+			}
+
 			db.execSQL("DELETE FROM disability;");
 			db.execSQL("DELETE FROM disability_category;");
 
@@ -90,8 +101,9 @@ public class PointsDatabase implements Closeable {
 	}
 
 	private void insertDisability(Disability disability) {
-		ContentValues cv = new ContentValues(1);
+		ContentValues cv = new ContentValues(2);
 		cv.put("name", disability.getName());
+		cv.put("active", disability.isActive());
 		db.insert("disability", null, cv);
 
 		for (int categoryId : disability.getCategories()) {
@@ -114,6 +126,20 @@ public class PointsDatabase implements Closeable {
 
 	public Cursor loadPoints(int categoryId) {
 		return db.query("point", COLUMNS_POINT, "categoryId=?", toArray(categoryId), null, null, null);
+	}
+
+	public Cursor loadDisabilities() {
+		return db.query("disability", COLUMNS_DISABILITY, null, null, null, null, null);
+	}
+
+	public void setDisabilityState(Disability disability, boolean isActive) {
+		if (disability.getDbId() == -1) {
+			throw new IllegalArgumentException("Trying change state of non stored disability");
+		}
+
+		ContentValues cv = new ContentValues(1);
+		cv.put("active", isActive);
+		db.update("disability", cv, "_id=?", toArray(disability.getDbId()));
 	}
 
 	private boolean isCategoryExists(Category category) {
@@ -153,16 +179,16 @@ public class PointsDatabase implements Closeable {
 					"url TEXT);");
 
 			db.execSQL("CREATE TABLE point " +
-					"(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-					"name TEXT," +
-					"description TEXT," +
-					"url TEXT," +
-					"lat INTEGER," +
-					"lon INTEGER," +
-					"categoryId," +
-					"provider TEXT," +
-					"uuid TEXT," +
-					"difficulty INTEGER," +
+					"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+					"name TEXT, " +
+					"description TEXT, " +
+					"url TEXT, " +
+					"lat INTEGER, " +
+					"lon INTEGER, " +
+					"categoryId, " +
+					"provider TEXT, " +
+					"uuid TEXT, " +
+					"difficulty INTEGER, " +
 					"FOREIGN KEY(categoryId) REFERENCES category(_id));");
 
 			db.execSQL("CREATE TABLE disability " +
@@ -173,6 +199,7 @@ public class PointsDatabase implements Closeable {
 					"(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
 					"categoryId INTEGER," +
 					"disabilityId INTEGER, " +
+					"active INTEGER, " +
 					"FOREIGN KEY(disabilityId) REFERENCES disability(_id));");
 		}
 

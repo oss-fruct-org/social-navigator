@@ -242,6 +242,20 @@ public class PointsService extends Service {
 		};
 	}
 
+	public Request<Disability> requestDisabilities() {
+		return new Request<Disability>() {
+			@Override
+			public Cursor doQuery() {
+				return database.loadDisabilities();
+			}
+
+			@Override
+			public Disability cursorToObject(Cursor cursor) {
+				return new Disability(cursor);
+			}
+		};
+	}
+
 	@Blocking
 	private void refreshProvider() throws PointsException {
 		if (pointsProvider == null) {

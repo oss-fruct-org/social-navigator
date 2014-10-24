@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator.points;
 
+import android.database.Cursor;
 import android.util.Xml;
 
 import org.fruct.oss.socialnavigator.utils.Utils;
@@ -17,10 +18,24 @@ import gnu.trove.list.array.TIntArrayList;
 public class Disability {
 	private String name;
 	private int[] categories;
+	private int dbId = -1;
+	private boolean isActive;
 
 	public Disability(String name, int[] categories) {
 		this.name = name;
 		this.categories = categories;
+	}
+
+	public Disability(String name, int[] categories, int dbId) {
+		this.name = name;
+		this.categories = categories;
+		this.dbId = dbId;
+	}
+
+	public Disability(Cursor cursor) {
+		dbId = cursor.getInt(0);
+		name = cursor.getString(1);
+		isActive = cursor.getInt(2) != 0;
 	}
 
 	public String getName() {
@@ -28,7 +43,22 @@ public class Disability {
 	}
 
 	public int[] getCategories() {
+		if (categories == null) {
+			throw new IllegalStateException("Can't get categories of incomplete object");
+		}
 		return categories;
+	}
+
+	public int getDbId() {
+		return dbId;
+	}
+
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+
+	public boolean isActive() {
+		return isActive;
 	}
 
 	public static List<Disability> parse(Reader reader) throws IOException, XmlPullParserException {
