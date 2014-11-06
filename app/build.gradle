@@ -63,4 +63,5 @@ dependencies {
     compile 'com.android.support:support-v4:20.0.0'
     compile 'org.osmdroid:osmdroid-android:4.2'
     compile 'org.mapsforge:mapsforge-map-android:0.4.3'
+    compile 'org.jetbrains:annotations:13.0'
 }

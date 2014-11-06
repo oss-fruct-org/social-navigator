@@ -29,6 +29,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 public class PositionOverlayFragment extends OverlayFragment implements RoutingService.Listener {
 	private static final String STATE_FOLLOW = "is-following-active";
@@ -150,7 +151,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	@Override
-	public void pathsUpdated(GeoPoint targetPoint, EnumMap<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
 
 	}
 

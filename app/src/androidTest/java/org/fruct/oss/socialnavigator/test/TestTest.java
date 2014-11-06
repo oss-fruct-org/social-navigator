@@ -2,6 +2,10 @@ package org.fruct.oss.socialnavigator.test;
 
 import android.test.AndroidTestCase;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,6 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class TestTest extends AndroidTestCase {
+	@Nullable
+	private String str;
+
 	public void testExecutorTest() throws Exception {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -36,6 +43,39 @@ public class TestTest extends AndroidTestCase {
 			assertEquals(1, integer.get());
 		}
 	}
+
+	public void testNullable() {
+		char c;
+		try {
+			c = methodContract("qwe", null).charAt(0);
+		} catch (Exception ex) {
+			return;
+		}
+
+		if (c == 5) {
+			throw new NullPointerException();
+		}
+	}
+
+	@Nullable
+	private String nullable() {
+		return str;
+	}
+
+	@NotNull
+	private String notnull() {
+		return "qwe";
+	}
+
+	@Contract("_, null -> fail")
+	private String methodContract(String str1, String str2) {
+		if (str2 == null) {
+			throw new IllegalArgumentException("Str2 = null");
+		}
+
+		return str1;
+	}
+
 /*
 	public void testOk() throws Exception {
 		File cacheDirectory = new File(getContext().getCacheDir(), "test-cache");

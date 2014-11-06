@@ -26,9 +26,7 @@ public class PathPointList implements Iterable<GeoPoint> {
 	private org.fruct.oss.socialnavigator.utils.PointList pointList
 			= new org.fruct.oss.socialnavigator.utils.PointList(new EarthSpace(), DISTANCE_NEAR);
 
-	public PathPointList(GHResponse response) {
-		PointList ghPointList = response.getPoints();
-
+	public PathPointList(PointList ghPointList) {
 		for (int i = 0; i < ghPointList.size(); i++) {
 			pointList.addPoint(ghPointList.getLatitude(i), ghPointList.getLongitude(i));
 		}

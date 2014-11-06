@@ -6,6 +6,8 @@ import com.graphhopper.routing.util.FootPriorityWeighting;
 import com.graphhopper.routing.util.Weighting;
 import com.graphhopper.util.EdgeIteratorState;
 
+import org.jetbrains.annotations.NotNull;
+
 import gnu.trove.impl.hash.TIntIntHash;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.TIntObjectMap;
@@ -17,6 +19,7 @@ public class BlockingWeighting extends FootPriorityWeighting {
 	private final boolean half;
 	private final TIntIntMap blockedEdgesMap;
 
+	@Deprecated
 	public BlockingWeighting(FlagEncoder encoder, int[] edgeIds, int[] difficulties, boolean half) {
 		super(encoder);
 		this.half = half;
@@ -24,6 +27,18 @@ public class BlockingWeighting extends FootPriorityWeighting {
 		blockedEdgesMap = new TIntIntHashMap(edgeIds.length, 0.5f, -1, -1);
 		for (int i = 0; i < edgeIds.length; i++) {
 			blockedEdgesMap.put(edgeIds[i], difficulties[i]);
+		}
+	}
+
+	public BlockingWeighting(@NotNull FlagEncoder encoder,
+							 @NotNull TIntObjectMap<BlockedEdge> blockedEdges,
+							 boolean half) {
+		super(encoder);
+		this.half = half;
+
+		blockedEdgesMap = new TIntIntHashMap(blockedEdges.size(), 0.5f, -1, -1);
+		for (BlockedEdge blockedEdge : blockedEdges.valueCollection()) {
+			blockedEdgesMap.put(blockedEdge.edge, blockedEdge.difficulty);
 		}
 	}
 

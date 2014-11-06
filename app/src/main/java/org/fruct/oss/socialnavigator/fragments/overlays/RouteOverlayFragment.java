@@ -39,6 +39,7 @@ import org.osmdroid.views.overlay.PathOverlay;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener {
 	private final RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
@@ -53,7 +54,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private ItemizedIconOverlay<TargetPointItem> targetPointOverlay;
 	private GeoPoint targetPoint;
 
-	private EnumMap<RoutingType, RoutingService.Path> paths = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
+	private Map<RoutingType, RoutingService.Path> paths = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
 	private RoutingType activeRoutingType = RoutingType.SAFE;
 
 	private MapView mapView;
@@ -149,7 +150,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 		if (path != null) {
 			lengthTextView.setVisibility(View.VISIBLE);
-			lengthTextView.setText(Utils.stringDistance(getResources(), path.getResponse().getDistance()));
+			lengthTextView.setText(Utils.stringDistance(getResources(), path.getDistance()));
 			titleTextView.setText(path.getRoutingType().getStringId());
 
 		} else {
@@ -305,7 +306,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	@Override
-	public void pathsUpdated(GeoPoint targetPoint, EnumMap<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
 		this.targetPoint = targetPoint;
 		this.paths = paths;
 		this.activeRoutingType = activeType;

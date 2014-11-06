@@ -139,6 +139,7 @@ public class PointList implements Iterable<Space.Point> {
 		initialize();
 
 		return new Iterator<Space.Point>() {
+			// TODO: IndexOutOfBoundsException
 			private Space.Point firstPoint = !isHasFix ? segments.get(0).p1 : matchedPoint;
 
 			private int idx = segmentIdx;

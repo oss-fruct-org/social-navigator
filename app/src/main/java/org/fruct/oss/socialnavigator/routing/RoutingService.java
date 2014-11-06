@@ -16,6 +16,8 @@ import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.graphhopper.GHResponse;
+import com.graphhopper.routing.Path;
+import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.DataService;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
@@ -29,8 +31,10 @@ import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -67,7 +71,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	private GeoPoint targetPoint;
 
-	private final EnumMap<RoutingType, Path> currentPathsMap = new EnumMap<RoutingType, Path>(RoutingType.class);
+	private final Map<RoutingType, Path> currentPathsMap = Collections.synchronizedMap(new EnumMap<RoutingType, Path>(RoutingType.class));
 	private Turn currentTurn;
 	private RoutingType currentRoutingType = RoutingType.SAFE;
 
@@ -481,7 +485,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public void onDataUpdateFailed(Throwable throwable) {
 	}
 
-	private void notifyPathsUpdated(final GeoPoint targetPoint, final EnumMap<RoutingType, Path> paths) {
+	private void notifyPathsUpdated(final GeoPoint targetPoint, final Map<RoutingType, Path> paths) {
 		if (targetPoint == null)
 			return;
 
@@ -619,34 +623,39 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	}
 
 	public static class Path {
-		private GHResponse response;
-		private PathPointList pointList;
-		private RoutingType routingType;
+		private final Point[] points;
+		private final PathPointList pointList;
+		private final RoutingType routingType;
+		private final double distance;
 
-		public Path(GHResponse response, RoutingType routingType) {
-			this.pointList = new PathPointList(response);
-			this.response = response;
+		public Path(PointList ghPointList, double distance, RoutingType routingType, Point[] points) {
+			this.pointList = new PathPointList(ghPointList);
+			this.distance = distance;
 			this.routingType = routingType;
+			this.points = points;
 		}
 
 		public PathPointList getPointList() {
 			return pointList;
 		}
 
-		public GHResponse getResponse() {
-			return response;
+		public double getDistance() {
+			return distance;
 		}
-
 
 		public RoutingType getRoutingType() {
 			return routingType;
+		}
+
+		public Point[] getPoints() {
+			return points;
 		}
 	}
 
 	public static interface Listener {
 		void proximityEvent(Point point);
 		void proximityEvent(Turn turn);
-		void pathsUpdated(GeoPoint targetPoint, EnumMap<RoutingType, Path> paths, RoutingType activeType);
+		void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, Path> paths, RoutingType activeType);
 		void pathsCleared();
 	}
 
