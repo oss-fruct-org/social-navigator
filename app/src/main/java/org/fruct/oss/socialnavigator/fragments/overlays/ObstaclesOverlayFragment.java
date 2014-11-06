@@ -10,9 +10,11 @@ import android.os.IBinder;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
+import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.utils.Turn;
+import org.jetbrains.annotations.Nullable;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -26,13 +28,15 @@ import java.util.List;
 import java.util.Map;
 
 public class ObstaclesOverlayFragment extends OverlayFragment
-		implements ItemizedIconOverlay.OnItemGestureListener<ObstaclesOverlayFragment.Obstacle>, RoutingService.Listener {
+		implements ItemizedIconOverlay.OnItemGestureListener<ObstaclesOverlayFragment.Obstacle>, RoutingService.Listener, PointsService.Listener {
 	private static final Logger log = LoggerFactory.getLogger(ObstaclesOverlayFragment.class);
 
 	private RoutingServiceConnection routingServiceConnection;
+	private PointsServiceConnection pointsServiceConnection;
 
 	private Drawable obstacleDrawable;
 	private RoutingService routingService;
+	private PointsService pointsService;
 	private ItemizedIconOverlay<Obstacle> overlay;
 	private MapView mapView;
 
@@ -48,7 +52,18 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 			routingService.removeListener(this);
 		}
 
-		getActivity().unbindService(routingServiceConnection);
+		if (pointsService != null) {
+			pointsService.removeListener(this);
+		}
+
+		if (routingServiceConnection != null) {
+			getActivity().unbindService(routingServiceConnection);
+		}
+
+		if (pointsServiceConnection != null) {
+			getActivity().unbindService(pointsServiceConnection);
+		}
+
 		super.onDestroy();
 	}
 
@@ -59,6 +74,10 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 		getActivity().bindService(new Intent(getActivity(), RoutingService.class),
 				routingServiceConnection = new RoutingServiceConnection(), Context.BIND_AUTO_CREATE);
+
+		//getActivity().bindService(new Intent(getActivity(), PointsService.class),
+		//		pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
+
 		this.mapView = mapView;
 	}
 
@@ -82,18 +101,16 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		routingService = null;
 	}
 
-	/*@Override
-	public void onDataUpdated() {
-		List<Point> points = pointsService.queryList(pointsService.requestPoints());
-		overlay.removeAllItems();
+	private void onPointsServiceConnected(PointsService service) {
+		pointsService = service;
+		pointsService.addListener(this);
 
-		List<Obstacle> obstacles = new ArrayList<Obstacle>(points.size());
-		for (Point point : points) {
-			obstacles.add(new Obstacle(point.getName(), point.getDescription(),
-					new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleDrawable));
-		}
-		overlay.addItems(obstacles);
-	}*/
+		onDataUpdated();
+	}
+
+	private void onPointsServiceDisconnected() {
+		pointsService = null;
+	}
 
 	@Override
 	public void proximityEvent(Point point) {
@@ -126,6 +143,24 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		mapView.invalidate();
 	}
 
+	@Override
+	public void onDataUpdated() {
+		List<Point> points = pointsService.queryList(pointsService.requestPoints());
+		overlay.removeAllItems();
+
+		List<Obstacle> obstacles = new ArrayList<Obstacle>(points.size());
+		for (Point point : points) {
+			obstacles.add(new Obstacle(point.getName(), point.getDescription(),
+					new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleDrawable));
+		}
+		overlay.addItems(obstacles);
+	}
+
+	@Override
+	public void onDataUpdateFailed(Throwable throwable) {
+
+	}
+
 	public static class Obstacle extends OverlayItem {
 		public Obstacle(String aTitle, String aSnippet, GeoPoint aGeoPoint, Drawable drawable) {
 			super(aTitle, aSnippet, aGeoPoint);
@@ -147,4 +182,17 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		}
 	}
 
+	private class PointsServiceConnection implements ServiceConnection {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			if (pointsServiceConnection != null) {
+				onPointsServiceConnected(((PointsService.Binder) service).getService());
+			}
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			onPointsServiceDisconnected();
+		}
+	}
 }
