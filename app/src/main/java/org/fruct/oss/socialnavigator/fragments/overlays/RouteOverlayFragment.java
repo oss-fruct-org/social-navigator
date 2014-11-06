@@ -333,6 +333,11 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		hidePanel();
 	}
 
+	@Override
+	public void activePathUpdated(RoutingService.Path activePath) {
+
+	}
+
 	private int getColorByPathType(RoutingService.Path path) {
 		assert path.getRoutingType() != null;
 

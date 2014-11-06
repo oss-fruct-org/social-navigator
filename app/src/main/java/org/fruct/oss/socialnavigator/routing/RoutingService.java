@@ -340,6 +340,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 						notifyPathsCleared();
 					} else {
 						updateActivePathWayInformation(activePath);
+						notifyActivePathUpdated(activePath);
 					}
 				}
 
@@ -485,6 +486,17 @@ public class RoutingService extends Service implements PointsService.Listener, L
 	public void onDataUpdateFailed(Throwable throwable) {
 	}
 
+	private void notifyActivePathUpdated(final Path activePath) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (Listener listener : listeners) {
+					listener.activePathUpdated(activePath);
+				}
+			}
+		});
+	}
+
 	private void notifyPathsUpdated(final GeoPoint targetPoint, final Map<RoutingType, Path> paths) {
 		if (targetPoint == null)
 			return;
@@ -534,7 +546,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 
 	public void setRoutingTypeActive(RoutingType activeRoutingType) {
 		this.currentRoutingType = activeRoutingType;
-		updateActivePathWayInformation(currentPathsMap.get(currentRoutingType));
+		Path activePath = currentPathsMap.get(currentRoutingType);
+		updateActivePathWayInformation(activePath);
+		notifyActivePathUpdated(activePath);
 	}
 
 	public void updateActivePathWayInformation(Path activePath) {
@@ -657,6 +671,7 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		void proximityEvent(Turn turn);
 		void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, Path> paths, RoutingType activeType);
 		void pathsCleared();
+		void activePathUpdated(Path activePath);
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {

@@ -160,6 +160,11 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	}
 
+	@Override
+	public void activePathUpdated(RoutingService.Path activePath) {
+
+	}
+
 	/*@Override
 	public void routingUpdated(RoutingService.Path path) {
 		if (path != null) {

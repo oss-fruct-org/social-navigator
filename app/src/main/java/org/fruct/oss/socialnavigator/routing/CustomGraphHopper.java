@@ -45,8 +45,8 @@ public class CustomGraphHopper extends GraphHopper {
 				tmpGeoPoint.setCoordsE6((int) (snappedPoint.getLat() * 1e6), (int) (snappedPoint.getLon() * 1e6));
 
 				if (tmpGeoPoint.distanceTo(geoPoint) < 10) {
-					int edge = result.getClosestEdge().getEdge();
-					blockedEdges.put(edge, new BlockedEdge(point.getDifficulty(), edge, point));
+					int edgeId = result.getClosestEdge().getEdge();
+					blockedEdges.put(edgeId, new BlockedEdge(point.getDifficulty(), edgeId, point));
 				}
 			}
 		}
