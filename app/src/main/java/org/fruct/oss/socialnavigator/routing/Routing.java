@@ -67,7 +67,12 @@ public class Routing {
 		request.setVehicle(routingType.getVehicle());
 		request.setWeighting(routingType.getWeighting());
 
-		return gh.routePath(request, routingType);
+		try {
+			return gh.routePath(request, routingType);
+		} catch (Exception ex) {
+			log.error("Routing error for routing type: {}", routingType, ex);
+			return null;
+		}
 	}
 
 	public synchronized void setObstacles(List<Point> points) {

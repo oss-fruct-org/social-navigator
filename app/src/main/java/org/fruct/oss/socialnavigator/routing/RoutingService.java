@@ -402,7 +402,6 @@ public class RoutingService extends Service implements PointsService.Listener, L
 					}
 
 					// Set obstacles
-					log.debug("Setting obstacles points");
 					obstaclesPoints = pointsService.queryList(pointsService.requestPoints());
 					routing.setObstacles(obstaclesPoints);
 				}

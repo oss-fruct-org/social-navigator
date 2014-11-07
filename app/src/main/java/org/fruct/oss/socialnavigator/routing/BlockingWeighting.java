@@ -16,44 +16,25 @@ import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 public class BlockingWeighting extends FootPriorityWeighting {
+	public static final double BLOCK_RADIUS = 20;
+
 	private final boolean half;
-	private final TIntIntMap blockedEdgesMap;
-
-	@Deprecated
-	public BlockingWeighting(FlagEncoder encoder, int[] edgeIds, int[] difficulties, boolean half) {
-		super(encoder);
-		this.half = half;
-
-		blockedEdgesMap = new TIntIntHashMap(edgeIds.length, 0.5f, -1, -1);
-		for (int i = 0; i < edgeIds.length; i++) {
-			blockedEdgesMap.put(edgeIds[i], difficulties[i]);
-		}
-	}
+	private final ObstaclesIndex obstaclesIndex;
 
 	public BlockingWeighting(@NotNull FlagEncoder encoder,
-							 @NotNull TIntObjectMap<BlockedEdge> blockedEdges,
+							 @NotNull ObstaclesIndex obstaclesIndex,
 							 boolean half) {
 		super(encoder);
 		this.half = half;
-
-		blockedEdgesMap = new TIntIntHashMap(blockedEdges.size(), 0.5f, -1, -1);
-		for (BlockedEdge blockedEdge : blockedEdges.valueCollection()) {
-			blockedEdgesMap.put(blockedEdge.edge, blockedEdge.difficulty);
-		}
+		this.obstaclesIndex = obstaclesIndex;
 	}
 
 	@Override
 	public double calcWeight(EdgeIteratorState edge, boolean reverse) {
-		int difficulty = blockedEdgesMap.get(edge.getEdge());
-
-		if (difficulty == -1) {
-			return super.calcWeight(edge, reverse);
-		}
-
-		if (difficulty < 5 && half) {
-			return super.calcWeight(edge, reverse);
-		} else {
+		if (obstaclesIndex.checkEdgeBlocked(edge, BLOCK_RADIUS, half)) {
 			return Double.POSITIVE_INFINITY;
+		} else {
+			return super.calcWeight(edge, reverse);
 		}
 	}
 

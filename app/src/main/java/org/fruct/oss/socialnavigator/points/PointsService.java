@@ -286,6 +286,8 @@ public class PointsService extends Service {
 					continue;
 				}
 
+				// FIXME: too slow, use transaction
+				// FIXME: NullPointer exception after shutdown
 				database.insertPoint(point);
 
 				if (Thread.currentThread().isInterrupted()) {

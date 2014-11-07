@@ -18,6 +18,8 @@ import com.graphhopper.util.shapes.GHPoint3D;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.jetbrains.annotations.Nullable;
 import org.osmdroid.util.GeoPoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,29 +29,20 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class CustomGraphHopper extends GraphHopper {
-	private TIntObjectMap<BlockedEdge> blockedEdges = new TIntObjectHashMap<BlockedEdge>();
+	private static final Logger log = LoggerFactory.getLogger(CustomGraphHopper.class);
+
+	private ObstaclesIndex obstaclesIndex;
 
 	public void updateBlockedEdges(List<Point> points) {
-		GeoPoint tmpGeoPoint = new GeoPoint(0, 0);
+		long startTime = System.currentTimeMillis();
 
-		blockedEdges.clear();
-
-		LocationIndex index = getLocationIndex();
-
+		obstaclesIndex = new ObstaclesIndex(getGraph());
 		for (Point point : points) {
-			GeoPoint geoPoint = point.toGeoPoint();
-			QueryResult result = index.findClosest(geoPoint.getLatitude(), geoPoint.getLongitude(), EdgeFilter.ALL_EDGES);
-
-			if (result.isValid()) {
-				GHPoint3D snappedPoint = result.getSnappedPoint();
-				tmpGeoPoint.setCoordsE6((int) (snappedPoint.getLat() * 1e6), (int) (snappedPoint.getLon() * 1e6));
-
-				if (tmpGeoPoint.distanceTo(geoPoint) < 10) {
-					int edgeId = result.getClosestEdge().getEdge();
-					blockedEdges.put(edgeId, new BlockedEdge(point.getDifficulty(), edgeId, point));
-				}
-			}
+			obstaclesIndex.insertPoint(point);
 		}
+		obstaclesIndex.initialize();
+
+		log.debug("Blocked edges calculation took {} ms", System.currentTimeMillis() - startTime);
 	}
 
 	@Nullable
@@ -66,11 +59,7 @@ public class CustomGraphHopper extends GraphHopper {
 		PointList pointList = ghPath.calcPoints();
 		List<EdgeIteratorState> edges = ghPath.calcEdges();
 		for (EdgeIteratorState edge : edges) {
-			int edgeId = edge.getEdge();
-			BlockedEdge blockedEdge = blockedEdges.get(edgeId);
-			if (blockedEdge != null) {
-				pointsOnPath.add(blockedEdge.blockingPoint);
-			}
+			pointsOnPath.addAll(obstaclesIndex.queryByEdge(edge, BlockingWeighting.BLOCK_RADIUS));
 		}
 
 		return new RoutingService.Path(pointList,
@@ -83,9 +72,9 @@ public class CustomGraphHopper extends GraphHopper {
 	@Override
 	public Weighting createWeighting(String weighting, FlagEncoder encoder) {
 		if (weighting.equalsIgnoreCase("half-blocking")) {
-			return new BlockingWeighting(encoder, blockedEdges, true);
+			return new BlockingWeighting(encoder, obstaclesIndex, true);
 		} else if (weighting.equalsIgnoreCase("blocking")) {
-			return new BlockingWeighting(encoder, blockedEdges, false);
+			return new BlockingWeighting(encoder, obstaclesIndex, false);
 		} else {
 			return super.createWeighting(weighting, encoder);
 		}
