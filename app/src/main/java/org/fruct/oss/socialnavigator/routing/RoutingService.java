@@ -15,14 +15,12 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.graphhopper.GHResponse;
-import com.graphhopper.routing.Path;
 import com.graphhopper.util.PointList;
 
-import org.fruct.oss.socialnavigator.DataService;
+import org.fruct.oss.mapcontent.content.DataService;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
-import org.fruct.oss.socialnavigator.content.ContentItem;
-import org.fruct.oss.socialnavigator.content.RemoteContentService;
+import org.fruct.oss.mapcontent.content.ContentItem;
+import org.fruct.oss.mapcontent.content.RemoteContentService;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.NamedThreadFactory;

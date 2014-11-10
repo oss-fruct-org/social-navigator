@@ -1,6 +1,5 @@
 package org.fruct.oss.socialnavigator.fragments.other;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -11,7 +10,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.fruct.oss.socialnavigator.R;
-import org.fruct.oss.socialnavigator.content.ContentItem;
+import org.fruct.oss.mapcontent.content.ContentItem;
 import org.fruct.oss.socialnavigator.fragments.root.ContentFragment;
 
 import java.util.Locale;

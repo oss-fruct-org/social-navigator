@@ -13,22 +13,18 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.fruct.oss.socialnavigator.content.RemoteContentService;
+import org.fruct.oss.mapcontent.content.RemoteContentService;
 import org.fruct.oss.socialnavigator.fragments.root.ContentFragment;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
-import org.fruct.oss.socialnavigator.routing.Routing;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.settings.SettingsActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 
 public class MainActivity extends ActionBarActivity

@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator.parsers;
 
+import org.fruct.oss.mapcontent.content.utils.XmlUtil;
 import org.fruct.oss.socialnavigator.points.Category;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.xmlpull.v1.XmlPullParser;
@@ -29,7 +30,7 @@ public class CategoriesContent implements IContent {
 			if (tagName.equals("category")) {
 				content.categories.add(parseCategory(parser));
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 
@@ -63,7 +64,7 @@ public class CategoriesContent implements IContent {
 			} else if (tagName.equals("url")) {
 				url = GetsResponse.readText(parser);
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 

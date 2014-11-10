@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 
 import org.fruct.oss.socialnavigator.R;
-import org.fruct.oss.socialnavigator.content.RemoteContentService;
+import org.fruct.oss.mapcontent.content.RemoteContentService;
 
 import java.util.ArrayList;
 import java.util.Iterator;

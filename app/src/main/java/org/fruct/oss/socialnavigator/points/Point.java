@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.fruct.oss.mapcontent.content.utils.XmlUtil;
 import org.fruct.oss.socialnavigator.parsers.GetsResponse;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.util.GeoPoint;
@@ -162,7 +163,7 @@ public class Point implements Parcelable {
 				readExtendedData(parser, point);
 				parser.require(XmlPullParser.END_TAG, null, "ExtendedData");
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 
@@ -213,7 +214,7 @@ public class Point implements Parcelable {
 				parser.nextTag();
 				parser.require(XmlPullParser.END_TAG, null, "Data");
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 	}

@@ -9,13 +9,10 @@ import android.os.IBinder;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Toast;
 
-import org.fruct.oss.socialnavigator.DataService;
+import org.fruct.oss.mapcontent.content.DataService;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.utils.Utils;
 
@@ -36,7 +33,7 @@ public class SettingsActivity extends PreferenceActivity {
 
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
 
-		storagePathPref = (ListPreference) findPreference(Settings.PREF_STORAGE_PATH);
+		storagePathPref = (ListPreference) findPreference(org.fruct.oss.mapcontent.content.Settings.PREF_STORAGE_PATH);
 
 		bindService(new Intent(this, DataService.class), dataServiceConnection, BIND_AUTO_CREATE);
 	}
@@ -63,7 +60,7 @@ public class SettingsActivity extends PreferenceActivity {
 		String[] names = new String[storagePaths.length];
 		String[] paths = new String[storagePaths.length];
 
-		String currentValue = pref.getString(Settings.PREF_STORAGE_PATH, null);
+		String currentValue = pref.getString(org.fruct.oss.mapcontent.content.Settings.PREF_STORAGE_PATH, null);
 		int currentNameRes = -1;
 
 		for (int i = 0; i < storagePaths.length; i++) {

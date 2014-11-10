@@ -1,6 +1,5 @@
 package org.fruct.oss.socialnavigator.fragments.root;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -25,7 +24,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
@@ -33,8 +31,8 @@ import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
-import org.fruct.oss.socialnavigator.content.ContentItem;
-import org.fruct.oss.socialnavigator.content.RemoteContentService;
+import org.fruct.oss.mapcontent.content.ContentItem;
+import org.fruct.oss.mapcontent.content.RemoteContentService;
 import org.fruct.oss.socialnavigator.fragments.other.DownloadProgressFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

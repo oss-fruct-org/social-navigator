@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator.parsers;
 
+import org.fruct.oss.mapcontent.content.utils.XmlUtil;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -35,7 +36,7 @@ public class AuthRedirectResponse implements IContent {
 				content.redirectUrl = GetsResponse.readText(parser);
 				parser.require(XmlPullParser.END_TAG, null, "redirect_url");
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 

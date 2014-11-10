@@ -38,12 +38,12 @@
             android:exported="false" >
         </service>
         <service
-            android:name="org.fruct.oss.socialnavigator.content.RemoteContentService"
+            android:name="org.fruct.oss.mapcontent.content.RemoteContentService"
             android:enabled="true"
             android:exported="false" >
         </service>
         <service
-            android:name="org.fruct.oss.socialnavigator.DataService"
+            android:name="org.fruct.oss.mapcontent.content.DataService"
             android:enabled="true"
             android:exported="false" >
         </service>

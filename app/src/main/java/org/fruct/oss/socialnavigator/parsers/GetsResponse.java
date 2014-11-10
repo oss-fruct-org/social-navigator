@@ -2,6 +2,7 @@ package org.fruct.oss.socialnavigator.parsers;
 
 import android.util.Xml;
 
+import org.fruct.oss.mapcontent.content.utils.XmlUtil;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,12 +97,12 @@ public class GetsResponse {
 			} else if (tagName.equals("content") && contentClass != null) {
 				ContentParser contentParser = contentParsers.get(contentClass);
 				if (contentParser == null) {
-					Utils.skip(parser);
+					XmlUtil.skip(parser);
 				} else {
 					resp.content = contentParser.parse(parser);
 				}
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 

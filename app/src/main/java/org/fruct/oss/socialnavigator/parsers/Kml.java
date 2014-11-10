@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator.parsers;
 
+import org.fruct.oss.mapcontent.content.utils.XmlUtil;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.xmlpull.v1.XmlPullParser;
@@ -59,7 +60,7 @@ public class Kml implements IContent {
 				points.add(Point.parse(parser));
 				parser.require(XmlPullParser.END_TAG, null, "Placemark");
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 

@@ -233,43 +233,6 @@ public class Utils {
 		return ret;
 	}
 
-	public static void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
-		int depth = 1;
-
-		if (parser.getEventType() != XmlPullParser.START_TAG) {
-			throw new IllegalStateException("Parser must be on start tag");
-		}
-
-		while (depth > 0) {
-			switch (parser.next()) {
-			case XmlPullParser.START_TAG:
-				depth++;
-				break;
-			case XmlPullParser.END_TAG:
-				depth--;
-				break;
-			}
-		}
-	}
-
-	public static String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
-		String result = "";
-		if (parser.next() == XmlPullParser.TEXT) {
-			result = parser.getText();
-			parser.nextTag();
-		}
-		return result;
-	}
-
-	public static int readNumber(XmlPullParser parser) throws IOException, XmlPullParserException {
-		try {
-			String text = readText(parser);
-			return Integer.parseInt(text);
-		} catch (NumberFormatException ex) {
-			throw new XmlPullParserException("Expected number");
-		}
-	}
-
 	public static String inputStreamToString(InputStream stream) throws IOException {
 		InputStreamReader reader = new InputStreamReader(stream, "UTF-8");
 		return readerToString(reader);

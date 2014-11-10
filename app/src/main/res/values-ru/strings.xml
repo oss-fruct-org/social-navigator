@@ -22,9 +22,6 @@
     <string name="str_turn_left">Поверните налево через %s</string>
     <string name="str_turn_right">Поверните направо через %s</string>
     <string name="str_approaching">Приближается %s</string>
-    <string name="storage_path_sd_card">SD Card</string>
-    <string name="storage_path_external">External</string>
-    <string name="storage_path_internal">Internal</string>
     <string name="navigation_data">Navigation data</string>
     <string name="offline_map">Offline map</string>
     <string name="update_availabe">Update available</string>

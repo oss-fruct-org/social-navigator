@@ -7,8 +7,8 @@ import android.preference.PreferenceManager;
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 
+import org.fruct.oss.mapcontent.content.Settings;
 import org.fruct.oss.socialnavigator.points.Point;
-import org.fruct.oss.socialnavigator.settings.Settings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;

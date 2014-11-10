@@ -3,8 +3,8 @@ package org.fruct.oss.socialnavigator.test;
 import android.content.Context;
 import android.test.AndroidTestCase;
 
-import org.fruct.oss.socialnavigator.content.NetworkContent;
-import org.fruct.oss.socialnavigator.content.NetworkContentItem;
+import org.fruct.oss.mapcontent.content.NetworkContent;
+import org.fruct.oss.mapcontent.content.NetworkContentItem;
 
 import java.io.IOException;
 import java.io.InputStream;

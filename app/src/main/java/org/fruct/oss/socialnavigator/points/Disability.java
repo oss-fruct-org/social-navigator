@@ -3,6 +3,7 @@ package org.fruct.oss.socialnavigator.points;
 import android.database.Cursor;
 import android.util.Xml;
 
+import org.fruct.oss.mapcontent.content.utils.XmlUtil;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -84,7 +85,7 @@ public class Disability {
 			if (tag.equals("disability")) {
 				disabilities.add(readDisability(parser));
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 
@@ -106,11 +107,11 @@ public class Disability {
 
 			String tag = parser.getName();
 			if (tag.equals("name")) {
-				name = Utils.readText(parser);
+				name = XmlUtil.readText(parser);
 			} else if (tag.equals("category")) {
-				categories.add(Utils.readNumber(parser));
+				categories.add(XmlUtil.readNumber(parser));
 			} else {
-				Utils.skip(parser);
+				XmlUtil.skip(parser);
 			}
 		}
 
