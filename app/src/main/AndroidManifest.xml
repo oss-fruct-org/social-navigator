@@ -37,16 +37,6 @@
             android:enabled="true"
             android:exported="false" >
         </service>
-        <service
-            android:name="org.fruct.oss.mapcontent.content.RemoteContentService"
-            android:enabled="true"
-            android:exported="false" >
-        </service>
-        <service
-            android:name="org.fruct.oss.mapcontent.content.DataService"
-            android:enabled="true"
-            android:exported="false" >
-        </service>
 
         <activity
             android:name="org.fruct.oss.socialnavigator.settings.SettingsActivity"

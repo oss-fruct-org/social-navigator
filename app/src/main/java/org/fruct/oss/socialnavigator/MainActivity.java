@@ -17,9 +17,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.fruct.oss.mapcontent.content.RemoteContentService;
-import org.fruct.oss.socialnavigator.fragments.root.ContentFragment;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
+import org.fruct.oss.socialnavigator.fragments.root.RootContentFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.settings.SettingsActivity;
@@ -101,7 +101,7 @@ public class MainActivity extends ActionBarActivity
 			break;
 
 		case 2:
-			fragment = ContentFragment.newInstance();
+			fragment = RootContentFragment.newInstance();
 			break;
 
 		case 3:
