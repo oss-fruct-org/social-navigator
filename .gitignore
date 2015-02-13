@@ -7,3 +7,4 @@
 *.apk
 *.ghz
 *.jar
+/dev
