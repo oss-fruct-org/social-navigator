@@ -81,15 +81,20 @@ public class PointsService extends Service {
 
 	@Override
 	public void onDestroy() {
-		database.close();
-		database = null;
-
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				pointsProvider.close();
 			}
 		});
+
+		synchronized (this) {
+			if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
+				refreshProvidersTask.cancel(true);
+
+			database.close();
+			database = null;
+		}
 
 		executor.shutdown();
 
@@ -288,10 +293,12 @@ public class PointsService extends Service {
 
 				// FIXME: too slow, use transaction
 				// FIXME: NullPointer exception after shutdown
-				database.insertPoint(point);
+				synchronized (this) {
+					if (Thread.currentThread().isInterrupted()) {
+						return;
+					}
 
-				if (Thread.currentThread().isInterrupted()) {
-					return;
+					database.insertPoint(point);
 				}
 			}
 		}
