@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 
+import org.fruct.oss.socialnavigator.BuildConfig;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.utils.Function;
 import org.slf4j.Logger;
@@ -282,24 +283,25 @@ public class PointsService extends Service {
 				continue;
 			}
 
-			for (Point point : points) {
-				log.trace(" Point received: {}", point.getName());
+			// Check points
+			if (BuildConfig.DEBUG) {
+				for (Point point : points) {
+					log.trace(" Point received: {}", point.getName());
 
-				if (point.getCategoryId() != category.getId()) {
-					log.error(" Point's category doesn't equals category it loaded from: '{}' != '{}'",
-							point.getCategoryId(), category.getId());
-					continue;
-				}
-
-				// FIXME: too slow, use transaction
-				// FIXME: NullPointer exception after shutdown
-				synchronized (this) {
-					if (Thread.currentThread().isInterrupted()) {
-						return;
+					if (point.getCategoryId() != category.getId()) {
+						log.error(" Point's category doesn't equals category it loaded from: '{}' != '{}'",
+								point.getCategoryId(), category.getId());
 					}
-
-					database.insertPoint(point);
 				}
+			}
+
+			synchronized (this) {
+				if (Thread.currentThread().isInterrupted()) {
+					return;
+				}
+
+				database.insertPoints(points);
+				log.trace("Points inserted");
 			}
 		}
 	}

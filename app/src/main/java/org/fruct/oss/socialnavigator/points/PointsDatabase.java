@@ -68,6 +68,19 @@ public class PointsDatabase implements Closeable {
 		}
 	}
 
+	public void insertPoints(List<Point> points) {
+		db.beginTransaction();
+		try {
+			for (Point point : points) {
+				insertPoint(point);
+			}
+
+			db.setTransactionSuccessful();
+		} finally {
+			db.endTransaction();
+		}
+	}
+
 	public void insertPoint(Point point) {
 		if (point == null) {
 			throw new IllegalArgumentException("Point can't be null");

@@ -434,7 +434,9 @@ public class RoutingService extends Service implements PointsService.Listener, L
 		synchronized (serviceMutex) {
 			this.remoteContentService = contentService;
 		}
+
 		remoteContentService.setContentStateListener(RemoteContentService.GRAPHHOPPER_MAP, this);
+		remoteContentService.setLocation(getLastLocation());
 	}
 
 	private void onContentServiceDisconnected() {
