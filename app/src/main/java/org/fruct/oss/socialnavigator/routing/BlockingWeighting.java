@@ -30,11 +30,11 @@ public class BlockingWeighting extends FootPriorityWeighting {
 	}
 
 	@Override
-	public double calcWeight(EdgeIteratorState edge, boolean reverse) {
+	public double calcWeight(EdgeIteratorState edge, boolean reverse, int prevOrNextEdgeId) {
 		if (obstaclesIndex.checkEdgeBlocked(edge, BLOCK_RADIUS, half)) {
 			return Double.POSITIVE_INFINITY;
 		} else {
-			return super.calcWeight(edge, reverse);
+			return super.calcWeight(edge, reverse, prevOrNextEdgeId);
 		}
 	}
 

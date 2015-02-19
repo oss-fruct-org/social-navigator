@@ -29,7 +29,7 @@ public class Routing {
 		}
 
 		gh = (CustomGraphHopper) new CustomGraphHopper().forMobile();
-		gh.disableCHShortcuts();
+		gh.setCHEnable(false);
 
 		if (path != null) {
 			if (!gh.load(path)) {
