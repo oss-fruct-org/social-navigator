@@ -3,8 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/graphhopper-priority/graphhopper-priority.iml" filepath="$PROJECT_DIR$/graphhopper-priority/graphhopper-priority.iml" />
       <module fileurl="file://$PROJECT_DIR$/mapcontent/mapcontent.iml" filepath="$PROJECT_DIR$/mapcontent/mapcontent.iml" />
       <module fileurl="file://$PROJECT_DIR$/social-navigator.iml" filepath="$PROJECT_DIR$/social-navigator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/testlib/testlib.iml" filepath="$PROJECT_DIR$/testlib/testlib.iml" />
     </modules>
   </component>
 </project>

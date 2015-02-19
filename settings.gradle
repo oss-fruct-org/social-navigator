@@ -1,1 +1,1 @@
-include ':app', ':mapcontent'
+include ':app', ':mapcontent', ':graphhopper-priority'

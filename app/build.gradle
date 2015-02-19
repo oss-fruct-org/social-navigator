@@ -65,4 +65,5 @@ dependencies {
     compile 'org.mapsforge:mapsforge-map-android:0.4.3'
     compile 'org.jetbrains:annotations:13.0'
     compile project(':mapcontent')
+    compile project(':graphhopper-priority')
 }
