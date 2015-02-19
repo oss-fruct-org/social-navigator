@@ -2,10 +2,10 @@ package org.fruct.oss.socialnavigator.routing;
 
 import com.graphhopper.routing.util.FastestWeighting;
 import com.graphhopper.routing.util.FlagEncoder;
-import com.graphhopper.routing.util.FootPriorityWeighting;
 import com.graphhopper.routing.util.Weighting;
 import com.graphhopper.util.EdgeIteratorState;
 
+import org.fruct.oss.ghpriority.FootPriorityWeighting;
 import org.jetbrains.annotations.NotNull;
 
 import gnu.trove.impl.hash.TIntIntHash;
@@ -20,21 +20,25 @@ public class BlockingWeighting extends FootPriorityWeighting {
 
 	private final boolean half;
 	private final ObstaclesIndex obstaclesIndex;
+	private final String encoder;
 
 	public BlockingWeighting(@NotNull FlagEncoder encoder,
 							 @NotNull ObstaclesIndex obstaclesIndex,
 							 boolean half) {
 		super(encoder);
+
+		this.encoder = encoder.toString();
+
 		this.half = half;
 		this.obstaclesIndex = obstaclesIndex;
 	}
 
 	@Override
-	public double calcWeight(EdgeIteratorState edge, boolean reverse, int prevOrNextEdgeId) {
+	public double calcWeight(EdgeIteratorState edge, boolean reverse) {
 		if (obstaclesIndex.checkEdgeBlocked(edge, BLOCK_RADIUS, half)) {
 			return Double.POSITIVE_INFINITY;
 		} else {
-			return super.calcWeight(edge, reverse, prevOrNextEdgeId);
+			return super.calcWeight(edge, reverse);
 		}
 	}
 

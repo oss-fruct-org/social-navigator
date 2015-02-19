@@ -11,7 +11,6 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/graphhopper-priority" />
             <option value="$PROJECT_DIR$/mapcontent" />
-            <option value="$PROJECT_DIR$/testlib" />
           </set>
         </option>
       </GradleProjectSettings>

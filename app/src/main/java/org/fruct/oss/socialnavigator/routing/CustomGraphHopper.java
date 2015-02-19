@@ -7,7 +7,6 @@ import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.EdgeFilter;
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.Weighting;
-import com.graphhopper.routing.util.WeightingMap;
 import com.graphhopper.storage.index.LocationIndex;
 import com.graphhopper.storage.index.QueryResult;
 import com.graphhopper.util.DouglasPeucker;
@@ -16,6 +15,7 @@ import com.graphhopper.util.PathMerger;
 import com.graphhopper.util.PointList;
 import com.graphhopper.util.shapes.GHPoint3D;
 
+import org.fruct.oss.ghpriority.PriorityGraphHopper;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.jetbrains.annotations.Nullable;
 import org.osmdroid.util.GeoPoint;
@@ -29,7 +29,7 @@ import java.util.Locale;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-public class CustomGraphHopper extends GraphHopper {
+public class CustomGraphHopper extends PriorityGraphHopper {
 	private static final Logger log = LoggerFactory.getLogger(CustomGraphHopper.class);
 
 	private ObstaclesIndex obstaclesIndex;
@@ -71,14 +71,13 @@ public class CustomGraphHopper extends GraphHopper {
 	}
 
 	@Override
-	public Weighting createWeighting(WeightingMap wMap, FlagEncoder encoder) {
-		String weighting = wMap.getWeighting();
+	public Weighting createWeighting(String weighting, FlagEncoder encoder) {
 		if (weighting.equalsIgnoreCase("half-blocking")) {
 			return new BlockingWeighting(encoder, obstaclesIndex, true);
 		} else if (weighting.equalsIgnoreCase("blocking")) {
 			return new BlockingWeighting(encoder, obstaclesIndex, false);
 		} else {
-			return super.createWeighting(wMap, encoder);
+			return super.createWeighting(weighting, encoder);
 		}
 	}
 }
