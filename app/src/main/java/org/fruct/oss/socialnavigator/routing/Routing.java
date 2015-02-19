@@ -22,7 +22,7 @@ public class Routing {
 	private CustomGraphHopper gh;
 	private boolean isReady;
 
-	public synchronized void loadFromPref(Context context, String storagePath) {
+	public synchronized void loadFromPref(Context context, String path) {
 		if (gh != null) {
 			gh.close();
 			isReady = false;
@@ -31,15 +31,11 @@ public class Routing {
 		gh = (CustomGraphHopper) new CustomGraphHopper().forMobile();
 		gh.disableCHShortcuts();
 
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-
-		String ghDirectory = pref.getString(Settings.NAVIGATION_DATA, null);
-		if (ghDirectory != null) {
-			String ghPath = storagePath + "/graphhopper/" + ghDirectory;
-			if (!gh.load(ghPath)) {
+		if (path != null) {
+			if (!gh.load(path)) {
 				gh.close();
 				gh = null;
-				throw new RuntimeException("Can't initialize graphhopper in " + ghPath);
+				throw new RuntimeException("Can't initialize graphhopper in " + path);
 			}
 			isReady = true;
 		}

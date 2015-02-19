@@ -16,7 +16,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.fruct.oss.mapcontent.content.RemoteContentService;
+import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
 import org.fruct.oss.socialnavigator.fragments.root.RootContentFragment;
@@ -62,7 +62,7 @@ public class MainActivity extends ActionBarActivity
 
 		startService(new Intent(this, PointsService.class));
 		startService(new Intent(this, RoutingService.class));
-		startService(new Intent(this, RemoteContentService.class));
+		startService(new Intent(this, ContentService.class));
 	}
 
 	@Override

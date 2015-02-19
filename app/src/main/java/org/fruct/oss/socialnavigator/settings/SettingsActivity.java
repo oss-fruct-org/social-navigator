@@ -1,50 +1,39 @@
 package org.fruct.oss.socialnavigator.settings;
 
-import android.app.ProgressDialog;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.os.IBinder;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
-import android.widget.Toast;
 
-import org.fruct.oss.mapcontent.content.DataService;
+import org.fruct.oss.mapcontent.content.ContentService;
+import org.fruct.oss.mapcontent.content.connections.ContentServiceConnection;
+import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionListener;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.utils.Utils;
 
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends PreferenceActivity implements ContentServiceConnectionListener {
 	private ListPreference storagePathPref;
 	private SharedPreferences pref;
 
-	private DataService.MigrateListener migrateListener = new MigrateListener();
-	private DataServiceConnection dataServiceConnection = new DataServiceConnection();
-
-	private DataService dataService;
+	private ContentServiceConnection contentServiceConnection = new ContentServiceConnection(this);
+	private ContentService contentService;
 
 	@Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
 		addPreferencesFromResource(R.xml.preferenecs);
 
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
 
 		storagePathPref = (ListPreference) findPreference(org.fruct.oss.mapcontent.content.Settings.PREF_STORAGE_PATH);
-
-		bindService(new Intent(this, DataService.class), dataServiceConnection, BIND_AUTO_CREATE);
+		contentServiceConnection.bindService(this);
 	}
 
 	@Override
 	protected void onDestroy() {
-		if (dataService != null) {
-			dataService.setMigrateListener(null);
-		}
-
-		unbindService(dataServiceConnection);
+		contentServiceConnection.unbindService(this);
 		super.onDestroy();
 	}
 
@@ -79,6 +68,16 @@ public class SettingsActivity extends PreferenceActivity {
 			storagePathPref.setSummary(currentNameRes);
 	}
 
+	@Override
+	public void onContentServiceReady(ContentService contentService) {
+		setupStoragePathPreference();
+	}
+
+	@Override
+	public void onContentServiceDisconnected() {
+
+	}
+/*
 	private class MigrateListener implements DataService.MigrateListener {
 		private ProgressDialog dialog;
 
@@ -115,18 +114,6 @@ public class SettingsActivity extends PreferenceActivity {
 			Toast.makeText(SettingsActivity.this, getString(R.string.str_local_content_move_error), Toast.LENGTH_LONG).show();
 		}
 	}
-
-	private class DataServiceConnection implements ServiceConnection {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder binder) {
-			dataService = ((DataService.Binder) binder).getService();
-			dataService.setMigrateListener(migrateListener);
-			setupStoragePathPreference();
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			dataService = null;
-		}
-	}
+	*/
 }
+
