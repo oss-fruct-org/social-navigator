@@ -49,19 +49,32 @@ public class CustomGraphHopper extends PriorityGraphHopper {
 	@Nullable
 	public RoutingService.Path routePath(GHRequest request, RoutingType routingType) {
 		GHResponse response = new GHResponse();
+		log.info("Searching path for {} {}", request.getVehicle(), request.getWeighting());
+
 		List<Path> paths = getPaths(request, response);
-		if (response.hasErrors() && paths.size() == 0)
+		if (response.hasErrors() && paths.size() == 0) {
+			log.warn("No path found");
 			return null;
+		}
 
 		Path ghPath = paths.get(0);
+		PointList pointList = ghPath.calcPoints();
 
 		List<Point> pointsOnPath = new ArrayList<Point>();
-
-		PointList pointList = ghPath.calcPoints();
-		List<EdgeIteratorState> edges = ghPath.calcEdges();
-		for (EdgeIteratorState edge : edges) {
-			pointsOnPath.addAll(obstaclesIndex.queryByEdge(edge, BlockingWeighting.BLOCK_RADIUS));
+		if (pointList.isEmpty()) {
+			log.warn("Path found but is empty");
+			return null;
 		}
+
+		log.info("Searching obstacles on path");
+		for (int i = 0; i < pointList.getSize() - 1; i++) {
+			pointsOnPath.addAll(obstaclesIndex.queryByEdge(
+					pointList.getLat(i), pointList.getLon(i),
+					pointList.getLat(i + 1), pointList.getLon(i + 1),
+					BlockingWeighting.BLOCK_RADIUS));
+		}
+
+		log.info("{} obstacles on path found", pointsOnPath.size());
 
 		return new RoutingService.Path(pointList,
 				ghPath.getDistance(),

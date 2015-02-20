@@ -271,7 +271,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 		return locationReceiver.getOldLocation();
 	}
 
-
 	private void checkGeofences(final Location location) {
 		executor.execute(new Runnable() {
 			@Override
@@ -305,6 +304,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 					return;
 				}
 
+				log.info("Starting paths calculation for point " + targetPoint.toString());
 				for (RoutingType requiredRoutingType : REQUIRED_ROUTING_TYPES) {
 					Path existingPath = currentPathsMap.get(requiredRoutingType);
 
@@ -557,7 +557,13 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private ContentService.Listener contentListener = new ContentListenerAdapter() {
 		@Override
 		public void recommendedRegionItemReady(final ContentItem contentItem) {
+			log.debug("Recommended content item received");
+
 			if (!contentItem.getType().equals(ContentManagerImpl.GRAPHHOPPER_MAP)) {
+				return;
+			}
+
+			if (recommendedContentItem == contentItem) {
 				return;
 			}
 
@@ -627,32 +633,4 @@ public class RoutingService extends Service implements PointsService.Listener,
 			onPointsServiceDisconnected();
 		}
 	}
-
-	/*
-	private class ContentServiceConnection implements ServiceConnection {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			RemoteContentService remoteContentService = ((RemoteContentService.Binder) service).getService();
-			onContentServiceReady(remoteContentService);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			onContentServiceDisconnected();
-		}
-	}
-
-	private class DataServiceConnection implements ServiceConnection {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			DataService remoteContentService = ((DataService.Binder) service).getService();
-			onDataServiceReady(remoteContentService);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			onDataServiceDisconnected();
-		}
-	}
-*/
 }

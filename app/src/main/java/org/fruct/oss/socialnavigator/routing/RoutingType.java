@@ -3,7 +3,7 @@ package org.fruct.oss.socialnavigator.routing;
 import org.fruct.oss.socialnavigator.R;
 
 public enum RoutingType {
-	FASTEST("fastest", "foot", R.string.action_route_unsafe),
+	FASTEST("fastest", "pfoot", R.string.action_route_unsafe),
 	NORMAL("half-blocking", "pfoot", R.string.action_route_half_safe),
 	SAFE("blocking", "pfoot", R.string.action_route_safe);
 

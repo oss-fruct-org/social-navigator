@@ -12,6 +12,7 @@ import org.fruct.oss.socialnavigator.utils.Utils;
 import org.fruct.oss.socialnavigator.utils.quadtree.Func;
 import org.fruct.oss.socialnavigator.utils.quadtree.Node;
 import org.fruct.oss.socialnavigator.utils.quadtree.QuadTree;
+import org.osmdroid.util.GeoPoint;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ public class ObstaclesIndex {
 	private final NodeAccess nodeAccess;
 	private QuadTree quadtree;
 
-	private List<Point> points = new ArrayList<Point>();
+	protected List<Point> points = new ArrayList<Point>();
 
 	private double latMin = -90;
 	private double lonMin = -180;
@@ -78,14 +79,10 @@ public class ObstaclesIndex {
 		quadtree.clear();
 	}
 
-	public void queryByEdge(EdgeIteratorState edge, final double radius, final Function<Point> func) {
+	public void queryByEdge(final double aLat, final double aLon, final double bLat, final double bLon,
+			final double radius, final Function<Point> func) {
 		if (!isInitialized)
 			throw new IllegalArgumentException("ObstaclesIndex not initialized");
-
-		final double aLat = nodeAccess.getLat(edge.getBaseNode());
-		final double aLon = nodeAccess.getLon(edge.getBaseNode());
-		final double bLat = nodeAccess.getLat(edge.getAdjNode());
-		final double bLon = nodeAccess.getLon(edge.getAdjNode());
 
 		final double rectALat;
 		final double rectALon;
@@ -108,11 +105,16 @@ public class ObstaclesIndex {
 			rectBLon = aLon;
 		}
 
+		double latCenter = (rectALat + rectBLat) / 2;
+		double degreesRadius = Math.toDegrees((radius / GeoPoint.RADIUS_EARTH_METERS)
+				* Math.cos(Math.toRadians(latCenter)));
+
 		quadtree.navigate(quadtree.getRootNode(), new Func() {
 			@Override
 			public void call(QuadTree quadTree, Node node) {
-				double nodeLat = node.getX();
-				double nodeLon = node.getY();
+				org.fruct.oss.socialnavigator.utils.quadtree.Point quadtreePoint = node.getPoint();
+				double nodeLat = quadtreePoint.getX();
+				double nodeLon = quadtreePoint.getY();
 
 				double dist = Utils.calcDist(nodeLat, nodeLon,
 						aLat, aLon, bLat, bLon, outInt, outDouble);
@@ -121,13 +123,22 @@ public class ObstaclesIndex {
 					func.call((Point) node.getPoint().getValue());
 				}
 			}
-		}, rectALat, rectALon, rectBLat, rectBLon);
+		}, rectALat - degreesRadius, rectALon + degreesRadius, rectBLat - degreesRadius, rectBLon + degreesRadius);
 	}
 
-	public List<Point> queryByEdge(EdgeIteratorState edge, final double radius) {
+	public void queryByEdge(EdgeIteratorState edge, final double radius, final Function<Point> func) {
+		final double aLat = nodeAccess.getLat(edge.getBaseNode());
+		final double aLon = nodeAccess.getLon(edge.getBaseNode());
+		final double bLat = nodeAccess.getLat(edge.getAdjNode());
+		final double bLon = nodeAccess.getLon(edge.getAdjNode());
+		queryByEdge(aLat, aLon, bLat, bLon, radius, func);
+	}
+
+	public List<Point> queryByEdge(final double aLat, final double aLon, final double bLat, final double bLon,
+								   final double radius) {
 		final ArrayList<Point> ret = new ArrayList<Point>();
 
-		queryByEdge(edge, radius, new Function<Point>() {
+		queryByEdge(aLat, aLon, bLat, bLon, radius, new Function<Point>() {
 			@Override
 			public void call(Point point) {
 				ret.add(point);

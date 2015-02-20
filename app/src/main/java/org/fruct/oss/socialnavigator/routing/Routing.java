@@ -23,6 +23,7 @@ public class Routing {
 	private boolean isReady;
 
 	public synchronized void loadFromPref(Context context, String path) {
+		log.info("Loading graphhopper from path {}", path);
 		if (gh != null) {
 			gh.close();
 			isReady = false;
@@ -35,9 +36,12 @@ public class Routing {
 			if (!gh.load(path)) {
 				gh.close();
 				gh = null;
+				log.error("Can't initialize graphhopper in " + path);
 				throw new RuntimeException("Can't initialize graphhopper in " + path);
 			}
 			isReady = true;
+		} else {
+			log.error("Can't initialize graphhopper in null path");
 		}
 	}
 
