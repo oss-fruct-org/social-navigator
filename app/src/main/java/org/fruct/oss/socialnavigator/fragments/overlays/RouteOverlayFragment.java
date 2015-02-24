@@ -67,32 +67,22 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		@Override
 		public void onClick(View v) {
 			PopupMenu popupMenu = new PopupMenu(getActivity(), v);
-			popupMenu.inflate(R.menu.popup_route);
-			popupMenu.show();
 
-			popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-				@Override
-				public boolean onMenuItemClick(MenuItem menuItem) {
-					RoutingType routingType;
-					switch (menuItem.getItemId()) {
-					case R.id.action_safe:
-						routingType = RoutingType.SAFE;
-						break;
-					case R.id.action_half_save:
-						routingType = RoutingType.NORMAL;
-						break;
-					case R.id.action_unsafe:
-						routingType = RoutingType.FASTEST;
-						break;
-					default:
-						return false;
+			for (Map.Entry<RoutingType, RoutingService.Path> entry : paths.entrySet()) {
+				final RoutingType routingType = entry.getKey();
+
+				popupMenu.getMenu()
+						.add(routingType.getStringId())
+						.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+					@Override
+					public boolean onMenuItemClick(MenuItem item) {
+						pathSelected(routingType);
+						return true;
 					}
+				});
+			}
 
-					pathSelected(routingType);
-
-					return true;
-				}
-			});
+			popupMenu.show();
 		}
 	};
 

@@ -61,7 +61,7 @@ public class CustomGraphHopper extends PriorityGraphHopper {
 		PointList pointList = ghPath.calcPoints();
 
 		List<Point> pointsOnPath = new ArrayList<Point>();
-		if (pointList.isEmpty()) {
+		if (pointList.size() < 2) {
 			log.warn("Path found but is empty");
 			return null;
 		}

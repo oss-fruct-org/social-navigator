@@ -326,8 +326,13 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 				Path activePath = currentPathsMap.get(currentRoutingType);
 				if (activePath == null) {
-					currentRoutingType = RoutingType.SAFE;
-					activePath = currentPathsMap.get(currentRoutingType);
+					for (RoutingType routingType : RoutingType.values()) {
+						activePath = currentPathsMap.get(routingType);
+						if (activePath != null) {
+							currentRoutingType = routingType;
+							break;
+						}
+					}
 				}
 
 				if (activePath != null) {
