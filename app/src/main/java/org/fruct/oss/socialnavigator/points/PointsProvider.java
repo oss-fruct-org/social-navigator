@@ -8,6 +8,4 @@ public interface PointsProvider {
 	List<Disability> loadDisabilities() throws PointsException;
 	List<Category> loadCategories() throws PointsException;
 	List<Point> loadPoints(Category category) throws PointsException;
-
-	void close();
 }

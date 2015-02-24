@@ -96,11 +96,10 @@ public class PointsDatabase implements Closeable {
 		cv.put("provider", point.getProvider());
 		cv.put("difficulty", point.getDifficulty());
 
-		if (!isPointExists(point)) {
+		int affected = db.update("point", cv, "uuid=?", toArray(point.getUuid()));
+		if (affected == 0) {
 			cv.put("uuid", point.getUuid());
 			db.insert("point", null, cv);
-		} else {
-			db.update("point", cv, "uuid=?", toArray(point.getUuid()));
 		}
 	}
 
@@ -233,6 +232,8 @@ public class PointsDatabase implements Closeable {
 					"categoryId INTEGER," +
 					"disabilityId INTEGER, " +
 					"FOREIGN KEY(disabilityId) REFERENCES disability(_id));");
+
+			db.execSQL("CREATE UNIQUE INDEX point_uuid_index ON point (uuid);");
 		}
 
 		@Override

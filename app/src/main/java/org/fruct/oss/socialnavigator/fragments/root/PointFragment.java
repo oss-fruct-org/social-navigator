@@ -145,6 +145,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	public void onDataUpdated() {
 		refreshLayout.setRefreshing(false);
 		refreshList();
+		Toast.makeText(getActivity(), R.string.str_data_refresh_complete, Toast.LENGTH_SHORT).show();
 	}
 
 	@Override

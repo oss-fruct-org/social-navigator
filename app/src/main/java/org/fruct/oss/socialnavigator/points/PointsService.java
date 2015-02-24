@@ -14,7 +14,6 @@ import org.fruct.oss.socialnavigator.utils.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -29,8 +28,6 @@ public class PointsService extends Service {
 
 	private final Binder binder = new Binder();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
-
-	private PointsProvider pointsProvider = null;
 
 	private final List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 
@@ -58,15 +55,6 @@ public class PointsService extends Service {
 		database = new PointsDatabase(this);
 		handler = new Handler(Looper.getMainLooper());
 
-		handler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				if (!isTestMode) {
-					setupProviders();
-				}
-			}
-		}, 1000);
-
 		log.info("created");
 	}
 
@@ -82,20 +70,15 @@ public class PointsService extends Service {
 
 	@Override
 	public void onDestroy() {
+		if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
+			refreshProvidersTask.cancel(true);
+
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				pointsProvider.close();
+				database.close();
 			}
 		});
-
-		synchronized (this) {
-			if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
-				refreshProvidersTask.cancel(true);
-
-			database.close();
-			database = null;
-		}
 
 		executor.shutdown();
 
@@ -130,26 +113,20 @@ public class PointsService extends Service {
 			@Override
 			public void run() {
 				try {
-					refreshProvider();
+					log.info("Starting points refresh");
+					long refreshStartTime = System.nanoTime();
+					refreshRemote();
+					long refreshEndTime = System.nanoTime();
+					log.info("Points refresh time: {}", (refreshEndTime - refreshStartTime) * 1e-9f);
 
-					if (!Thread.currentThread().isInterrupted()) {
-						notifyDataUpdated();
-					}
+					notifyDataUpdated();
 				} catch (Exception ex) {
-					// TODO: refreshProvider should throw specific checked exception
+					// TODO: refreshRemote should throw specific checked exception
 					log.error("Cannot refresh provider", ex);
 					notifyDataUpdateFailed(ex);
 				}
 			}
 		});
-	}
-
-	public void setPointsProvider(PointsProvider pointsProvider) {
-		if (this.pointsProvider != null) {
-			throw new IllegalArgumentException("Provider with name " + pointsProvider.getProviderName() + " already exists");
-		}
-
-		this.pointsProvider = pointsProvider;
 	}
 
 	private void notifyDataUpdated() {
@@ -249,42 +226,35 @@ public class PointsService extends Service {
 	}
 
 	@Blocking
-	private void refreshProvider() throws PointsException {
-		if (pointsProvider == null) {
-			throw new IllegalArgumentException("Trying to refresh non-existing provider");
-		}
-
-		try {
-			List<Disability> disabilities = pointsProvider.loadDisabilities();
-			if (disabilities != null) {
-				database.setDisabilities(disabilities);
-			}
-		} catch (PointsException e) {
-			notifyDataUpdateFailed(e);
-			return;
+	private void refreshRemote() throws PointsException {
+		PointsProvider pointsProvider = setupProvider();
+		
+		List<Disability> disabilities = pointsProvider.loadDisabilities();
+		if (disabilities != null) {
+			database.setDisabilities(disabilities);
 		}
 
 		List<Category> categories;
-		try {
-			categories = pointsProvider.loadCategories();
-		} catch (PointsException e) {
-			notifyDataUpdateFailed(e);
-			return;
-		}
+		categories = pointsProvider.loadCategories();
 
 		for (Category category : categories) {
-			log.trace("Category received: {}", category.getName());
 			database.insertCategory(category);
+
+			if (Thread.currentThread().isInterrupted()) {
+				return;
+			}
 
 			List<Point> points;
 			try {
+				log.debug("Loading points for category {}", category.getName());
 				points = pointsProvider.loadPoints(category);
+				log.debug("Points loaded");
 			} catch (PointsException ex) {
 				continue;
 			}
 
 			// Check points
-			if (BuildConfig.DEBUG) {
+			/*if (BuildConfig.DEBUG) {
 				for (Point point : points) {
 					log.trace(" Point received: {}", point.getName());
 
@@ -293,16 +263,11 @@ public class PointsService extends Service {
 								point.getCategoryId(), category.getId());
 					}
 				}
-			}
+			}*/
 
-			synchronized (this) {
-				if (Thread.currentThread().isInterrupted()) {
-					return;
-				}
-
-				database.insertPoints(points);
-				log.trace("Points inserted");
-			}
+			log.debug("Inserting points to database");
+			database.insertPoints(points);
+			log.debug("Points inserted to database");
 		}
 	}
 
@@ -314,6 +279,7 @@ public class PointsService extends Service {
 				latch.countDown();
 			}
 		});
+
 		try {
 			if (!latch.await(100, TimeUnit.MILLISECONDS)) {
 				throw new RuntimeException("Too long wait");
@@ -330,11 +296,10 @@ public class PointsService extends Service {
 		listeners.remove(listener);
 	}
 
-	private void setupProviders() {
+	private PointsProvider setupProvider() {
 		GetsProvider getsProvider;
 		getsProvider = new GetsProvider();
-		setPointsProvider(getsProvider);
-		refresh();
+		return getsProvider;
 /*
 		ArrayPointsProvider arrayPointsProvider = new ArrayPointsProvider("array-provider");
 		arrayPointsProvider.setCategories("test-category");
@@ -345,7 +310,6 @@ public class PointsService extends Service {
 				"test-category", 61.78623, 34.356029, 7);
 
 		setPointsProvider(arrayPointsProvider);*/
-		refresh();
 	}
 
 	public void addPoint(Point point) {

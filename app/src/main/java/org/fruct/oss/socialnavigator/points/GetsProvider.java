@@ -32,11 +32,6 @@ public class GetsProvider implements PointsProvider {
 		}
 	}
 
-
-	@Override
-	public void close() {
-	}
-
 	@Override
 	public String getProviderName() {
 		return "gets-provider";
