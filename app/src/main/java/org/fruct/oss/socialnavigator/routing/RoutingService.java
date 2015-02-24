@@ -117,10 +117,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 		bindService(new Intent(this, PointsService.class),
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
-		//bindService(new Intent(this, RemoteContentService.class),
-		//		remoteContentServiceConnection = new ContentServiceConnection(), BIND_AUTO_CREATE);
-		//bindService(new Intent(this, DataService.class),
-		//		dataServiceConnection = new DataServiceConnection(), BIND_AUTO_CREATE);
 
 		currentPathsMap.clear();
 
