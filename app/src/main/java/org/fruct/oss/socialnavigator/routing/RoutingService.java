@@ -576,6 +576,20 @@ public class RoutingService extends Service implements PointsService.Listener,
 				}
 			});
 		}
+
+		@Override
+		public void requestContentReload() {
+			if (recommendedContentItem == null) {
+				return;
+			}
+
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					initializeRouting(recommendedContentItem);
+				}
+			});
+		}
 	};
 
 	public class Binder extends android.os.Binder {

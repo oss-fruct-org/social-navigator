@@ -165,21 +165,6 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	}
 
-	/*@Override
-	public void routingUpdated(RoutingService.Path path) {
-		if (path != null) {
-			GeoPoint p1 = new GeoPoint(path.getPointList().getLatitude(0), path.getPointList().getLongitude(0));
-			GeoPoint p2 = new GeoPoint(path.getPointList().getLatitude(1), path.getPointList().getLongitude(1));
-
-			double bearing = p1.bearingTo(p2);
-			mapView.setMapOrientation((float) -bearing);
-
-			activateFollowMode();
-		} else {
-			deactivateFollowMode();
-		}
-	}*/
-
 	private class ScrollableOverlay extends MyLocationNewOverlay {
 		public ScrollableOverlay(Context context, IMyLocationProvider myLocationProvider, MapView mapView) {
 			super(context, myLocationProvider, mapView);
