@@ -17,8 +17,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
@@ -59,7 +62,9 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private MapView mapView;
 	private ResourceProxy resourceProxy;
+
 	private View view;
+	private boolean expanded = false;
 
 	private Drawable targetPointDrawable;
 
@@ -91,6 +96,19 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		public void onClick(View v) {
 			Intent intent = new Intent(RoutingService.ACTION_ROUTE, null, getActivity(), RoutingService.class);
 			getActivity().startService(intent);
+		}
+	};
+
+	private View.OnClickListener expandListener = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			View bottomView = view.findViewById(R.id.details_view);
+			if (expanded) {
+				Utils.collapse(bottomView);
+			} else {
+				Utils.expand(bottomView);
+			}
+			expanded = !expanded;
 		}
 	};
 
@@ -131,18 +149,29 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		ImageButton typeButton = (ImageButton) view.findViewById(R.id.route_button_type);
 		typeButton.setOnClickListener(typeListener);
 
+		view.setOnClickListener(expandListener);
+
 		return view;
 	}
 
 	private void showPathInfo(RoutingService.Path path) {
 		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
 		TextView titleTextView = (TextView) view.findViewById(R.id.title_text);
+		ListView obstaclesListView = (ListView) view.findViewById(R.id.obstacles_list_view);
 
 		if (path != null) {
 			lengthTextView.setVisibility(View.VISIBLE);
 			lengthTextView.setText(Utils.stringDistance(getResources(), path.getDistance()));
 			titleTextView.setText(path.getRoutingType().getStringId());
 
+			List<String> obstaclesList = new ArrayList<String>();
+			for (Point point : path.getPoints()) {
+				obstaclesList.add(point.getName());
+			}
+
+			ArrayAdapter<String> obstaclesAdapter = new ArrayAdapter<String>(getActivity(),
+					android.R.layout.simple_list_item_1, obstaclesList);
+			obstaclesListView.setAdapter(obstaclesAdapter);
 		} else {
 			lengthTextView.setText(getResources().getString(R.string.str_path_not_found));
 			lengthTextView.setVisibility(View.GONE);

@@ -12,7 +12,7 @@
     <FrameLayout
         android:id="@+id/overlay_route"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/route_panel_height"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"/>
 
     <FrameLayout android:id="@+id/map_anchor"
