@@ -270,7 +270,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		}
 
 		@Override
-		public boolean onLongPress(MotionEvent e, MapView mapView) {
+		public boolean onSingleTapConfirmed(MotionEvent e, MapView mapView) {
 			Projection projection = mapView.getProjection();
 			IGeoPoint geoPoint = projection.fromPixels((int) e.getX(), (int) e.getY());
 
@@ -278,6 +278,12 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 			screenPoint.offset(-projection.getScreenRect().left, -projection.getScreenRect().top);
 
 			onPointPressed(geoPoint, screenPoint);
+
+			return super.onSingleTapConfirmed(e, mapView);
+		}
+
+		@Override
+		public boolean onLongPress(MotionEvent e, MapView mapView) {
 			return super.onLongPress(e, mapView);
 		}
 	}
