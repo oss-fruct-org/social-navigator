@@ -160,11 +160,6 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	}
 
-	@Override
-	public void activePathUpdated(RoutingService.Path activePath) {
-
-	}
-
 	private class ScrollableOverlay extends MyLocationNewOverlay {
 		public ScrollableOverlay(Context context, IMyLocationProvider myLocationProvider, MapView mapView) {
 			super(context, myLocationProvider, mapView);

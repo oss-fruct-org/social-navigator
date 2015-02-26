@@ -122,15 +122,11 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	@Override
 	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
-	}
+		RoutingService.Path activePath = paths.get(activeType);
+		if (activePath == null) {
+			return;
+		}
 
-	@Override
-	public void pathsCleared() {
-		overlay.removeAllItems();
-	}
-
-	@Override
-	public void activePathUpdated(RoutingService.Path activePath) {
 		overlay.removeAllItems();
 
 		List<Obstacle> obstacles = new ArrayList<Obstacle>(activePath.getPoints().length);
@@ -141,6 +137,11 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 		overlay.addItems(obstacles);
 		mapView.invalidate();
+	}
+
+	@Override
+	public void pathsCleared() {
+		overlay.removeAllItems();
 	}
 
 	@Override

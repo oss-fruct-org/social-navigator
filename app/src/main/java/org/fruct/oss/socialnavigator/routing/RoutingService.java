@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -74,12 +75,14 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 	private GeoPoint targetPoint;
 
-	private final Map<RoutingType, Path> currentPathsMap = Collections.synchronizedMap(new EnumMap<RoutingType, Path>(RoutingType.class));
-	private Turn currentTurn;
-	private RoutingType currentRoutingType = RoutingType.SAFE;
-
 	// Locks current target point ad current paths
 	private final Object mutex = new Object();
+
+	private final Map<RoutingType, Path> currentPathsMap = Collections.synchronizedMap(new EnumMap<RoutingType, Path>(RoutingType.class));
+	private RoutingType currentRoutingType = RoutingType.SAFE;
+	private Turn currentTurn;
+
+
 
 	// Locks services assignment
 	private final Object serviceMutex = new Object();
@@ -210,11 +213,11 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 	private void clearTargetPoint() {
-		if (routeFuture != null) {
-			routeFuture.cancel(true);
-		}
-
 		synchronized (mutex) {
+			if (routeFuture != null) {
+				routeFuture.cancel(true);
+			}
+
 			currentPathsMap.clear();
 			targetPoint = null;
 		}
@@ -277,79 +280,84 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 	private void recalculatePaths(final boolean forceRecalc) {
-		if (routeFuture != null) {
-			routeFuture.cancel(true);
-		}
-
-		if (targetPoint == null) {
-			log.warn("Trying to recalculate paths with null target point");
-			return;
-		}
-
-		final Location currentLocation = locationReceiver.getOldLocation();
-		if (currentLocation == null) {
-			log.warn("No location");
-			return;
-		}
-
-		final GeoPoint targetPoint = this.targetPoint;
-		routeFuture = executor.submit(new Runnable() {
-			@Override
-			public void run() {
-				if (!routing.isReady()) {
-					return;
-				}
-
-				log.info("Starting paths calculation for point " + targetPoint.toString());
-				for (RoutingType requiredRoutingType : REQUIRED_ROUTING_TYPES) {
-					Path existingPath = currentPathsMap.get(requiredRoutingType);
-
-					boolean isPathDeviated = true;
-					if (existingPath != null && !forceRecalc) {
-						existingPath.pointList.setLocation(currentLocation);
-						isPathDeviated = existingPath.pointList.isDeviated();
-					}
-
-					if (existingPath == null || forceRecalc || isPathDeviated) {
-						Path path = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
-								targetPoint.getLatitude(), targetPoint.getLongitude(), requiredRoutingType);
-
-						if (path != null) {
-							currentPathsMap.put(requiredRoutingType, path);
-						}
-					}
-				}
-
-				Path activePath = currentPathsMap.get(currentRoutingType);
-				if (activePath == null) {
-					for (RoutingType routingType : RoutingType.values()) {
-						activePath = currentPathsMap.get(routingType);
-						if (activePath != null) {
-							currentRoutingType = routingType;
-							break;
-						}
-					}
-				}
-
-				if (activePath != null) {
-					if (activePath.getPointList().isCompleted()) {
-						synchronized (mutex) {
-							currentPathsMap.clear();
-							RoutingService.this.targetPoint = null;
-						}
-
-						notifyPathsCleared();
-					} else {
-						updateActivePathWayInformation(activePath);
-						notifyActivePathUpdated(activePath);
-					}
-				}
-
-				if (!currentPathsMap.isEmpty()) {
-					notifyPathsUpdated(targetPoint, currentPathsMap);
-				}
+		synchronized (mutex) {
+			if (routeFuture != null) {
+				routeFuture.cancel(true);
 			}
-		});
+
+			if (targetPoint == null) {
+				log.warn("Trying to recalculate paths with null target point");
+				return;
+			}
+
+			final Location currentLocation = locationReceiver.getOldLocation();
+			if (currentLocation == null) {
+				log.warn("No location");
+				return;
+			}
+
+			final GeoPoint targetPoint = this.targetPoint;
+
+			routeFuture = executor.submit(new Runnable() {
+				@Override
+				public void run() {
+					if (!routing.isReady()) {
+						return;
+					}
+
+					log.info("Starting paths calculation for point " + targetPoint.toString());
+					for (RoutingType requiredRoutingType : REQUIRED_ROUTING_TYPES) {
+						Path existingPath = currentPathsMap.get(requiredRoutingType);
+
+						boolean isPathDeviated = true;
+						if (existingPath != null && !forceRecalc) {
+							existingPath.pointList.setLocation(currentLocation);
+							isPathDeviated = existingPath.pointList.isDeviated();
+						}
+
+						if (existingPath == null || forceRecalc || isPathDeviated) {
+							Path path = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
+									targetPoint.getLatitude(), targetPoint.getLongitude(), requiredRoutingType);
+
+							if (path != null) {
+								currentPathsMap.put(requiredRoutingType, path);
+							}
+						}
+					}
+
+					Path activePath;
+					synchronized (mutex) {
+						activePath = currentPathsMap.get(currentRoutingType);
+						if (activePath == null) {
+							for (RoutingType routingType : RoutingType.values()) {
+								activePath = currentPathsMap.get(routingType);
+								if (activePath != null) {
+									currentRoutingType = routingType;
+									break;
+								}
+							}
+						}
+					}
+
+					if (activePath != null) {
+						if (activePath.getPointList().isCompleted()) {
+							synchronized (mutex) {
+								currentPathsMap.clear();
+								RoutingService.this.targetPoint = null;
+							}
+
+							notifyPathsCleared();
+						} else {
+							updateActivePathWayInformation(activePath);
+						}
+					}
+
+					if (!currentPathsMap.isEmpty()) {
+						notifyPathsUpdated(targetPoint, currentPathsMap);
+					}
+				}
+			});
+		}
 	}
 
 	public void newTargetPoint(final GeoPoint targetPoint) {
@@ -456,26 +464,18 @@ public class RoutingService extends Service implements PointsService.Listener,
 	public void onDataUpdateFailed(Throwable throwable) {
 	}
 
-	private void notifyActivePathUpdated(final Path activePath) {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				for (Listener listener : listeners) {
-					listener.activePathUpdated(activePath);
-				}
-			}
-		});
-	}
-
 	private void notifyPathsUpdated(final GeoPoint targetPoint, final Map<RoutingType, Path> paths) {
 		if (targetPoint == null)
 			return;
 
+		final Map<RoutingType, Path> pathMapCopy = new HashMap<RoutingType, Path>(paths);
+		final RoutingType routingTypeCopy = currentRoutingType;
+
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
 				for (Listener listener : listeners) {
-					listener.pathsUpdated(targetPoint, paths, currentRoutingType);
+					listener.pathsUpdated(targetPoint, pathMapCopy, routingTypeCopy);
 				}
 			}
 		});
@@ -518,7 +518,9 @@ public class RoutingService extends Service implements PointsService.Listener,
 		this.currentRoutingType = activeRoutingType;
 		Path activePath = currentPathsMap.get(currentRoutingType);
 		updateActivePathWayInformation(activePath);
-		notifyActivePathUpdated(activePath);
+		synchronized (mutex) {
+			notifyPathsUpdated(targetPoint, currentPathsMap);
+		}
 	}
 
 	public void updateActivePathWayInformation(Path activePath) {
@@ -633,7 +635,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 		void proximityEvent(Turn turn);
 		void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, Path> paths, RoutingType activeType);
 		void pathsCleared();
-		void activePathUpdated(Path activePath);
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {
@@ -647,5 +648,9 @@ public class RoutingService extends Service implements PointsService.Listener,
 		public void onServiceDisconnected(ComponentName name) {
 			onPointsServiceDisconnected();
 		}
+	}
+
+	public static enum State {
+		IDLE, UPDATING
 	}
 }
