@@ -39,6 +39,8 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.PathOverlay;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -46,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 
 public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener, AdapterView.OnItemClickListener {
+	private static final Logger log = LoggerFactory.getLogger(RouteOverlayFragment.class);
+
 	private final RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
 	private final PointsServiceConnection pointsServiceConnection = new PointsServiceConnection();
 
@@ -393,6 +397,8 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		if (mapView != null) {
 			Point clickedPoint = currentListPoints[position];
 			mapView.getController().animateTo(clickedPoint.toGeoPoint());
+			log.debug("User clicked point {} at {}, {}", clickedPoint.getName(),
+					clickedPoint.getLat(), clickedPoint.getLon());
 		}
 	}
 

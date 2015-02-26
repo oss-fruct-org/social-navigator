@@ -23,8 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -60,7 +62,7 @@ public class CustomGraphHopper extends PriorityGraphHopper {
 		Path ghPath = paths.get(0);
 		PointList pointList = ghPath.calcPoints();
 
-		List<Point> pointsOnPath = new ArrayList<Point>();
+		Set<Point> pointsOnPath = new HashSet<Point>();
 		if (pointList.size() < 2) {
 			log.warn("Path found but is empty");
 			return null;
