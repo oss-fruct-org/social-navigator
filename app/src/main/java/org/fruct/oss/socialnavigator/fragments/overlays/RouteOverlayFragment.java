@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -44,7 +45,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener {
+public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener, AdapterView.OnItemClickListener {
 	private final RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
 	private final PointsServiceConnection pointsServiceConnection = new PointsServiceConnection();
 
@@ -57,6 +58,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private ItemizedIconOverlay<TargetPointItem> targetPointOverlay;
 	private GeoPoint targetPoint;
 
+	private Point[] currentListPoints;
 	private Map<RoutingType, RoutingService.Path> paths = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
 	private RoutingType activeRoutingType = RoutingType.SAFE;
 
@@ -169,9 +171,12 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 				obstaclesList.add(point.getName());
 			}
 
+			this.currentListPoints = path.getPoints();
+
 			ArrayAdapter<String> obstaclesAdapter = new ArrayAdapter<String>(getActivity(),
 					android.R.layout.simple_list_item_1, obstaclesList);
 			obstaclesListView.setAdapter(obstaclesAdapter);
+			obstaclesListView.setOnItemClickListener(this);
 		} else {
 			lengthTextView.setText(getResources().getString(R.string.str_path_not_found));
 			lengthTextView.setVisibility(View.GONE);
@@ -325,14 +330,31 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	@Override
+	public void routingStateChanged(RoutingService.State state) {
+		if (state == RoutingService.State.UPDATING) {
+			showPanel();
+			setPanelUpdatingState(true);
+		} else if (state == RoutingService.State.IDLE) {
+			if (paths == null || paths.isEmpty()) {
+				hidePanel();
+			}
+			setPanelUpdatingState(false);
+		}
+	}
+
+	private void setPanelUpdatingState(boolean isUpdating) {
+		View progressBar = view.findViewById(R.id.route_updating_progressbar);
+		View button = view.findViewById(R.id.route_button_type);
+
+		progressBar.setVisibility(isUpdating ? View.VISIBLE : View.GONE);
+		button.setVisibility(isUpdating ? View.GONE : View.VISIBLE);
+	}
+
+	@Override
 	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
 		this.targetPoint = targetPoint;
 		this.paths = paths;
 		this.activeRoutingType = activeType;
-
-		if (!paths.isEmpty()) {
-			showPanel();
-		}
 
 		updateOverlays();
 	}
@@ -363,6 +385,14 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			return getResources().getColor(R.color.color_path_half_safe);
 		case SAFE:
 			return getResources().getColor(R.color.color_path_safe);
+		}
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		if (mapView != null) {
+			Point clickedPoint = currentListPoints[position];
+			mapView.getController().animateTo(clickedPoint.toGeoPoint());
 		}
 	}
 

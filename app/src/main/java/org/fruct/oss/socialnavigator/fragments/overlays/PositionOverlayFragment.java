@@ -151,6 +151,11 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	@Override
+	public void routingStateChanged(RoutingService.State state) {
+
+	}
+
+	@Override
 	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
 
 	}

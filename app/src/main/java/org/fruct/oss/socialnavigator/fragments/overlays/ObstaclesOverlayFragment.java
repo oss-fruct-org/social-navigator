@@ -121,6 +121,11 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	}
 
 	@Override
+	public void routingStateChanged(RoutingService.State state) {
+
+	}
+
+	@Override
 	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
 		RoutingService.Path activePath = paths.get(activeType);
 		if (activePath == null) {
