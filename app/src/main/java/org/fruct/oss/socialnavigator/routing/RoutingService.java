@@ -322,6 +322,8 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 							if (path != null) {
 								currentPathsMap.put(requiredRoutingType, path);
+							} else {
+								currentPathsMap.remove(requiredRoutingType);
 							}
 						}
 					}
