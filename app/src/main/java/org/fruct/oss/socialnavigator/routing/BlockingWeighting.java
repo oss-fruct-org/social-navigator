@@ -16,7 +16,7 @@ import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 public class BlockingWeighting extends FootPriorityWeighting {
-	public static final double BLOCK_RADIUS = 5;
+	public static final double BLOCK_RADIUS = 10;
 
 	private final boolean half;
 	private final ObstaclesIndex obstaclesIndex;
