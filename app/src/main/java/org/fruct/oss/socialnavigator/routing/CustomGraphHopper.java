@@ -7,6 +7,7 @@ import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.EdgeFilter;
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.Weighting;
+import com.graphhopper.routing.util.WeightingMap;
 import com.graphhopper.storage.index.LocationIndex;
 import com.graphhopper.storage.index.QueryResult;
 import com.graphhopper.util.DouglasPeucker;
@@ -86,13 +87,13 @@ public class CustomGraphHopper extends PriorityGraphHopper {
 	}
 
 	@Override
-	public Weighting createWeighting(String weighting, FlagEncoder encoder) {
-		if (weighting.equalsIgnoreCase("half-blocking")) {
+	public Weighting createWeighting(WeightingMap wMap, FlagEncoder encoder) {
+		if (wMap.getWeighting().equalsIgnoreCase("half-blocking")) {
 			return new BlockingWeighting(encoder, obstaclesIndex, true);
-		} else if (weighting.equalsIgnoreCase("blocking")) {
+		} else if (wMap.getWeighting().equalsIgnoreCase("blocking")) {
 			return new BlockingWeighting(encoder, obstaclesIndex, false);
 		} else {
-			return super.createWeighting(weighting, encoder);
+			return super.createWeighting(wMap, encoder);
 		}
 	}
 }

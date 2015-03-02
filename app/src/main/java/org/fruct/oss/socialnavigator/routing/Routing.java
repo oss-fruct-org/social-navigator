@@ -6,7 +6,13 @@ import android.preference.PreferenceManager;
 
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
+import com.graphhopper.routing.util.BikeFlagEncoder;
+import com.graphhopper.routing.util.CarFlagEncoder;
+import com.graphhopper.routing.util.EncodingManager;
+import com.graphhopper.routing.util.FlagEncoder;
+import com.graphhopper.routing.util.FootFlagEncoder;
 
+import org.fruct.oss.ghpriority.FootPriorityFlagEncoder;
 import org.fruct.oss.mapcontent.content.Settings;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Routing {
@@ -30,7 +37,14 @@ public class Routing {
 		}
 
 		gh = (CustomGraphHopper) new CustomGraphHopper().forMobile();
-		gh.disableCHShortcuts();
+		gh.setEncodingManager(new EncodingManager(new ArrayList<FlagEncoder>(4) {{
+			add(new CarFlagEncoder());
+			add(new BikeFlagEncoder());
+			add(new FootFlagEncoder());
+			add(new FootPriorityFlagEncoder());
+		}}, 8));
+
+		gh.setCHEnable(false);
 
 		if (path != null) {
 			if (!gh.load(path)) {
