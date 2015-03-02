@@ -13,8 +13,8 @@ android {
         applicationId "org.fruct.oss.socialnavigator"
         minSdkVersion 10
         targetSdkVersion 20
-        versionCode 3
-        versionName "0.0.3"
+        versionCode 4
+        versionName "0.0.4"
     }
 
     buildTypes {

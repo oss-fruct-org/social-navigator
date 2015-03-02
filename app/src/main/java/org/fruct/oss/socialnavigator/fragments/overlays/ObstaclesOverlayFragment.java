@@ -4,9 +4,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
@@ -30,6 +32,8 @@ import java.util.Map;
 public class ObstaclesOverlayFragment extends OverlayFragment
 		implements ItemizedIconOverlay.OnItemGestureListener<ObstaclesOverlayFragment.Obstacle>, RoutingService.Listener, PointsService.Listener {
 	private static final Logger log = LoggerFactory.getLogger(ObstaclesOverlayFragment.class);
+	public static final String PREF_LAST_POINTS_UPDATE_TIMESTAMP = "pref-last-points-update-timestamp";
+	public static final int POINT_UPDATE_INTERVAL = 60 * 3600;
 
 	private RoutingServiceConnection routingServiceConnection;
 	private PointsServiceConnection pointsServiceConnection;
@@ -75,8 +79,8 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		getActivity().bindService(new Intent(getActivity(), RoutingService.class),
 				routingServiceConnection = new RoutingServiceConnection(), Context.BIND_AUTO_CREATE);
 
-		//getActivity().bindService(new Intent(getActivity(), PointsService.class),
-		//		pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
+		getActivity().bindService(new Intent(getActivity(), PointsService.class),
+				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
 
 		this.mapView = mapView;
 	}
@@ -105,7 +109,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		pointsService = service;
 		pointsService.addListener(this);
 
-		onDataUpdated();
+		autoUpdatePoints();
 	}
 
 	private void onPointsServiceDisconnected() {
@@ -151,20 +155,26 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	@Override
 	public void onDataUpdated() {
-		List<Point> points = pointsService.queryList(pointsService.requestPoints());
-		overlay.removeAllItems();
+		long currentTime = System.currentTimeMillis();
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		pref.edit().putLong(PREF_LAST_POINTS_UPDATE_TIMESTAMP, currentTime).apply();
+	}
 
-		List<Obstacle> obstacles = new ArrayList<Obstacle>(points.size());
-		for (Point point : points) {
-			obstacles.add(new Obstacle(point.getName(), point.getDescription(),
-					new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleDrawable));
+	private boolean autoUpdatePoints() {
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		long lastUpdateTime = pref.getLong(PREF_LAST_POINTS_UPDATE_TIMESTAMP, -1);
+		long currentTime = System.currentTimeMillis();
+
+		if (lastUpdateTime < 0 || currentTime - lastUpdateTime > POINT_UPDATE_INTERVAL) {
+			pointsService.refresh();
+			return true;
+		} else {
+			return false;
 		}
-		overlay.addItems(obstacles);
 	}
 
 	@Override
 	public void onDataUpdateFailed(Throwable throwable) {
-
 	}
 
 	public static class Obstacle extends OverlayItem {
