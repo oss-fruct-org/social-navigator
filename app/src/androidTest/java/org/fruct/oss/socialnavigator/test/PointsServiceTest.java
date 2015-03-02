@@ -51,7 +51,7 @@ public class PointsServiceTest extends ServiceTestCase<PointsService> {
 		initTestService();
 		assertNotNull(getService());
 	}
-
+/*
 	public void testAddCategories() {
 		initTestService();
 		ArrayPointsProvider provider = new ArrayPointsProvider(Point.TEST_PROVIDER);
@@ -64,7 +64,7 @@ public class PointsServiceTest extends ServiceTestCase<PointsService> {
 		assertEquals("aaa", categories.get(0).getName());
 		assertEquals("bbb", categories.get(1).getName());
 		assertEquals("ccc", categories.get(2).getName());
-	}
+	}*/
 
 	public void testEmptyCategories() {
 		initTestService();

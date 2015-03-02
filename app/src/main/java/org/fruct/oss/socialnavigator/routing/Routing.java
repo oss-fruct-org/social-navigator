@@ -2,15 +2,18 @@ package org.fruct.oss.socialnavigator.routing;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.location.GeofenceHardwareRequest;
 import android.preference.PreferenceManager;
 
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
+import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.BikeFlagEncoder;
 import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.FootFlagEncoder;
+import com.graphhopper.util.PointList;
 
 import org.fruct.oss.ghpriority.FootPriorityFlagEncoder;
 import org.fruct.oss.mapcontent.content.Settings;
@@ -21,12 +24,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Routing {
 	private static final Logger log = LoggerFactory.getLogger(Routing.class);
 
 	private CustomGraphHopper gh;
+	private ObstaclesIndex obstaclesIndex;
 	private boolean isReady;
 
 	public synchronized void loadFromPref(Context context, String path) {
@@ -66,6 +72,7 @@ public class Routing {
 	public synchronized void close() {
 		if (gh != null) {
 			isReady = false;
+			obstaclesIndex.clear();
 			gh.close();
 			gh = null;
 		}
@@ -77,12 +84,36 @@ public class Routing {
 			return null;
 		}
 
+		gh.setObstaclesIndex(obstaclesIndex);
+
 		GHRequest request = new GHRequest(fromLat, fromLon, toLat, toLon);
 		request.setVehicle(routingType.getVehicle());
 		request.setWeighting(routingType.getWeighting());
 
 		try {
-			return gh.routePath(request, routingType);
+			GHResponse response = gh.route(request);
+			PointList pointList = response.getPoints();
+
+			if (pointList.size() < 2) {
+				log.warn("Path found but is empty");
+				return null;
+			}
+
+			Set<Point> pointsOnPath = new HashSet<Point>();
+			log.info("Searching obstacles on path");
+			for (int i = 0; i < pointList.getSize() - 1; i++) {
+				pointsOnPath.addAll(obstaclesIndex.queryByEdge(
+						pointList.getLat(i), pointList.getLon(i),
+						pointList.getLat(i + 1), pointList.getLon(i + 1),
+						BlockingWeighting.BLOCK_RADIUS));
+			}
+
+			log.info("{} obstacles on path found", pointsOnPath.size());
+
+			return new RoutingService.Path(pointList,
+					response.getDistance(),
+					routingType,
+					pointsOnPath.toArray(new Point[pointsOnPath.size()]));
 		} catch (Exception ex) {
 			log.error("Routing error for routing type: {}", routingType, ex);
 			return null;
@@ -90,6 +121,14 @@ public class Routing {
 	}
 
 	public synchronized void setObstacles(List<Point> points) {
-		gh.updateBlockedEdges(points);
+		long startTime = System.currentTimeMillis();
+
+		obstaclesIndex = new ObstaclesIndex(gh.getGraph());
+		for (Point point : points) {
+			obstaclesIndex.insertPoint(point);
+		}
+		obstaclesIndex.initialize();
+
+		log.debug("Blocked edges calculation took {} ms", System.currentTimeMillis() - startTime);
 	}
 }
