@@ -2,12 +2,18 @@ package org.fruct.oss.socialnavigator.fragments.root;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -116,6 +122,34 @@ public class MapFragment extends Fragment {
 		});
 
 		return view;
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+
+		checkLocationProviderEnabled();
+	}
+
+	private void checkLocationProviderEnabled() {
+		LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+		boolean isProvidersEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+				|| locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+		if (!isProvidersEnabled) {
+			AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
+			dialogBuilder.setTitle(R.string.alert_location_not_available_title)
+					.setMessage(R.string.alert_location_not_available)
+					.setNegativeButton(android.R.string.cancel, null)
+					.setPositiveButton(R.string.str_configure, new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+           					Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            				startActivity(intent);
+						}
+					});
+			dialogBuilder.show();
+		}
 	}
 
 	private void setupOverlays(Bundle savedInstanceState) {
