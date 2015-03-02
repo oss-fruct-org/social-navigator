@@ -109,10 +109,14 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		@Override
 		public void onClick(View v) {
 			View bottomView = view.findViewById(R.id.details_view);
+			TextView expandTextView = (TextView) view.findViewById(R.id.expand_text_view);
+
 			if (expanded) {
 				Utils.collapse(bottomView);
+				expandTextView.setText(R.string.str_expand_panel);
 			} else {
 				Utils.expand(bottomView);
+				expandTextView.setText(R.string.str_collapse_panel);
 			}
 			expanded = !expanded;
 		}

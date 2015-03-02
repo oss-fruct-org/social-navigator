@@ -52,5 +52,7 @@
     <string name="alert_location_not_available_title">Location unavailable</string>
     <string name="alert_location_not_available">Socian navigator requires location providers to be enabled</string>
     <string name="str_configure">Configure</string>
+    <string name="str_expand_panel">Click to view obstacles</string>
+    <string name="str_collapse_panel">Click to hide obstacles</string>
 
 </resources>
