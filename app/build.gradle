@@ -16,19 +16,21 @@ android {
         versionCode 3
         versionName "0.0.3"
     }
-    /*buildTypes {
+
+    buildTypes {
         release {
-            runProguard false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         if (debugProguard) {
             debug {
-                runProguard true
+                minifyEnabled true
                 proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             }
         }
-    }*/
+    }
+
     lintOptions {
         checkReleaseBuilds false
         // Or, if you prefer, you can continue to check for errors in release builds,
