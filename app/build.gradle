@@ -67,7 +67,7 @@ dependencies {
     compile 'org.mapsforge:mapsforge-map-android:0.5.0'
     compile 'org.jetbrains:annotations:13.0'
 
-    compile ('com.graphhopper:graphhopper:0.4-SNAPSHOT') {
+    compile ('com.graphhopper:graphhopper:0.4') {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     }
 
