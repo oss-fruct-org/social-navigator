@@ -267,7 +267,8 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	private void createOverlay(ChoicePath path) {
-		PathOverlay pathOverlay = new PathOverlay(getColorByPathType(path), 8, resourceProxy);
+		PathOverlay pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), path),
+				8, resourceProxy);
 		pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
 
 		PointList points = path.getResponse().getPoints();
@@ -430,20 +431,6 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	@Override
 	public void activePathUpdated(ChoicePath initialPath, PathPointList pointList) {
 
-	}
-
-	private int getColorByPathType(ChoicePath path) {
-		assert path.getRoutingType() != null;
-
-		switch (path.getRoutingType()) {
-		default:
-		case FASTEST:
-			return getResources().getColor(R.color.color_path_danger);
-		case NORMAL:
-			return getResources().getColor(R.color.color_path_half_safe);
-		case SAFE:
-			return getResources().getColor(R.color.color_path_safe);
-		}
 	}
 
 	@Override

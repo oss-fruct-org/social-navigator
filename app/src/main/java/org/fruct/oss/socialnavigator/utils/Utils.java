@@ -14,6 +14,7 @@ import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.App;
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -469,6 +470,20 @@ public class Utils {
 		ret.add(new StorageDirDesc(R.string.storage_path_internal, context.getDir("other", 0).getPath()));
 
 		return ret.toArray(new StorageDirDesc[ret.size()]);
+	}
+
+	public static int getColorByPathType(Resources resources, ChoicePath path) {
+		assert path.getRoutingType() != null;
+
+		switch (path.getRoutingType()) {
+		default:
+		case FASTEST:
+			return resources.getColor(R.color.color_path_danger);
+		case NORMAL:
+			return resources.getColor(R.color.color_path_half_safe);
+		case SAFE:
+			return resources.getColor(R.color.color_path_safe);
+		}
 	}
 
 	public static class StorageDirDesc {

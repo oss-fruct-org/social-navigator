@@ -15,6 +15,8 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.graphhopper.util.PointList;
+
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
@@ -22,19 +24,28 @@ import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.utils.Turn;
+import org.fruct.oss.socialnavigator.utils.Utils;
+import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.PathOverlay;
 
+import java.util.Iterator;
 import java.util.Map;
 
 public class TrackingOverlayFragment extends OverlayFragment implements RoutingService.Listener {
 	private MapView mapView;
+	private DefaultResourceProxyImpl resourceProxy;
 
 	private RoutingService routingService;
 	private RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
 	private View view;
 
 	private TextView textView;
+
+	private PathOverlay pathOverlay;
+	private ChoicePath initialPath;
+	private PathPointList pointList;
 
 	@Override
 	public void onCreate(Bundle in) {
@@ -120,6 +131,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	@Override
 	public void onMapViewReady(MapView mapView) {
 		this.mapView = mapView;
+		resourceProxy = new DefaultResourceProxyImpl(getActivity());
 	}
 
 	@Override
@@ -136,7 +148,11 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 			showPanel();
 		} else {
 			hidePanel();
+			this.initialPath = null;
+			pointList = null;
 		}
+
+		updateOverlay();
 	}
 
 	@Override
@@ -149,7 +165,28 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 
 	@Override
 	public void activePathUpdated(ChoicePath initialPath, PathPointList pointList) {
+		this.initialPath = initialPath;
+		this.pointList = pointList;
+
 		textView.setText("Total obstacles " + initialPath.getPoints().length);
+		updateOverlay();
+	}
+
+	private void updateOverlay() {
+		mapView.getOverlayManager().remove(pathOverlay);
+
+		if (initialPath == null || pointList == null) {
+			return;
+		}
+
+		pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), initialPath),
+				8, resourceProxy);
+
+		for (GeoPoint geoPoint : pointList) {
+			pathOverlay.addPoint(geoPoint);
+		}
+
+		mapView.getOverlayManager().add(pathOverlay);
 	}
 
 	private class RoutingServiceConnection implements ServiceConnection {
