@@ -39,7 +39,6 @@ import javax.crypto.spec.RC2ParameterSpec;
 public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, CreatePointDialog.Listener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
 
-	private EventOverlay eventOverlay;
 	private PlaceOverlay placeOverlay;
 
 	private GeoPoint selectedPoint;
@@ -81,9 +80,8 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		this.mapView = mapView;
 
 		Context context = getActivity();
-		eventOverlay = new EventOverlay(context);
+		EventOverlay eventOverlay = new EventOverlay(context);
 		mapView.getOverlayManager().add(eventOverlay);
-
 
 		getActivity().bindService(new Intent(getActivity(), PointsService.class),
 				pointsServiceConnection = new PointsConnection(), Context.BIND_AUTO_CREATE);
@@ -108,7 +106,6 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	private void onRoutingServiceDisconnected() {
 		routingService = null;
 	}
-
 
 	private void onPointPressed(IGeoPoint geoPoint, Point screenPoint) {
 		log.info("Map pressed on {}, {}", geoPoint.getLatitude(), geoPoint.getLongitude());

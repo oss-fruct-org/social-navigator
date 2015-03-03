@@ -116,7 +116,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		public void onClick(View v) {
 			if (routingService != null) {
 				// FIXME: can be crash if service in wrong state (i.e. updating)
-				routingService.activateRoute(activeRoutingType);
+				routingService.startTracking(activeRoutingType);
 			}
 		}
 	};
@@ -490,6 +490,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		}
 	}
 
+	// TODO: unneeded service
 	private class PointsServiceConnection implements ServiceConnection {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {

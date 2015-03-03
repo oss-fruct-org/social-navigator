@@ -206,12 +206,19 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 
-	public void activateRoute(RoutingType routingType) {
+	public void startTracking(RoutingType routingType) {
 		ChoicePath activePath = currentPathsMap.get(routingType);
 		trackingState = new TrackingState();
 		trackingState.initialPath = activePath;
 		trackingState.trackingPath = new PathPointList(activePath.getResponse().getPoints());
 		changeRoutingState(State.TRACKING);
+		notifyActivePathUpdated(trackingState.initialPath, trackingState.trackingPath);
+	}
+
+	public void stopTracking() {
+		trackingState = null;
+		changeRoutingState(State.IDLE);
+		recalculatePaths();
 	}
 
 	public void setTargetPoint(GeoPoint targetPoint) {
@@ -238,7 +245,13 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 	public void sendLastResult() {
 		synchronized (mutex) {
-			notifyPathsUpdated(targetLocation, currentPathsMap);
+			if (state == State.UPDATING || state == State.CHOICE) {
+				notifyPathsUpdated(targetLocation, currentPathsMap);
+			} else if (state == State.TRACKING) {
+				notifyActivePathUpdated(trackingState.initialPath, trackingState.trackingPath);
+			}
+
+			notifyRoutingStateChanged(state);
 		}
 	}
 
@@ -348,6 +361,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 						}
 					}
 
+					// FIXME: don't notify if service already in another state
 					RoutingService.this.currentLocation = new GeoPoint(getLastLocation());
 					if (!currentPathsMap.isEmpty()) {
 						notifyPathsUpdated(targetPoint, currentPathsMap);

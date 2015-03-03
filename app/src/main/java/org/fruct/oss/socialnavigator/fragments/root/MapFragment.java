@@ -32,6 +32,7 @@ import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment
 import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.RouteOverlayFragment;
+import org.fruct.oss.socialnavigator.fragments.overlays.TrackingOverlayFragment;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.events.MapListener;
@@ -171,6 +172,10 @@ public class MapFragment extends Fragment {
 			RouteOverlayFragment routeOverlayFragment = new RouteOverlayFragment();
 			trans.add(R.id.overlay_route, routeOverlayFragment, "route-overlay-gragment");
 			overlayFragments.add(routeOverlayFragment);
+
+			TrackingOverlayFragment trackingOverlayFragment = new TrackingOverlayFragment();
+			trans.add(R.id.overlay_tracking, trackingOverlayFragment, "tracking-overlay-fragment");
+			overlayFragments.add(trackingOverlayFragment);
 
 			trans.addToBackStack(null);
 			trans.commit();
