@@ -5,9 +5,6 @@ import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.points.Point;
 
-/**
-* Created by ivashov on 03.03.15.
-*/
 public class ChoicePath {
 	private final GHResponse response;
 	private final Point[] points;

@@ -105,8 +105,9 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private View.OnClickListener closeListener = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			Intent intent = new Intent(RoutingService.ACTION_ROUTE, null, getActivity(), RoutingService.class);
-			getActivity().startService(intent);
+			if (routingService != null) {
+				routingService.clearTargetPoint();
+			}
 		}
 	};
 

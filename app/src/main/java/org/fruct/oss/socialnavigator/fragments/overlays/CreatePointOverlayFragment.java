@@ -34,6 +34,8 @@ import org.osmdroid.views.overlay.Overlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.spec.RC2ParameterSpec;
+
 public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, CreatePointDialog.Listener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
 
@@ -45,6 +47,9 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 	private PointsConnection pointsServiceConnection;
 	private PointsService pointsService;
+
+	private RoutingConnection routingServiceConnection;
+	private RoutingService routingService;
 
 	@Override
 	public void onCreate(Bundle in) {
@@ -64,6 +69,11 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 			getActivity().unbindService(pointsServiceConnection);
 			pointsServiceConnection = null;
 		}
+
+		if (routingServiceConnection != null) {
+			getActivity().unbindService(routingServiceConnection);
+			routingServiceConnection = null;
+		}
 	}
 
 	@Override
@@ -77,6 +87,9 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 		getActivity().bindService(new Intent(getActivity(), PointsService.class),
 				pointsServiceConnection = new PointsConnection(), Context.BIND_AUTO_CREATE);
+
+		getActivity().bindService(new Intent(getActivity(), RoutingService.class),
+				routingServiceConnection = new RoutingConnection(), Context.BIND_AUTO_CREATE);
 	}
 
 
@@ -87,6 +100,15 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	private void onPointsServiceDisconnected() {
 		pointsService = null;
 	}
+
+	private void onRoutingServiceConnected(RoutingService service) {
+		routingService = service;
+	}
+
+	private void onRoutingServiceDisconnected() {
+		routingService = null;
+	}
+
 
 	private void onPointPressed(IGeoPoint geoPoint, Point screenPoint) {
 		log.info("Map pressed on {}, {}", geoPoint.getLatitude(), geoPoint.getLongitude());
@@ -107,15 +129,15 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	}
 
 	private void route() {
-		Intent intent = new Intent(RoutingService.ACTION_ROUTE, null, getActivity(), RoutingService.class);
-		intent.putExtra(RoutingService.ARG_POINT, (Parcelable) selectedPoint);
-		getActivity().startService(intent);
+		if (routingService != null) {
+			routingService.setTargetPoint(selectedPoint);
+		}
 	}
 
 	private void place() {
-		Intent intent = new Intent(RoutingService.ACTION_PLACE, null, getActivity(), RoutingService.class);
-		intent.putExtra(RoutingService.ARG_POINT, (Parcelable) selectedPoint);
-		getActivity().startService(intent);
+		if (routingService != null) {
+			routingService.setCurrentLocation(selectedPoint);
+		}
 	}
 
 	private void createPoint() {
@@ -300,5 +322,20 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		public void onServiceDisconnected(ComponentName name) {
 			onPointsServiceDisconnected();
 		}
+	}
+
+	private class RoutingConnection implements ServiceConnection {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			if (routingServiceConnection != null) {
+				onRoutingServiceConnected(((RoutingService.Binder) service).getService());
+			}
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			onRoutingServiceDisconnected();
+		}
+
 	}
 }

@@ -46,10 +46,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 		ContentServiceConnectionListener {
 	private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
 
-	public static final String ACTION_ROUTE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_ROUTE";
-	public static final String ACTION_PLACE = "org.fruct.oss.socialnavigator.routing.RoutingService.ACTION_PLACE";
-
-	public static final String ARG_POINT = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_POINT";
 	public static final String ARG_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_LOCATION";
 
 	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
@@ -98,11 +94,13 @@ public class RoutingService extends Service implements PointsService.Listener,
 	// Variables that represent routing
 	private GeoPoint currentLocation;
 	private GeoPoint targetLocation;
-	private Mode mode;
+	private State state;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
+
+		state = State.IDLE;
 
 		handler = new Handler(Looper.getMainLooper());
 
@@ -190,29 +188,20 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (intent == null || intent.getAction() == null) {
-			return RoutingService.START_NOT_STICKY;
-		}
-
 		handler.removeCallbacks(stopRunnable);
-
-		String action = intent.getAction();
-		if (action.equals(ACTION_ROUTE)) {
-			GeoPoint targetPoint = intent.getParcelableExtra(ARG_POINT);
-			if (targetPoint == null) {
-				clearTargetPoint();
-			} else {
-				newTargetPoint(targetPoint);
-			}
-		} else if (action.equals(ACTION_PLACE)) {
-			GeoPoint targetPoint = intent.getParcelableExtra(ARG_POINT);
-			setCurrentLocation(targetPoint);
-		}
 
 		return RoutingService.START_NOT_STICKY;
 	}
 
-	private void clearTargetPoint() {
+	public void setTargetPoint(GeoPoint targetPoint) {
+		this.targetLocation = targetPoint;
+
+		if (state == State.IDLE || state == State.CHOICE || state == State.UPDATING) {
+			recalculatePaths();
+		}
+	}
+
+	public void clearTargetPoint() {
 		synchronized (mutex) {
 			if (routeFuture != null) {
 				routeFuture.cancel(true);
@@ -259,7 +248,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
 		checkGeofences(location);
-		recalculatePaths(false);
+		recalculatePaths();
 
 		if (contentService != null) {
 			contentService.setLocation(location);
@@ -279,7 +268,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		});
 	}
 
-	private void recalculatePaths(final boolean forceRecalc) {
+	private void recalculatePaths() {
 		synchronized (mutex) {
 			if (routeFuture != null) {
 				routeFuture.cancel(true);
@@ -305,76 +294,36 @@ public class RoutingService extends Service implements PointsService.Listener,
 						return;
 					}
 
-					notifyRoutingStateChanged(State.UPDATING);
+					changeRoutingState(State.UPDATING);
 					log.info("Starting paths calculation for point " + targetPoint.toString());
 					for (RoutingType requiredRoutingType : REQUIRED_ROUTING_TYPES) {
-						ChoicePath existingPath = currentPathsMap.get(requiredRoutingType);
-
-						boolean isPathDeviated = true;
 						/*if (existingPath != null && !forceRecalc) {
 							existingPath.getPointList().setLocation(currentLocation);
 							isPathDeviated = existingPath.getPointList().isDeviated();
 						}*/
 
-						if (existingPath == null || forceRecalc || isPathDeviated) {
-							ChoicePath path = routing.route(currentLocation.getLatitude(), currentLocation.getLongitude(),
-									targetPoint.getLatitude(), targetPoint.getLongitude(), requiredRoutingType);
+						ChoicePath path = routing.route(currentLocation.getLatitude(),
+								currentLocation.getLongitude(),
+								targetPoint.getLatitude(),
+								targetPoint.getLongitude(),
+								requiredRoutingType);
 
-							if (path != null) {
-								currentPathsMap.put(requiredRoutingType, path);
-							} else {
-								currentPathsMap.remove(requiredRoutingType);
-							}
-						}
-					}
-
-					ChoicePath activePath;
-					/*synchronized (mutex) {
-						activePath = currentPathsMap.get(currentRoutingType);
-						if (activePath == null) {
-							for (RoutingType routingType : RoutingType.values()) {
-								activePath = currentPathsMap.get(routingType);
-								if (activePath != null) {
-									currentRoutingType = routingType;
-									break;
-								}
-							}
-						}
-					}
-
-					if (activePath != null) {
-						if (activePath.getPointList().isCompleted()) {
-							synchronized (mutex) {
-								currentPathsMap.clear();
-								RoutingService.this.targetLocation = null;
-							}
-
-							notifyPathsCleared();
+						if (path != null) {
+							currentPathsMap.put(requiredRoutingType, path);
 						} else {
-							updateActivePathWayInformation(activePath);
+							currentPathsMap.remove(requiredRoutingType);
 						}
-					}*/
+					}
 
 					RoutingService.this.currentLocation = new GeoPoint(getLastLocation());
 					if (!currentPathsMap.isEmpty()) {
 						notifyPathsUpdated(targetPoint, currentPathsMap);
 					}
 
-					notifyRoutingStateChanged(State.IDLE);
+					changeRoutingState(State.IDLE);
 				}
 			});
 		}
-	}
-
-	public void newTargetPoint(final GeoPoint targetPoint) {
-		if (targetPoint == null) {
-			clearTargetPoint();
-			return;
-		}
-
-		this.targetLocation = targetPoint;
-
-		recalculatePaths(true);
 	}
 
 	@Blocking
@@ -410,16 +359,18 @@ public class RoutingService extends Service implements PointsService.Listener,
 					routing.setObstacles(obstaclesPoints);
 				}
 
-				recalculatePaths(true);
+				if (state == State.CHOICE || state == State.UPDATING) {
+					recalculatePaths();
+				}
 
 				// Set geofences
-				geofencesManager.removeGeofences(GEOFENCE_TOKEN_OBSTACLES);
+				/*geofencesManager.removeGeofences(GEOFENCE_TOKEN_OBSTACLES);
 				for (Point point : obstaclesPoints) {
 					Bundle data = new Bundle(1);
 					data.putParcelable("point", point);
 
 					geofencesManager.addGeofence(GEOFENCE_TOKEN_OBSTACLES, point.getLat(), point.getLon(), PROXIMITY_RADIUS, data);
-				}
+				}*/
 			}
 		});
 	}
@@ -468,6 +419,11 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 	@Override
 	public void onDataUpdateFailed(Throwable throwable) {
+	}
+
+	private void changeRoutingState(State state) {
+		this.state = state;
+		notifyRoutingStateChanged(state);
 	}
 
 	private void notifyRoutingStateChanged(final State state) {
@@ -529,32 +485,32 @@ public class RoutingService extends Service implements PointsService.Listener,
 			}
 		});
 	}
-/*
-	public void setRoutingTypeActive(RoutingType activeRoutingType) {
-		this.currentRoutingType = activeRoutingType;
-		ChoicePath activePath = currentPathsMap.get(currentRoutingType);
-		updateActivePathWayInformation(activePath);
-		synchronized (mutex) {
-			notifyPathsUpdated(targetLocation, currentPathsMap);
-		}
-	}
-
-	public void updateActivePathWayInformation(ChoicePath activePath) {
-		Turn newTurn = activePath.getPointList().checkTurn();
-		if (newTurn != null) {
-			if (currentTurn == null || !currentTurn.equals(newTurn)) {
-				currentTurn = newTurn;
-				Bundle data = new Bundle(1);
-				data.putParcelable("turn", newTurn);
-				geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
-				geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO,
-						newTurn.getPoint().x, newTurn.getPoint().y, PROXIMITY_RADIUS, data);
+	/*
+		public void setRoutingTypeActive(RoutingType activeRoutingType) {
+			this.currentRoutingType = activeRoutingType;
+			ChoicePath activePath = currentPathsMap.get(currentRoutingType);
+			updateActivePathWayInformation(activePath);
+			synchronized (mutex) {
+				notifyPathsUpdated(targetLocation, currentPathsMap);
 			}
-		} else {
-			geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
 		}
-	}
-*/
+
+		public void updateActivePathWayInformation(ChoicePath activePath) {
+			Turn newTurn = activePath.getPointList().checkTurn();
+			if (newTurn != null) {
+				if (currentTurn == null || !currentTurn.equals(newTurn)) {
+					currentTurn = newTurn;
+					Bundle data = new Bundle(1);
+					data.putParcelable("turn", newTurn);
+					geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
+					geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO,
+							newTurn.getPoint().x, newTurn.getPoint().y, PROXIMITY_RADIUS, data);
+				}
+			} else {
+				geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
+			}
+		}
+	*/
 	@Override
 	public void geofenceEntered(final Bundle data) {
 		handler.post(new Runnable() {
@@ -620,8 +576,11 @@ public class RoutingService extends Service implements PointsService.Listener,
 		void proximityEvent(Point point);
 		void proximityEvent(Turn turn);
 		void routingStateChanged(State state);
+
 		void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths);
 		void pathsCleared();
+
+
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {
@@ -638,10 +597,11 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 	public static enum State {
-		IDLE, UPDATING
+		IDLE, UPDATING, CHOICE, TRACKING
 	}
 
-	public static enum Mode {
-		IDLE, CHOICE, TRACKING
+	private static class ActivePath {
+		ChoicePath initialPath;
+		PathPointList trackingPath;
 	}
 }
