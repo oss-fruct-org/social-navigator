@@ -22,14 +22,17 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
+import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
@@ -53,6 +56,8 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private final RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
 	private final PointsServiceConnection pointsServiceConnection = new PointsServiceConnection();
 
+	private Preferences appPreferences;
+
 	private PointsService pointsService;
 	private RoutingService routingService;
 
@@ -63,7 +68,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private GeoPoint targetPoint;
 
 	private Point[] currentListPoints;
-	private Map<RoutingType, RoutingService.Path> paths = new EnumMap<RoutingType, RoutingService.Path>(RoutingType.class);
+	private Map<RoutingType, ChoicePath> paths = new EnumMap<RoutingType, ChoicePath>(RoutingType.class);
 	private RoutingType activeRoutingType = RoutingType.SAFE;
 
 	private MapView mapView;
@@ -79,7 +84,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		public void onClick(View v) {
 			PopupMenu popupMenu = new PopupMenu(getActivity(), v);
 
-			for (Map.Entry<RoutingType, RoutingService.Path> entry : paths.entrySet()) {
+			for (Map.Entry<RoutingType, ChoicePath> entry : paths.entrySet()) {
 				final RoutingType routingType = entry.getKey();
 
 				popupMenu.getMenu()
@@ -126,7 +131,9 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	public void onCreate(Bundle in) {
 		super.onCreate(in);
 
+		appPreferences = new Preferences(getActivity());
 		targetPointDrawable = getResources().getDrawable(R.drawable.star);
+		activeRoutingType = appPreferences.getActiveRoutingType();
 	}
 
 	@Override
@@ -164,7 +171,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		return view;
 	}
 
-	private void showPathInfo(RoutingService.Path path) {
+	private void showPathInfo(ChoicePath path) {
 		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
 		TextView titleTextView = (TextView) view.findViewById(R.id.title_text);
 		ListView obstaclesListView = (ListView) view.findViewById(R.id.obstacles_list_view);
@@ -192,8 +199,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	private void pathSelected(RoutingType routingType) {
-		activeRoutingType = routingType;
-		routingService.setRoutingTypeActive(routingType);
+		changeActiveRoutingType(routingType);
 		updateOverlays();
 	}
 
@@ -245,12 +251,14 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		routingService.removeListener(this);
 	}
 
-	private void createOverlay(RoutingService.Path path) {
+	private void createOverlay(ChoicePath path) {
 		PathOverlay pathOverlay = new PathOverlay(getColorByPathType(path), 8, resourceProxy);
 		pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
-		PathPointList pointList = path.getPointList();
 
-		for (GeoPoint geoPoint : pointList) {
+		PointList points = path.getResponse().getPoints();
+		for (int i = 0; i < points.size(); i++) {
+			GeoPoint geoPoint = new GeoPoint(points.getLatitude(i),
+					points.getLongitude(i));
 			pathOverlay.addPoint(geoPoint);
 		}
 
@@ -263,8 +271,8 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		mapView.getOverlayManager().remove(targetPointOverlay);
 		pathOverlays.clear();
 
-		RoutingService.Path currentPath = paths.get(activeRoutingType);
-		for (RoutingService.Path path : paths.values()) {
+		ChoicePath currentPath = paths.get(activeRoutingType);
+		for (ChoicePath path : paths.values()) {
 			if (path == currentPath)
 				continue;
 
@@ -359,10 +367,20 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	@Override
-	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
+		assert !paths.isEmpty();
+
 		this.targetPoint = targetPoint;
 		this.paths = paths;
-		this.activeRoutingType = activeType;
+
+		if (paths.get(activeRoutingType) == null) {
+			for (RoutingType routingType : RoutingService.REQUIRED_ROUTING_TYPES) {
+				if (paths.containsKey(routingType)) {
+					changeActiveRoutingType(routingType);
+					break;
+				}
+			}
+		}
 
 		updateOverlays();
 	}
@@ -382,7 +400,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		hidePanel();
 	}
 
-	private int getColorByPathType(RoutingService.Path path) {
+	private int getColorByPathType(ChoicePath path) {
 		assert path.getRoutingType() != null;
 
 		switch (path.getRoutingType()) {
@@ -426,6 +444,11 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 				onServicesDisconnected();
 			}
 		}
+	}
+
+	private void changeActiveRoutingType(RoutingType routingType) {
+		activeRoutingType = routingType;
+		appPreferences.setActiveRoutingType(routingType);
 	}
 
 	public static class TargetPointItem extends OverlayItem {

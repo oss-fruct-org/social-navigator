@@ -8,15 +8,15 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
+import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.Turn;
-import org.jetbrains.annotations.Nullable;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -30,9 +30,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ObstaclesOverlayFragment extends OverlayFragment
-		implements ItemizedIconOverlay.OnItemGestureListener<ObstaclesOverlayFragment.Obstacle>, RoutingService.Listener, PointsService.Listener {
+		implements ItemizedIconOverlay.OnItemGestureListener<ObstaclesOverlayFragment.Obstacle>, RoutingService.Listener, PointsService.Listener, SharedPreferences.OnSharedPreferenceChangeListener {
 	private static final Logger log = LoggerFactory.getLogger(ObstaclesOverlayFragment.class);
-	public static final String PREF_LAST_POINTS_UPDATE_TIMESTAMP = "pref-last-points-update-timestamp";
 	public static final int POINT_UPDATE_INTERVAL = 60 * 3600;
 
 	private RoutingServiceConnection routingServiceConnection;
@@ -43,15 +42,22 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	private PointsService pointsService;
 	private ItemizedIconOverlay<Obstacle> overlay;
 	private MapView mapView;
+	private Map<RoutingType, ChoicePath> paths;
+	private Preferences appPreferences;
 
 	@Override
 	public void onCreate(Bundle in) {
 		super.onCreate(in);
 		obstacleDrawable = getActivity().getResources().getDrawable(R.drawable.blast);
+
+		appPreferences = new Preferences(getActivity());
+		appPreferences.getPref().registerOnSharedPreferenceChangeListener(this);
 	}
 
 	@Override
 	public void onDestroy() {
+		appPreferences.getPref().unregisterOnSharedPreferenceChangeListener(this);
+
 		if (routingService != null) {
 			routingService.removeListener(this);
 		}
@@ -130,8 +136,25 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	}
 
 	@Override
-	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
-		RoutingService.Path activePath = paths.get(activeType);
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
+		this.paths = paths;
+		updateOverlay();
+	}
+
+	@Override
+	public void pathsCleared() {
+		overlay.removeAllItems();
+	}
+
+	@Override
+	public void onDataUpdated() {
+		long currentTime = System.currentTimeMillis();
+		appPreferences.setLastPointsUpdateTimestamp(currentTime);
+	}
+
+	private void updateOverlay() {
+		RoutingType activeRoutingType = appPreferences.getActiveRoutingType();
+		ChoicePath activePath = paths.get(activeRoutingType);
 		if (activePath == null) {
 			return;
 		}
@@ -148,21 +171,8 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		mapView.invalidate();
 	}
 
-	@Override
-	public void pathsCleared() {
-		overlay.removeAllItems();
-	}
-
-	@Override
-	public void onDataUpdated() {
-		long currentTime = System.currentTimeMillis();
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-		pref.edit().putLong(PREF_LAST_POINTS_UPDATE_TIMESTAMP, currentTime).apply();
-	}
-
 	private boolean autoUpdatePoints() {
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-		long lastUpdateTime = pref.getLong(PREF_LAST_POINTS_UPDATE_TIMESTAMP, -1);
+		long lastUpdateTime = appPreferences.getLastPointsUpdateTimestamp();
 		long currentTime = System.currentTimeMillis();
 
 		if (lastUpdateTime < 0 || currentTime - lastUpdateTime > POINT_UPDATE_INTERVAL) {
@@ -175,6 +185,13 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	@Override
 	public void onDataUpdateFailed(Throwable throwable) {
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		if (key.equals(Preferences.PREF_ACTIVE_ROUTING_TYPE)) {
+			updateOverlay();
+		}
 	}
 
 	public static class Obstacle extends OverlayItem {

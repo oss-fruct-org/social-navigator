@@ -1,13 +1,9 @@
 package org.fruct.oss.socialnavigator.routing;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.hardware.location.GeofenceHardwareRequest;
-import android.preference.PreferenceManager;
 
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
-import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.BikeFlagEncoder;
 import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
@@ -16,9 +12,7 @@ import com.graphhopper.routing.util.FootFlagEncoder;
 import com.graphhopper.util.PointList;
 
 import org.fruct.oss.ghpriority.FootPriorityFlagEncoder;
-import org.fruct.oss.mapcontent.content.Settings;
 import org.fruct.oss.socialnavigator.points.Point;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +73,7 @@ public class Routing {
 	}
 
 	@Nullable
-	public synchronized RoutingService.Path route(double fromLat, double fromLon, double toLat, double toLon, RoutingType routingType) {
+	public synchronized ChoicePath route(double fromLat, double fromLon, double toLat, double toLon, RoutingType routingType) {
 		if (gh == null) {
 			return null;
 		}
@@ -92,6 +86,15 @@ public class Routing {
 
 		try {
 			GHResponse response = gh.route(request);
+
+			if (response.hasErrors()) {
+				log.warn("Graphhopper routing errors:");
+				for (Throwable throwable : response.getErrors()) {
+					log.warn("Error: ", throwable);
+				}
+				return null;
+			}
+
 			PointList pointList = response.getPoints();
 
 			if (pointList.size() < 2) {
@@ -110,9 +113,7 @@ public class Routing {
 
 			log.info("{} obstacles on path found", pointsOnPath.size());
 
-			return new RoutingService.Path(pointList,
-					response.getDistance(),
-					routingType,
+			return new ChoicePath(response, routingType,
 					pointsOnPath.toArray(new Point[pointsOnPath.size()]));
 		} catch (Exception ex) {
 			log.error("Routing error for routing type: {}", routingType, ex);

@@ -18,6 +18,7 @@ import android.view.MotionEvent;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
+import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.utils.Turn;
@@ -27,8 +28,6 @@ import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 
 public class PositionOverlayFragment extends OverlayFragment implements RoutingService.Listener {
@@ -156,7 +155,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	@Override
-	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, RoutingService.Path> paths, RoutingType activeType) {
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
 
 	}
 
