@@ -19,6 +19,7 @@ import android.view.MotionEvent;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
+import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.utils.Turn;
@@ -161,6 +162,11 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	@Override
 	public void pathsCleared() {
+
+	}
+
+	@Override
+	public void activePathUpdated(ChoicePath initialPath, PathPointList pointList) {
 
 	}
 

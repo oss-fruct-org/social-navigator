@@ -94,22 +94,45 @@
             android:layout_toStartOf="@id/right_button_layout"
             android:background="#ffeeeeee"/>
 
-        <FrameLayout
+        <LinearLayout
             android:id="@id/right_button_layout"
             android:layout_width="@dimen/route_panel_width"
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
+            android:orientation="vertical"
             >
 
             <ImageButton
-                android:id="@+id/route_button_close"
+                android:id="@+id/route_button_accept"
+
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center_horizontal"
+
+                android:background="@null"
+                android:src="@drawable/ic_action_accept"/>
+
+            <View
+                android:id="@+id/button_delimiter"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="2dp"
+                android:layout_margin="4dp"
+                android:background="#ffeeeeee"/>
+
+            <ImageButton
+                android:id="@+id/route_button_close"
+
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center_horizontal"
+
                 android:background="@null"
                 android:src="@drawable/ic_action_cancel"/>
 
-        </FrameLayout>
+        </LinearLayout>
     </RelativeLayout>
 
     <LinearLayout

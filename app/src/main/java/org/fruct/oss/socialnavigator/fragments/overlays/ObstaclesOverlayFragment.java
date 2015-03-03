@@ -13,6 +13,7 @@ import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
+import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.settings.Preferences;
@@ -144,6 +145,11 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	@Override
 	public void pathsCleared() {
 		overlay.removeAllItems();
+	}
+
+	@Override
+	public void activePathUpdated(ChoicePath initialPath, PathPointList pointList) {
+
 	}
 
 	@Override

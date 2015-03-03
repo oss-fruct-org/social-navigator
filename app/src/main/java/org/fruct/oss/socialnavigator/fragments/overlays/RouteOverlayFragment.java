@@ -111,6 +111,17 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		}
 	};
 
+	private View.OnClickListener acceptListener = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			if (routingService != null) {
+				// FIXME: can be crash if service in wrong state (i.e. updating)
+				routingService.activateRoute(activeRoutingType);
+			}
+		}
+	};
+
+
 	private View.OnClickListener expandListener = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
@@ -166,6 +177,9 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 		ImageButton typeButton = (ImageButton) view.findViewById(R.id.route_button_type);
 		typeButton.setOnClickListener(typeListener);
+
+		ImageButton acceptButton = (ImageButton) view.findViewById(R.id.route_button_accept);
+		acceptButton.setOnClickListener(acceptListener);
 
 		view.setOnClickListener(expandListener);
 
@@ -348,14 +362,25 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	@Override
 	public void routingStateChanged(RoutingService.State state) {
-		if (state == RoutingService.State.UPDATING) {
+		switch (state) {
+		case UPDATING:
 			showPanel();
 			setPanelUpdatingState(true);
-		} else if (state == RoutingService.State.IDLE) {
-			if (paths == null || paths.isEmpty()) {
-				hidePanel();
-			}
+			break;
+		case CHOICE:
+			showPanel();
 			setPanelUpdatingState(false);
+			break;
+		case IDLE:
+			hidePanel();
+			setPanelUpdatingState(false);
+			break;
+		case TRACKING:
+			pathsCleared();
+			break;
+
+		default:
+			hidePanel();
 		}
 	}
 
@@ -397,8 +422,14 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		paths.clear();
 		targetPoint = null;
 		targetPointOverlay = null;
+		activeRoutingType = null;
 
 		hidePanel();
+	}
+
+	@Override
+	public void activePathUpdated(ChoicePath initialPath, PathPointList pointList) {
+
 	}
 
 	private int getColorByPathType(ChoicePath path) {
