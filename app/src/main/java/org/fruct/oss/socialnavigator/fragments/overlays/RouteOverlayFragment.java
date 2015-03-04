@@ -29,10 +29,11 @@ import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
-import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.settings.Preferences;
+import org.fruct.oss.socialnavigator.utils.Space;
+import org.fruct.oss.socialnavigator.utils.TrackPath;
 import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
@@ -429,7 +430,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	@Override
-	public void activePathUpdated(ChoicePath initialPath, PathPointList pointList) {
+	public void activePathUpdated(RoutingService.TrackingState trackingState) {
 
 	}
 

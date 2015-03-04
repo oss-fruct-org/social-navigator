@@ -111,6 +111,8 @@ public class PointList implements Iterable<Space.Point> {
 		int turnDirection = relBearing > 0 ? -1 : 1;
 
 		int turnSharpness;
+
+		// Turn bearing in radians
 		if (diff < 0.2) {
 			return null;
 		} else if (diff < 0.8) {

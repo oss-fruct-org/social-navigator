@@ -15,14 +15,14 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.graphhopper.util.PointList;
-
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
+import org.fruct.oss.socialnavigator.utils.Space;
+import org.fruct.oss.socialnavigator.utils.TrackPath;
 import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
@@ -30,7 +30,7 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.PathOverlay;
 
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class TrackingOverlayFragment extends OverlayFragment implements RoutingService.Listener {
@@ -45,7 +45,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 
 	private PathOverlay pathOverlay;
 	private ChoicePath initialPath;
-	private PathPointList pointList;
+	private List<Space.Point> pointList;
 
 	@Override
 	public void onCreate(Bundle in) {
@@ -164,14 +164,16 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	@Override
-	public void activePathUpdated(ChoicePath initialPath, PathPointList pointList) {
-		this.initialPath = initialPath;
-		this.pointList = pointList;
+	public void activePathUpdated(RoutingService.TrackingState trackingState) {
+		this.initialPath = trackingState.initialPath;
+		this.pointList = trackingState.lastQueryResult.remainingPath;
 
-		textView.setText("Total obstacles " + initialPath.getPoints().length);
+		if (trackingState.lastQueryResult.nextPointData != null) {
+			textView.setText("Next obstacle: " + trackingState.lastQueryResult.nextPointData.getName());
+		}
+
 		updateOverlay();
 	}
-
 	private void updateOverlay() {
 		mapView.getOverlayManager().remove(pathOverlay);
 
@@ -182,8 +184,8 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), initialPath),
 				8, resourceProxy);
 
-		for (GeoPoint geoPoint : pointList) {
-			pathOverlay.addPoint(geoPoint);
+		for (Space.Point point : pointList) {
+			pathOverlay.addPoint(new GeoPoint(point.x, point.y));
 		}
 
 		mapView.getOverlayManager().add(pathOverlay);

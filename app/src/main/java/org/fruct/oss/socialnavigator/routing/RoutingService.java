@@ -15,6 +15,8 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.graphhopper.util.PointList;
+
 import org.fruct.oss.mapcontent.BuildConfig;
 import org.fruct.oss.mapcontent.content.ContentManagerImpl;
 import org.fruct.oss.mapcontent.content.ContentService;
@@ -25,13 +27,17 @@ import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.mapcontent.content.ContentItem;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.utils.EarthSpace;
 import org.fruct.oss.socialnavigator.utils.NamedThreadFactory;
+import org.fruct.oss.socialnavigator.utils.Space;
 import org.fruct.oss.socialnavigator.utils.Timer;
+import org.fruct.oss.socialnavigator.utils.TrackPath;
 import org.fruct.oss.socialnavigator.utils.Turn;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -40,6 +46,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -209,11 +216,29 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 	public void startTracking(RoutingType routingType) {
 		ChoicePath activePath = currentPathsMap.get(routingType);
+
+		List<Space.Point> points = new ArrayList<Space.Point>();
+
+		PointList ghPointList = activePath.getResponse().getPoints();
+		for (int i = 0; i < ghPointList.size(); i++) {
+			points.add(new Space.Point(ghPointList.getLat(i), ghPointList.getLon(i)));
+		}
+
 		trackingState = new TrackingState();
 		trackingState.initialPath = activePath;
-		trackingState.trackingPath = new PathPointList(activePath.getResponse().getPoints());
+		trackingState.trackingPath = new TrackPath<Point>(new EarthSpace(), points);
+
+		Point[] pointsOnPath = activePath.getPoints();
+		for (Point point : pointsOnPath) {
+			trackingState.trackingPath.addPoint(point.getLat(), point.getLon(), point);
+		}
+
+		trackingState.lastQueryResult = trackingState.trackingPath.query(
+				currentLocation.getLatitude(),
+				currentLocation.getLongitude());
+
 		changeRoutingState(State.TRACKING);
-		notifyActivePathUpdated(trackingState.initialPath, trackingState.trackingPath);
+		notifyActivePathUpdated(trackingState);
 	}
 
 	public void stopTracking() {
@@ -249,7 +274,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 			if (state == State.UPDATING || state == State.CHOICE) {
 				notifyPathsUpdated(targetLocation, currentPathsMap);
 			} else if (state == State.TRACKING) {
-				notifyActivePathUpdated(trackingState.initialPath, trackingState.trackingPath);
+				notifyActivePathUpdated(trackingState);
 			}
 
 			notifyRoutingStateChanged(state);
@@ -303,10 +328,11 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 	private void updateActivePath(Location location) {
 		Timer timer = new Timer().start();
-		trackingState.trackingPath.setLocation(location);
+		trackingState.lastQueryResult = trackingState.trackingPath.query(
+				location.getLatitude(), location.getLongitude());
 		log.debug("Updating active path took {} seconds", timer.stop().getSeconds());
 
-		notifyActivePathUpdated(trackingState.initialPath, trackingState.trackingPath);
+		notifyActivePathUpdated(trackingState);
 	}
 
 	private void checkGeofences(final Location location) {
@@ -515,12 +541,12 @@ public class RoutingService extends Service implements PointsService.Listener,
 		});
 	}
 
-	private void notifyActivePathUpdated(final ChoicePath initialPath, final PathPointList pointList) {
+	private void notifyActivePathUpdated(final TrackingState trackingState) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
 				for (Listener listener : listeners) {
-					listener.activePathUpdated(initialPath, pointList);
+					listener.activePathUpdated(trackingState);
 				}
 			}
 		});
@@ -643,7 +669,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths);
 		void pathsCleared();
 
-		void activePathUpdated(ChoicePath initialPath, PathPointList pointList);
+		void activePathUpdated(TrackingState trackingState);
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {
@@ -681,8 +707,9 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 
-	private static class TrackingState {
-		ChoicePath initialPath;
-		PathPointList trackingPath;
+	public static class TrackingState {
+		public ChoicePath initialPath;
+		public TrackPath<Point> trackingPath;
+		public TrackPath.Result<Point> lastQueryResult;
 	}
 }
