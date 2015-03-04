@@ -358,11 +358,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 					changeRoutingState(State.UPDATING);
 					log.info("Starting paths calculation for point " + targetPoint.toString());
 					for (RoutingType requiredRoutingType : REQUIRED_ROUTING_TYPES) {
-						/*if (existingPath != null && !forceRecalc) {
-							existingPath.getPointList().setLocation(currentLocation);
-							isPathDeviated = existingPath.getPointList().isDeviated();
-						}*/
-
 						ChoicePath path = routing.route(currentLocation.getLatitude(),
 								currentLocation.getLongitude(),
 								targetPoint.getLatitude(),
