@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -13,16 +14,16 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
-import org.fruct.oss.socialnavigator.routing.PathPointList;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
+import org.fruct.oss.socialnavigator.utils.EarthSpace;
 import org.fruct.oss.socialnavigator.utils.Space;
-import org.fruct.oss.socialnavigator.utils.TrackPath;
 import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TrackingOverlayFragment extends OverlayFragment implements RoutingService.Listener {
+	public static final int TURN_PROXIMITY_NOTIFICATION = 30;
 	private MapView mapView;
 	private DefaultResourceProxyImpl resourceProxy;
 
@@ -41,11 +43,20 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	private RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
 	private View view;
 
-	private TextView textView;
+	private TextView obstacleTextViewTitle;
+	private TextView obstacleTextView;
+	private TextView obstacleTextViewDist;
+
+	private TextView turnTextViewTitle;
+	private TextView turnTextView;
+
+	private ImageView turnImageView;
 
 	private PathOverlay pathOverlay;
 	private ChoicePath initialPath;
 	private List<Space.Point> pointList;
+
+	private Space space = new EarthSpace();
 
 	@Override
 	public void onCreate(Bundle in) {
@@ -71,7 +82,15 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 			}
 		});
 
-		textView = (TextView) view.findViewById(R.id.test_text_view);
+		obstacleTextViewTitle = (TextView) view.findViewById(R.id.next_obstacle_title_text_view);
+		turnTextViewTitle = (TextView) view.findViewById(R.id.turn_title_text_view);
+
+		obstacleTextView = (TextView) view.findViewById(R.id.next_obstacle_text_view);
+		turnTextView = (TextView) view.findViewById(R.id.turn_text_view);
+
+		obstacleTextViewDist = (TextView) view.findViewById(R.id.next_obstacle_dist_text_view);
+
+		turnImageView = (ImageView) view.findViewById(R.id.turn_image_view);
 
 		return view;
 	}
@@ -92,7 +111,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		if (view.getVisibility() != View.GONE)
 			return;
 
-		Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_up);
+		Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_down_top);
 
 		if (view != null) {
 			view.startAnimation(anim);
@@ -104,7 +123,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		if (view.getVisibility() == View.GONE)
 			return;
 
-		Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_down);
+		Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_up_top);
 		anim.setAnimationListener(new Animation.AnimationListener() {
 			@Override
 			public void onAnimationStart(Animation animation) {
@@ -135,14 +154,6 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	@Override
-	public void proximityEvent(Point point) {
-	}
-
-	@Override
-	public void proximityEvent(Turn turn) {
-	}
-
-	@Override
 	public void routingStateChanged(RoutingService.State state) {
 		if (state == RoutingService.State.TRACKING) {
 			showPanel();
@@ -169,11 +180,47 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		this.pointList = trackingState.lastQueryResult.remainingPath;
 
 		if (trackingState.lastQueryResult.nextPointData != null) {
-			textView.setText("Next obstacle: " + trackingState.lastQueryResult.nextPointData.getName());
+			obstacleTextViewTitle.setText(R.string.str_next_obstacle);
+			obstacleTextView.setText(trackingState.lastQueryResult.nextPointData.getName());
+			float[] dist = new float[1];
+			Location.distanceBetween(
+					trackingState.lastQueryResult.nextPointData.getLat(),
+					trackingState.lastQueryResult.nextPointData.getLon(),
+					trackingState.lastQueryResult.currentPosition.x,
+					trackingState.lastQueryResult.currentPosition.y, dist);
+			obstacleTextViewDist.setText(Utils.stringDistance(getResources(), dist[0]));
+		} else {
+			obstacleTextViewTitle.setText(R.string.str_no_obstacles);
+			obstacleTextView.setText("");
+			obstacleTextViewDist.setText("");
+		}
+
+		boolean isTurnShown = false;
+		if (trackingState.lastQueryResult.nextTurn != null
+				&& trackingState.lastQueryResult.nextTurn.getTurnSharpness() > 1) {
+			double dist = space.dist(trackingState.lastQueryResult.nextTurn.getPoint(),
+					trackingState.lastQueryResult.currentPosition);
+
+			if (dist < TURN_PROXIMITY_NOTIFICATION) {
+				isTurnShown = true;
+				turnTextViewTitle.setText(R.string.str_turn_in);
+				turnTextView.setVisibility(View.VISIBLE);
+				turnTextView.setText(Utils.stringDistance(getResources(), dist));
+				turnImageView.setImageResource(trackingState.lastQueryResult.nextTurn.getTurnDirection() > 0
+						? R.drawable.ic_left_arrow
+						: R.drawable.ic_right_arrow);
+			}
+		}
+
+		if (!isTurnShown) {
+			turnTextViewTitle.setText(R.string.str_turn_forward);
+			turnTextView.setVisibility(View.GONE);
+			turnImageView.setImageResource(R.drawable.ic_forward_arrow);
 		}
 
 		updateOverlay();
 	}
+
 	private void updateOverlay() {
 		mapView.getOverlayManager().remove(pathOverlay);
 

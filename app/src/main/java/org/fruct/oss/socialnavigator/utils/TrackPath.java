@@ -47,9 +47,9 @@ public class TrackPath<T> {
 
 		ProjectedPoint projectedPoint = projectPoint(x, y);
 
-		Map.Entry<ProjectedPoint, T> entryFloor = points.floorEntry(projectedPoint);
+		//Map.Entry<ProjectedPoint, T> entryFloor = points.floorEntry(projectedPoint);
 		Map.Entry<ProjectedPoint, T> entryCeiling = points.ceilingEntry(projectedPoint);
-
+/*
 		Map.Entry<ProjectedPoint, T> nearestEntry = null;
 		if (entryFloor != null && entryCeiling != null) {
 			double dist1 = space.dist(entryFloor.getKey(), projectedPoint);
@@ -64,20 +64,36 @@ public class TrackPath<T> {
 		} else if (entryCeiling != null) {
 			nearestEntry = entryCeiling;
 		}
-
-		if (nearestEntry != null) {
-			result.nextPointDistance = space.dist(nearestEntry.getKey(), projectedPoint);
-			result.nextPointData = nearestEntry.getValue();
+*/
+		if (entryCeiling != null) {
+			result.nextPointDistance = space.dist(entryCeiling.getKey(), projectedPoint);
+			result.nextPointData = entryCeiling.getValue();
 		}
 
 		// Find remaining path
 		result.remainingPath.add(new Space.Point(projectedPoint.projX, projectedPoint.projY));
 
 		Segment currentSegment = projectedPoint.nearestSegment.next;
+
 		while (currentSegment != null) {
 			result.remainingPath.add(currentSegment.a);
 			currentSegment = currentSegment.next;
 		}
+
+		// Trace for next turn
+		result.nextTurn = null;
+		for (int i = 0; i < result.remainingPath.size() - 2; i++) {
+			Space.Point a = result.remainingPath.get(i);
+			Space.Point b = result.remainingPath.get(i + 1);
+			Space.Point c = result.remainingPath.get(i + 2);
+
+			result.nextTurn = Turn.create(space, a, b, c);
+			if (result.nextTurn != null) {
+				break;
+			}
+		}
+
+		result.currentPosition = projectedPoint;
 
 		return result;
 	}
@@ -165,6 +181,9 @@ public class TrackPath<T> {
 
 	public static class Result<T> {
 		public T nextPointData;
+		public Space.Point currentPosition;
+
+		public Turn nextTurn;
 		public double nextPointDistance;
 
 		public List<Space.Point> remainingPath = new ArrayList<Space.Point>();

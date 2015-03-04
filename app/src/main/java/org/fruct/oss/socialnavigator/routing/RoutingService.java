@@ -8,7 +8,6 @@ import android.content.ServiceConnection;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -18,13 +17,13 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.graphhopper.util.PointList;
 
 import org.fruct.oss.mapcontent.BuildConfig;
+import org.fruct.oss.mapcontent.content.ContentItem;
+import org.fruct.oss.mapcontent.content.ContentListenerAdapter;
 import org.fruct.oss.mapcontent.content.ContentManagerImpl;
 import org.fruct.oss.mapcontent.content.ContentService;
-import org.fruct.oss.mapcontent.content.ContentListenerAdapter;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnection;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionListener;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
-import org.fruct.oss.mapcontent.content.ContentItem;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.EarthSpace;
@@ -41,12 +40,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -55,22 +52,18 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class RoutingService extends Service implements PointsService.Listener,
-		LocationReceiver.Listener, GeofencesManager.GeofencesListener,
-		ContentServiceConnectionListener {
+		LocationReceiver.Listener,	ContentServiceConnectionListener {
 	private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
 
 	public static final String ARG_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_LOCATION";
 
 	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
-	public static final int PROXIMITY_RADIUS = 20;
 
 	public static final RoutingType[] REQUIRED_ROUTING_TYPES = {
 			RoutingType.SAFE,
 			RoutingType.NORMAL,
 			RoutingType.FASTEST};
 
-	private int GEOFENCE_TOKEN_OBSTACLES;
-	private int GEOFENCE_TOKEN_INFO;
 
 	private final Binder binder = new Binder();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("RoutingServiceThread"));
@@ -86,7 +79,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private final Object mutex = new Object();
 
 	private final Map<RoutingType, ChoicePath> currentPathsMap = Collections.synchronizedMap(new EnumMap<RoutingType, ChoicePath>(RoutingType.class));
-	private Turn currentTurn;
 
 	// Locks services assignment
 	private final Object serviceMutex = new Object();
@@ -98,7 +90,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private ContentService contentService;
 
 	private LocationReceiver locationReceiver;
-	private GeofencesManager geofencesManager;
+	//private GeofencesManager geofencesManager;
 
 	private Handler handler;
 
@@ -123,13 +115,13 @@ public class RoutingService extends Service implements PointsService.Listener,
 		locationReceiver.setListener(this);
 		locationReceiver.start();
 
-		geofencesManager = new SimpleGeofencesManager();
-		geofencesManager.addListener(this);
+		//geofencesManager = new SimpleGeofencesManager();
+		//geofencesManager.addListener(this);
 
 		routing = new Routing();
 
-		GEOFENCE_TOKEN_OBSTACLES = geofencesManager.createToken();
-		GEOFENCE_TOKEN_INFO = geofencesManager.createToken();
+		//GEOFENCE_TOKEN_OBSTACLES = geofencesManager.createToken();
+		//GEOFENCE_TOKEN_INFO = geofencesManager.createToken();
 
 		bindService(new Intent(this, PointsService.class),
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
@@ -308,9 +300,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 		intent.putExtra(ARG_LOCATION, location);
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
-		// TODO: this should be replaced with new obstacles system
-		checkGeofences(location);
-
 		if (state == State.CHOICE) {
 			recalculatePaths();
 		} else if (state == State.TRACKING) {
@@ -335,14 +324,14 @@ public class RoutingService extends Service implements PointsService.Listener,
 		notifyActivePathUpdated(trackingState);
 	}
 
-	private void checkGeofences(final Location location) {
+	/*private void checkGeofences(final Location location) {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				geofencesManager.setLocation(location);
 			}
 		});
-	}
+	}*/
 
 	private void recalculatePaths() {
 		synchronized (mutex) {
@@ -552,28 +541,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 		});
 	}
 
-	private void notifyProximityEvent(final Point point) {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				for (Listener listener : listeners) {
-					listener.proximityEvent(point);
-				}
-			}
-		});
-	}
-
-	private void notifyProximityEvent(final Turn turn) {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				for (Listener listener : listeners) {
-					listener.proximityEvent(turn);
-				}
-			}
-		});
-	}
-
 	/*
 		public void setRoutingTypeActive(RoutingType activeRoutingType) {
 			this.currentRoutingType = activeRoutingType;
@@ -600,24 +567,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 			}
 		}
 	*/
-	@Override
-	public void geofenceEntered(final Bundle data) {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (data.containsKey("point")) {
-					notifyProximityEvent((Point) data.getParcelable("point"));
-				} else if (data.containsKey("turn")) {
-					notifyProximityEvent((Turn) data.getParcelable("turn"));
-				}
-			}
-		});
-	}
-
-	@Override
-	public void geofenceExited(Bundle data) {
-	}
-
 	private ContentService.Listener contentListener = new ContentListenerAdapter() {
 		@Override
 		public void recommendedRegionItemReady(final ContentItem contentItem) {
@@ -662,8 +611,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 	public static interface Listener {
-		void proximityEvent(Point point);
-		void proximityEvent(Turn turn);
 		void routingStateChanged(State state);
 
 		void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths);

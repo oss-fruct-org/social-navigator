@@ -11,13 +11,32 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical">
+
         <TextView
-            android:id="@+id/test_text_view"
-            android:layout_width="wrap_content"
+            android:id="@+id/next_obstacle_title_text_view"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:textSize="12sp"
             />
-        </LinearLayout>
+
+        <TextView
+            android:id="@+id/next_obstacle_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="16sp"
+            />
+
+        <TextView
+            android:id="@+id/next_obstacle_dist_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="16sp"
+            />
+
+    </LinearLayout>
 
     <View
         android:layout_width="2dp"
@@ -30,6 +49,30 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/turn_title_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="12sp"
+            />
+
+        <TextView
+            android:id="@+id/turn_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="16sp"
+            />
+
+        <ImageView
+            android:id="@+id/turn_image_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/ic_left_arrow"/>
+
 
     </LinearLayout>
 

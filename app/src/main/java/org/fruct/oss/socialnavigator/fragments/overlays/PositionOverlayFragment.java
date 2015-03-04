@@ -143,16 +143,6 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	@Override
-	public void proximityEvent(Point point) {
-
-	}
-
-	@Override
-	public void proximityEvent(Turn turn) {
-
-	}
-
-	@Override
 	public void routingStateChanged(RoutingService.State state) {
 
 	}

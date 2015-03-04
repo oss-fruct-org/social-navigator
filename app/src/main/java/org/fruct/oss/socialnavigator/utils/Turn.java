@@ -71,6 +71,30 @@ public class Turn implements Serializable, Parcelable {
 		dest.writeInt(turnDirection);
 	}
 
+	public static Turn create(Space space, Space.Point a, Space.Point b, Space.Point c) {
+		double bearing1 = space.bearing(a, b);
+		double bearing2 = space.bearing(b, c);
+
+		double relBearing = Utils.normalizeAngleRad(bearing2 - bearing1);
+		double diff = Math.abs(relBearing);
+		int turnDirection = relBearing > 0 ? -1 : 1;
+
+		int turnSharpness;
+
+		// Turn bearing in radians
+		if (diff < 0.2) {
+			return null;
+		} else if (diff < 0.8) {
+			turnSharpness = 1;
+		} else if (diff < 1.8) {
+			turnSharpness = 2;
+		} else {
+			turnSharpness = 3;
+		}
+
+		return new Turn(b, turnSharpness, turnDirection);
+	}
+
 	public static final Creator<Turn> CREATOR = new Creator<Turn>() {
 		@Override
 		public Turn createFromParcel(Parcel source) {

@@ -339,30 +339,6 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	@Override
-	public void proximityEvent(Point point) {
-		showEventNotification(getResources().getString(R.string.str_approaching, point.getName()));
-	}
-
-	@Override
-	public void proximityEvent(Turn turn) {
-		float[] dist = new float[1];
-
-		int turnStrRes = turn.getTurnDirection() > 0
-				? R.string.str_turn_left
-				: R.string.str_turn_right;
-
-		Location currentLocation = routingService.getLastLocation();
-		Location.distanceBetween(turn.getPoint().x, turn.getPoint().y,
-				currentLocation.getLatitude(), currentLocation.getLongitude(), dist);
-
-		int intDist = (int) dist[0];
-		String str = getResources().getString(turnStrRes,
-				getResources().getQuantityString(R.plurals.plural_meters, intDist, intDist));
-
-		showEventNotification(str);
-	}
-
-	@Override
 	public void routingStateChanged(RoutingService.State state) {
 		switch (state) {
 		case UPDATING:

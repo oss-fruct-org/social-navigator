@@ -45,8 +45,6 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="pref_storage_path_title">Storage</string>
-    <string name="str_local_content_moved">Local content successfully moved</string>
-    <string name="str_local_content_move_error">Cannot move local content</string>
     <string name="str_path_not_found">Path not found</string>
     <string name="str_data_refresh_complete">Data successfully refreshed</string>
     <string name="alert_location_not_available_title">Location unavailable</string>
@@ -54,5 +52,9 @@
     <string name="str_configure">Configure</string>
     <string name="str_expand_panel">Click to view obstacles</string>
     <string name="str_collapse_panel">Click to hide obstacles</string>
+    <string name="str_turn_in">Turn in</string>
+    <string name="str_turn_forward">Move forward</string>
+    <string name="str_next_obstacle">Next obstacle</string>
+    <string name="str_no_obstacles">No obstacles</string>
 
 </resources>

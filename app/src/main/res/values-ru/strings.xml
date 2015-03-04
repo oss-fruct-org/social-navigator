@@ -23,10 +23,10 @@
     <string name="str_turn_right">Поверните направо через %s</string>
     <string name="str_approaching">Приближается %s</string>
 
-    <string name="pref_storage_path_title">Storage</string>
-    <string name="str_local_content_moved">Local content successfully moved</string>
-    <string name="str_local_content_move_error">Cannot move local content</string>
-    <string name="str_path_not_found">Path not found</string>
+    <string name="pref_storage_path_title">Хранилище</string>
+    <string name="str_path_not_found">Маршрут не найден</string>
+    <string name="str_turn_in">Поверните через</string>
+    <string name="str_turn_forward">Двигайтесь вперед</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d метр</item>
@@ -41,4 +41,23 @@
         <item quantity="many">%d километров</item>
         <item quantity="other">%d километр</item>
     </plurals>
+    <string name="action_example">Пример действия</string>
+    <string name="action_settings">Настройки</string>
+    <string name="alert_location_not_available">Приложению требуется ваше местоположение</string>
+    <string name="alert_location_not_available_title">Местоположение не доступно</string>
+    <string name="app_name">Социальный навигатор</string>
+    <string name="hello_blank_fragment">Пустой фрагмент</string>
+    <string name="hello_world">Привет мир</string>
+    <string name="navigation_drawer_close">Закрыть боковую панель</string>
+    <string name="navigation_drawer_open">Открыть боковую панель</string>
+    <string name="str_collapse_panel">Свернуть панель</string>
+    <string name="str_configure">Настроить</string>
+    <string name="str_data_refresh_complete">Данные обновлены</string>
+    <string name="str_expand_panel">Развернуть панель</string>
+    <string name="str_next_obstacle">Следующее препятствие</string>
+    <string name="str_no_obstacles">Нет препятствия</string>
+    <string name="title_section1">Карта</string>
+    <string name="title_section2">Категории</string>
+    <string name="title_section3">Контент</string>
+    <string name="title_section4">Настройки</string>
 </resources>
