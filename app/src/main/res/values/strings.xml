@@ -45,6 +45,7 @@
     <string name="str_turn_forward">Move forward</string>
     <string name="str_next_obstacle">Next obstacle</string>
     <string name="str_no_obstacles">No obstacles</string>
+    <string name="str_difficulty">Difficulty</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d meter</item>

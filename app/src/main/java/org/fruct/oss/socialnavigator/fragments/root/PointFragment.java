@@ -34,6 +34,7 @@ import org.fruct.oss.socialnavigator.utils.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//FIXME: rename to category fragment
 public class PointFragment extends ListFragment implements PointsService.Listener, SwipeRefreshLayout.OnRefreshListener, Checker {
 	private static final Logger log = LoggerFactory.getLogger(PointFragment.class);
 

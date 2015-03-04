@@ -47,6 +47,7 @@
     <string name="title_section2">Категории</string>
     <string name="title_section3">Контент</string>
     <string name="title_section4">Настройки</string>
+    <string name="str_difficulty">Сложность</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d метр</item>

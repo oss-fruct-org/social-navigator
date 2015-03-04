@@ -142,19 +142,12 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <LinearLayout
-        android:id="@+id/details_view"
+    <android.support.v7.widget.RecyclerView
         android:visibility="gone"
+        android:layout_margin="4dp"
+
+        android:id="@+id/obstacles_list_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="4dp"
-        android:orientation="vertical">
-
-        <ListView
-            android:id="@+id/obstacles_list_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            </ListView>
-
-    </LinearLayout>
+        android:scrollbars="vertical" />
 </LinearLayout>

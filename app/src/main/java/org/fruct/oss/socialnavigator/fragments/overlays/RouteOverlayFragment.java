@@ -6,11 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,23 +19,20 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.graphhopper.util.PointList;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.adapters.ObstacleAdapter;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.settings.Preferences;
-import org.fruct.oss.socialnavigator.utils.Space;
-import org.fruct.oss.socialnavigator.utils.TrackPath;
-import org.fruct.oss.socialnavigator.utils.Turn;
+import org.fruct.oss.socialnavigator.utils.RecyclerItemClickListener;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
@@ -51,7 +49,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener, AdapterView.OnItemClickListener {
+public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener, RecyclerItemClickListener.OnItemClickListener {
 	private static final Logger log = LoggerFactory.getLogger(RouteOverlayFragment.class);
 
 	private final RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
@@ -126,7 +124,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private View.OnClickListener expandListener = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			View bottomView = view.findViewById(R.id.details_view);
+			View bottomView = view.findViewById(R.id.obstacles_list_view);
 			TextView expandTextView = (TextView) view.findViewById(R.id.expand_text_view);
 
 			if (expanded) {
@@ -182,6 +180,10 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		ImageButton acceptButton = (ImageButton) view.findViewById(R.id.route_button_accept);
 		acceptButton.setOnClickListener(acceptListener);
 
+		RecyclerView obstaclesListView = (RecyclerView) view.findViewById(R.id.obstacles_list_view);
+		obstaclesListView.setHasFixedSize(true);
+		obstaclesListView.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
+
 		view.setOnClickListener(expandListener);
 
 		return view;
@@ -191,9 +193,11 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
 		TextView obstaclesTextView = (TextView) view.findViewById(R.id.obstacles_text);
 		TextView titleTextView = (TextView) view.findViewById(R.id.title_text);
-		ListView obstaclesListView = (ListView) view.findViewById(R.id.obstacles_list_view);
+		RecyclerView obstaclesListView = (RecyclerView) view.findViewById(R.id.obstacles_list_view);
 
 		if (path != null) {
+			this.currentListPoints = path.getPoints();
+
 			lengthTextView.setVisibility(View.VISIBLE);
 			lengthTextView.setText(Utils.stringDistance(getResources(), path.getDistance()));
 
@@ -207,17 +211,8 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 			titleTextView.setText(path.getRoutingType().getStringId());
 
-			List<String> obstaclesList = new ArrayList<String>();
-			for (Point point : path.getPoints()) {
-				obstaclesList.add(point.getName());
-			}
-
-			this.currentListPoints = path.getPoints();
-
-			ArrayAdapter<String> obstaclesAdapter = new ArrayAdapter<String>(getActivity(),
-					android.R.layout.simple_list_item_1, obstaclesList);
-			obstaclesListView.setAdapter(obstaclesAdapter);
-			obstaclesListView.setOnItemClickListener(this);
+			obstaclesListView.setAdapter(new ObstacleAdapter(currentListPoints));
+			obstaclesListView.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), this));
 		} else {
 			lengthTextView.setText(getResources().getString(R.string.str_path_not_found));
 			lengthTextView.setVisibility(View.GONE);
@@ -422,7 +417,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+	public void onItemClick(View view, int position) {
 		if (mapView != null) {
 			Point clickedPoint = currentListPoints[position];
 			mapView.getController().animateTo(clickedPoint.toGeoPoint());
