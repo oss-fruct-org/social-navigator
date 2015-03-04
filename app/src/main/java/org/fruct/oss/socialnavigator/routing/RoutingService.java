@@ -26,6 +26,7 @@ import org.fruct.oss.mapcontent.content.ContentItem;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.utils.NamedThreadFactory;
+import org.fruct.oss.socialnavigator.utils.Timer;
 import org.fruct.oss.socialnavigator.utils.Turn;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
@@ -301,7 +302,10 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 	private void updateActivePath(Location location) {
+		Timer timer = new Timer().start();
 		trackingState.trackingPath.setLocation(location);
+		log.debug("Updating active path took {} seconds", timer.stop().getSeconds());
+
 		notifyActivePathUpdated(trackingState.initialPath, trackingState.trackingPath);
 	}
 

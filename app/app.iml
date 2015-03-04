@@ -100,9 +100,9 @@
     <orderEntry type="library" exported="" name="mapsforge-map-android-0.5.0" level="project" />
     <orderEntry type="library" exported="" name="mapsforge-map-reader-0.5.0" level="project" />
     <orderEntry type="library" exported="" name="mapsforge-core-0.5.0" level="project" />
-    <orderEntry type="library" exported="" name="graphhopper-0.4-SNAPSHOT" level="project" />
     <orderEntry type="library" exported="" name="slf4j-api-1.7.10" level="project" />
     <orderEntry type="library" exported="" name="trove4j-3.0.3" level="project" />
+    <orderEntry type="library" exported="" name="graphhopper-0.4.0-RC1" level="project" />
     <orderEntry type="module" module-name="mapcontent" exported="" />
     <orderEntry type="module" module-name="graphhopper-priority" exported="" />
   </component>
