@@ -47,38 +47,31 @@ public class TrackPath<T> {
 
 		ProjectedPoint projectedPoint = projectPoint(x, y);
 
-		//Map.Entry<ProjectedPoint, T> entryFloor = points.floorEntry(projectedPoint);
 		Map.Entry<ProjectedPoint, T> entryCeiling = points.ceilingEntry(projectedPoint);
-/*
-		Map.Entry<ProjectedPoint, T> nearestEntry = null;
-		if (entryFloor != null && entryCeiling != null) {
-			double dist1 = space.dist(entryFloor.getKey(), projectedPoint);
-			double dist2 = space.dist(entryCeiling.getKey(), projectedPoint);
-			if (dist1 < dist2) {
-				nearestEntry = entryFloor;
-			} else {
-				nearestEntry = entryCeiling;
-			}
-		} else if (entryFloor != null) {
-			nearestEntry = entryFloor;
-		} else if (entryCeiling != null) {
-			nearestEntry = entryCeiling;
-		}
-*/
+
 		if (entryCeiling != null) {
 			result.nextPointDistance = space.dist(entryCeiling.getKey(), projectedPoint);
 			result.nextPointData = entryCeiling.getValue();
 		}
 
 		// Find remaining path
-		result.remainingPath.add(new Space.Point(projectedPoint.projX, projectedPoint.projY));
+		Space.Point projection = new Space.Point(projectedPoint.projX, projectedPoint.projY);
+		result.remainingPath.add(projection);
+		result.remainingDist += space.dist(projection, projectedPoint.nearestSegment.next.a);
 
+		Segment previousSegment = projectedPoint.nearestSegment;
 		Segment currentSegment = projectedPoint.nearestSegment.next;
 
 		while (currentSegment != null) {
 			result.remainingPath.add(currentSegment.a);
+			previousSegment = currentSegment;
 			currentSegment = currentSegment.next;
+
+			if (currentSegment != null) {
+				result.remainingDist += space.dist(previousSegment.a, currentSegment.a);
+			}
 		}
+
 
 		// Trace for next turn
 		result.nextTurn = null;
@@ -187,5 +180,6 @@ public class TrackPath<T> {
 		public double nextPointDistance;
 
 		public List<Space.Point> remainingPath = new ArrayList<Space.Point>();
+		public double remainingDist;
 	}
 }

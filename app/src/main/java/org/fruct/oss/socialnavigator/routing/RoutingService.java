@@ -63,6 +63,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 			RoutingType.SAFE,
 			RoutingType.NORMAL,
 			RoutingType.FASTEST};
+	public static final int TRACKING_FINISH_DISTANCE = 10;
 
 
 	private final Binder binder = new Binder();
@@ -320,18 +321,13 @@ public class RoutingService extends Service implements PointsService.Listener,
 		trackingState.lastQueryResult = trackingState.trackingPath.query(
 				location.getLatitude(), location.getLongitude());
 		log.debug("Updating active path took {} seconds", timer.stop().getSeconds());
-
-		notifyActivePathUpdated(trackingState);
+		if (trackingState.lastQueryResult.remainingDist < TRACKING_FINISH_DISTANCE) {
+			targetLocation = null;
+			stopTracking();
+		} else {
+			notifyActivePathUpdated(trackingState);
+		}
 	}
-
-	/*private void checkGeofences(final Location location) {
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				geofencesManager.setLocation(location);
-			}
-		});
-	}*/
 
 	private void recalculatePaths() {
 		synchronized (mutex) {
@@ -340,7 +336,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 			}
 
 			if (targetLocation == null) {
-				log.warn("Trying to recalculate paths with null target point");
+				log.info("Trying to recalculate paths with null target point");
 				return;
 			}
 

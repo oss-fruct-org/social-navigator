@@ -24,17 +24,22 @@ import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.utils.EarthSpace;
 import org.fruct.oss.socialnavigator.utils.Space;
+import org.fruct.oss.socialnavigator.utils.TrackPath;
 import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.PathOverlay;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 public class TrackingOverlayFragment extends OverlayFragment implements RoutingService.Listener {
+	private static final Logger log = LoggerFactory.getLogger(TrackingOverlayFragment.class);
+
 	public static final int TURN_PROXIMITY_NOTIFICATION = 30;
 	private MapView mapView;
 	private DefaultResourceProxyImpl resourceProxy;
@@ -160,7 +165,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		} else {
 			hidePanel();
 			this.initialPath = null;
-			pointList = null;
+			this.pointList = null;
 		}
 
 		updateOverlay();
@@ -177,17 +182,19 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	@Override
 	public void activePathUpdated(RoutingService.TrackingState trackingState) {
 		this.initialPath = trackingState.initialPath;
-		this.pointList = trackingState.lastQueryResult.remainingPath;
+		TrackPath.Result<Point> lastQueryResult = trackingState.lastQueryResult;
+		this.pointList = lastQueryResult.remainingPath;
 
-		if (trackingState.lastQueryResult.nextPointData != null) {
+		// Fill obstacle panel
+		if (lastQueryResult.nextPointData != null) {
 			obstacleTextViewTitle.setText(R.string.str_next_obstacle);
-			obstacleTextView.setText(trackingState.lastQueryResult.nextPointData.getName());
+			obstacleTextView.setText(lastQueryResult.nextPointData.getName());
 			float[] dist = new float[1];
 			Location.distanceBetween(
-					trackingState.lastQueryResult.nextPointData.getLat(),
-					trackingState.lastQueryResult.nextPointData.getLon(),
-					trackingState.lastQueryResult.currentPosition.x,
-					trackingState.lastQueryResult.currentPosition.y, dist);
+					lastQueryResult.nextPointData.getLat(),
+					lastQueryResult.nextPointData.getLon(),
+					lastQueryResult.currentPosition.x,
+					lastQueryResult.currentPosition.y, dist);
 			obstacleTextViewDist.setText(Utils.stringDistance(getResources(), dist[0]));
 		} else {
 			obstacleTextViewTitle.setText(R.string.str_no_obstacles);
@@ -195,18 +202,19 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 			obstacleTextViewDist.setText("");
 		}
 
+		// Fill turn panel
 		boolean isTurnShown = false;
-		if (trackingState.lastQueryResult.nextTurn != null
-				&& trackingState.lastQueryResult.nextTurn.getTurnSharpness() > 1) {
-			double dist = space.dist(trackingState.lastQueryResult.nextTurn.getPoint(),
-					trackingState.lastQueryResult.currentPosition);
+		if (lastQueryResult.nextTurn != null
+				&& lastQueryResult.nextTurn.getTurnSharpness() > 1) {
+			double dist = space.dist(lastQueryResult.nextTurn.getPoint(),
+					lastQueryResult.currentPosition);
 
 			if (dist < TURN_PROXIMITY_NOTIFICATION) {
 				isTurnShown = true;
 				turnTextViewTitle.setText(R.string.str_turn_in);
 				turnTextView.setVisibility(View.VISIBLE);
 				turnTextView.setText(Utils.stringDistance(getResources(), dist));
-				turnImageView.setImageResource(trackingState.lastQueryResult.nextTurn.getTurnDirection() > 0
+				turnImageView.setImageResource(lastQueryResult.nextTurn.getTurnDirection() > 0
 						? R.drawable.ic_left_arrow
 						: R.drawable.ic_right_arrow);
 			}
@@ -217,6 +225,8 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 			turnTextView.setVisibility(View.GONE);
 			turnImageView.setImageResource(R.drawable.ic_forward_arrow);
 		}
+
+		log.debug("Remaining dist {}", lastQueryResult.remainingDist);
 
 		updateOverlay();
 	}
