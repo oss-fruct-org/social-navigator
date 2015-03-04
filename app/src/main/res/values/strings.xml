@@ -32,17 +32,6 @@
     <string name="str_turn_right">Turn right after %s</string>
     <string name="str_approaching">Approaching %s</string>
 
-    <plurals name="plural_meters">
-        <item quantity="one">%d meter</item>
-        <item quantity="many">%d meters</item>
-        <item quantity="other">%d meters</item>
-    </plurals>
-    <plurals name="plural_kilometers">
-        <item quantity="one">%d kilometer</item>
-        <item quantity="many">%d kilometers</item>
-        <item quantity="other">%d kilometers</item>
-    </plurals>
-
     <string name="hello_world">Hello world!</string>
     <string name="pref_storage_path_title">Storage</string>
     <string name="str_path_not_found">Path not found</string>
@@ -57,4 +46,20 @@
     <string name="str_next_obstacle">Next obstacle</string>
     <string name="str_no_obstacles">No obstacles</string>
 
+    <plurals name="plural_meters">
+        <item quantity="one">%d meter</item>
+        <item quantity="many">%d meters</item>
+        <item quantity="other">%d meters</item>
+    </plurals>
+    <plurals name="plural_kilometers">
+        <item quantity="one">%d kilometer</item>
+        <item quantity="many">%d kilometers</item>
+        <item quantity="other">%d kilometers</item>
+    </plurals>
+
+    <plurals name="plural_obstacles">
+        <item quantity="one">%d obstacle</item>
+        <item quantity="many">%d obstacles</item>
+        <item quantity="other">Obstacles: %d</item>
+    </plurals>
 </resources>

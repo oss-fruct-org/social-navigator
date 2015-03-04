@@ -189,12 +189,22 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private void showPathInfo(ChoicePath path) {
 		TextView lengthTextView = (TextView) view.findViewById(R.id.length_text);
+		TextView obstaclesTextView = (TextView) view.findViewById(R.id.obstacles_text);
 		TextView titleTextView = (TextView) view.findViewById(R.id.title_text);
 		ListView obstaclesListView = (ListView) view.findViewById(R.id.obstacles_list_view);
 
 		if (path != null) {
 			lengthTextView.setVisibility(View.VISIBLE);
 			lengthTextView.setText(Utils.stringDistance(getResources(), path.getDistance()));
+
+			int obstaclesCount = path.getPoints().length;
+			if (obstaclesCount == 0) {
+				obstaclesTextView.setText(R.string.str_no_obstacles);
+			} else {
+				obstaclesTextView.setText(getResources().getQuantityString(R.plurals.plural_obstacles,
+						obstaclesCount, obstaclesCount));
+			}
+
 			titleTextView.setText(path.getRoutingType().getStringId());
 
 			List<String> obstaclesList = new ArrayList<String>();
@@ -211,6 +221,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		} else {
 			lengthTextView.setText(getResources().getString(R.string.str_path_not_found));
 			lengthTextView.setVisibility(View.GONE);
+			obstaclesTextView.setVisibility(View.GONE);
 		}
 	}
 

@@ -28,19 +28,6 @@
     <string name="str_turn_in">Поверните через</string>
     <string name="str_turn_forward">Двигайтесь вперед</string>
 
-    <plurals name="plural_meters">
-        <item quantity="one">%d метр</item>
-        <item quantity="few">%d метра</item>
-        <item quantity="many">%d метров</item>
-        <item quantity="other">%d метров</item>
-    </plurals>
-
-    <plurals name="plural_kilometers">
-        <item quantity="one">%d километр</item>
-        <item quantity="few">%d километра</item>
-        <item quantity="many">%d километров</item>
-        <item quantity="other">%d километр</item>
-    </plurals>
     <string name="action_example">Пример действия</string>
     <string name="action_settings">Настройки</string>
     <string name="alert_location_not_available">Приложению требуется ваше местоположение</string>
@@ -55,9 +42,32 @@
     <string name="str_data_refresh_complete">Данные обновлены</string>
     <string name="str_expand_panel">Развернуть панель</string>
     <string name="str_next_obstacle">Следующее препятствие</string>
-    <string name="str_no_obstacles">Нет препятствия</string>
+    <string name="str_no_obstacles">Нет препятствий</string>
     <string name="title_section1">Карта</string>
     <string name="title_section2">Категории</string>
     <string name="title_section3">Контент</string>
     <string name="title_section4">Настройки</string>
+
+    <plurals name="plural_meters">
+        <item quantity="one">%d метр</item>
+        <item quantity="few">%d метра</item>
+        <item quantity="many">%d метров</item>
+        <item quantity="other">%d метров</item>
+    </plurals>
+
+    <plurals name="plural_kilometers">
+        <item quantity="one">%d километр</item>
+        <item quantity="few">%d километра</item>
+        <item quantity="many">%d километров</item>
+        <item quantity="other">%d километр</item>
+    </plurals>
+
+    <plurals name="plural_obstacles">
+        <item quantity="one">%d препятствие</item>
+        <item quantity="few">%d препятствия</item>
+        <item quantity="many">%d препятствий</item>
+        <item quantity="other">Препятствий: %d</item>
+    </plurals>
+
+
 </resources>
