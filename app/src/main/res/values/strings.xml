@@ -46,6 +46,8 @@
     <string name="str_next_obstacle">Next obstacle</string>
     <string name="str_no_obstacles">No obstacles</string>
     <string name="str_difficulty">Difficulty</string>
+    <string name="action_open_categories">Show categories</string>
+    <string name="action_open_map">Show map</string>
 
     <plurals name="plural_meters">
         <item quantity="one">%d meter</item>

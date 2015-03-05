@@ -20,6 +20,9 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.SlidingPaneLayout;
 import android.support.v7.app.ActionBar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -224,6 +227,9 @@ public class MapFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		setHasOptionsMenu(true);
+
 		log.debug("onCreate");
 	}
 
@@ -231,6 +237,23 @@ public class MapFragment extends Fragment {
 	public void onDestroy() {
 		log.debug("onDestroy");
 		super.onDestroy();
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+
+		inflater.inflate(R.menu.map_fragment_menu, menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.action_open_categories) {
+			((MainActivity) getActivity()).openCategoriesFragment();
+			return true;
+		}
+
+		return super.onOptionsItemSelected(item);
 	}
 
 	@Override

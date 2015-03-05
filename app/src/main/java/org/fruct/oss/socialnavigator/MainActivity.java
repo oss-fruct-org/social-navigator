@@ -169,19 +169,15 @@ public class MainActivity extends ActionBarActivity
         return super.onCreateOptionsMenu(menu);
     }
 
-    /*@Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }*/
+	public void openCategoriesFragment() {
+		mNavigationDrawerFragment.selectItem(1, null);
+	}
 
-    /**
+	public void openMapFragment() {
+		mNavigationDrawerFragment.selectItem(0, null);
+	}
+
+	/**
      * A placeholder fragment containing a simple view.
      */
     public static class PlaceholderFragment extends Fragment {

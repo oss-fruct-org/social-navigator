@@ -123,13 +123,17 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		inflater.inflate(R.menu.points, menu);
+		inflater.inflate(R.menu.categories_fragment_menu, menu);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getItemId() == R.id.action_refresh) {
+		switch (item.getItemId()) {
+		case R.id.action_refresh:
 			onRefresh();
+			return true;
+		case R.id.action_open_map:
+			((MainActivity) getActivity()).openMapFragment();
 			return true;
 		}
 
