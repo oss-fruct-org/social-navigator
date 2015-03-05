@@ -69,6 +69,8 @@
         <item quantity="many">%d препятствий</item>
         <item quantity="other">Препятствий: %d</item>
     </plurals>
+    <string name="action_open_categories">Показать категории</string>
+    <string name="action_open_map">Показать карту</string>
 
 
 </resources>

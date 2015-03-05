@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tran_rough_road">Неровная дорога</string>
+    <string name="tran_border">Поребрик</string>
+    <string name="tran_crosswalk">Пешеходный переход</string>
+    <string name="tran_traffic_light">Светофор</string>
+    <string name="tran_ramp">Пандус</string>
+    <string name="tran_slope">Уклон</string>
+    <string name="tran_stairs">Ступени</string>
+</resources>

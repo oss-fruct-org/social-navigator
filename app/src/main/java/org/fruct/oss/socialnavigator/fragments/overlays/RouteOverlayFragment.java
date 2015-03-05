@@ -33,6 +33,7 @@ import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.RecyclerItemClickListener;
+import org.fruct.oss.socialnavigator.utils.StaticTranslations;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SimpleTimeZone;
 
 public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener, RecyclerItemClickListener.OnItemClickListener {
 	private static final Logger log = LoggerFactory.getLogger(RouteOverlayFragment.class);
@@ -211,7 +213,9 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 			titleTextView.setText(path.getRoutingType().getStringId());
 
-			obstaclesListView.setAdapter(new ObstacleAdapter(currentListPoints));
+			obstaclesListView.setAdapter(
+					new ObstacleAdapter(StaticTranslations.createDefault(getResources()),
+							currentListPoints));
 			obstaclesListView.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), this));
 		} else {
 			lengthTextView.setText(getResources().getString(R.string.str_path_not_found));

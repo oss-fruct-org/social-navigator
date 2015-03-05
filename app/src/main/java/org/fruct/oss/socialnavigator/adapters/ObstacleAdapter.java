@@ -9,12 +9,16 @@ import android.widget.TextView;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
+import org.fruct.oss.socialnavigator.utils.StaticTranslations;
 
 public class ObstacleAdapter extends RecyclerView.Adapter<ObstacleAdapter.Holder> {
+	private final StaticTranslations translator;
 	private final Point[] points;
 
-	public ObstacleAdapter(Point[] points) {
+	public ObstacleAdapter(StaticTranslations translator, Point[] points) {
+		this.translator = translator;
 		this.points = points;
+
 	}
 
 	@Override
@@ -27,7 +31,7 @@ public class ObstacleAdapter extends RecyclerView.Adapter<ObstacleAdapter.Holder
 	public void onBindViewHolder(Holder holder, int i) {
 		Point obstacle = points[i];
 		Resources resources = holder.textView2.getResources();
-		holder.textView1.setText(obstacle.getName());
+		holder.textView1.setText(translator.getString(obstacle.getName()));
 		holder.textView2.setText(resources.getText(R.string.str_difficulty) + ": " + obstacle.getDifficulty());
 	}
 
