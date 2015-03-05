@@ -391,6 +391,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 			routing.loadFromPref(this, path);
 			setObstaclesPoints();
 		} catch (Exception ex) {
+			log.error("Error initializing routing for contentItem {}", contentItem.getName(), ex);
 			return false;
 		}
 

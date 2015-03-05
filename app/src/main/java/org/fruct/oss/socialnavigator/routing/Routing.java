@@ -53,6 +53,7 @@ public class Routing {
 				log.error("Can't initialize graphhopper in " + path);
 				throw new RuntimeException("Can't initialize graphhopper in " + path);
 			}
+			log.info("Graphhopper successfully loaded");
 			isReady = true;
 		} else {
 			log.error("Can't initialize graphhopper in null path");
@@ -75,6 +76,7 @@ public class Routing {
 	@Nullable
 	public synchronized ChoicePath route(double fromLat, double fromLon, double toLat, double toLon, RoutingType routingType) {
 		if (gh == null) {
+			log.warn("Routing with null graphhopper");
 			return null;
 		}
 
