@@ -16,14 +16,14 @@ import java.io.IOException;
 import java.util.List;
 
 public class PointsDatabase implements Closeable {
-	public static final int VERSION = 6;
+	public static final int VERSION = 8;
 	private final Context context;
 	private final Helper helper;
 	private final SQLiteDatabase db;
 
 	private static final String[] COLUMNS_DISABILITY = { "_id", "name", "active" };
 	private static final String[] COLUMNS_ID = { "_id" };
-	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url"};
+	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url", "iconUrl"};
 	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId", "provider", "uuid", "difficulty" };
 
 	public PointsDatabase(Context context) {
@@ -92,7 +92,7 @@ public class PointsDatabase implements Closeable {
 		cv.put("url", point.getUrl());
 		cv.put("lat", point.getLatE6());
 		cv.put("lon", point.getLonE6());
-		cv.put("categoryId", point.getCategoryId());
+		cv.put("categoryId", point.getCategory().getId());
 		cv.put("provider", point.getProvider());
 		cv.put("difficulty", point.getDifficulty());
 
@@ -150,7 +150,8 @@ public class PointsDatabase implements Closeable {
 
 	public Cursor loadPoints() {
 		return db.rawQuery("SELECT DISTINCT point._id, point.name, point.description, point.url, " +
-				"point.lat, point.lon, point.categoryId, point.provider, point.uuid, point.difficulty " +
+				"point.lat, point.lon, point.provider, point.uuid, point.difficulty, " +
+				"category._id, category.name, category.description, category.url, category.iconUrl " +
 				"FROM point INNER JOIN category ON point.categoryId = category._id " +
 				"INNER JOIN disability_category ON disability_category.categoryId = category._id " +
 				"INNER JOIN disability ON disability_category.disabilityId = disability._id " +
@@ -207,7 +208,8 @@ public class PointsDatabase implements Closeable {
 					"(_id INTEGER PRIMARY KEY," +
 					"name TEXT," +
 					"description TEXT," +
-					"url TEXT);");
+					"url TEXT," +
+					"iconUrl TEXT);");
 
 			db.execSQL("CREATE TABLE point " +
 					"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +

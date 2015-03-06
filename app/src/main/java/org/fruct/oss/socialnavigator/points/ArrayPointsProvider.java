@@ -17,7 +17,7 @@ public class ArrayPointsProvider implements PointsProvider {
 		categories = new ArrayList<Category>();
 		int c = 0;
 		for (String name : names) {
-			categories.add(new Category(name, name, "http://example.com", ++c));
+			categories.add(new Category(name, name, "http://example.com", "", ++c));
 		}
 	}
 
@@ -34,7 +34,7 @@ public class ArrayPointsProvider implements PointsProvider {
 			throw new IllegalArgumentException("Category " + categoryName + " don't exist");
 		}
 
-		pointList.add(new Point(name, description, url, lat, lon, cat.getId(), Point.TEST_PROVIDER, name, diff));
+		pointList.add(new Point(name, description, url, lat, lon, cat, Point.TEST_PROVIDER, name, diff));
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public class ArrayPointsProvider implements PointsProvider {
 	public List<Point> loadPoints(Category category) throws PointsException {
 		List<Point> catPoints = new ArrayList<Point>();
 		for (Point point : pointList) {
-			if (point.getCategoryId() == category.getId()) {
+			if (point.getCategory().equals(category)) {
 				catPoints.add(point);
 			}
 		}

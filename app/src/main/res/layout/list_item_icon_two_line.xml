@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:orientation="vertical"
+                android:minHeight="?android:listPreferredItemHeight"
+                android:layout_width="match_parent"
+                android:descendantFocusability="blocksDescendants"
+                android:layout_height="match_parent"
+    >
+
+    <!--
+           android:background="@drawable/list_item_activated"
+
+           android:scaleType="centerCrop"
+
+-->
+
+    <ImageView
+        android:id="@android:id/icon"
+
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+
+        android:layout_centerVertical="true"
+        android:layout_height="48dp"
+        android:layout_width="48dp"
+        android:layout_margin="8dp"/>
+
+    <LinearLayout
+        android:layout_toRightOf="@android:id/icon"
+        android:layout_toEndOf="@android:id/icon"
+
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        >
+        <TextView
+            android:id="@android:id/text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textColor="#ff58585B"
+            tools:text="Hello world Hello world"
+            />
+
+        <TextView
+            android:id="@android:id/text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#ff58585B"
+            android:lines="2"
+            android:ellipsize="marquee"
+            tools:text="..."
+            />
+    </LinearLayout>
+</RelativeLayout>

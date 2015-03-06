@@ -15,7 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -151,7 +153,6 @@ public class PointsService extends Service {
 		});
 	}
 
-
 	public void queryCursor(final Request<?> request, final Function<Cursor> callback) {
 		new AsyncTask<Void, Void, Cursor>() {
 			@Override
@@ -179,7 +180,6 @@ public class PointsService extends Service {
 		while (cursor.moveToNext()) {
 			ret.add(request.cursorToObject(cursor));
 		}
-
 		return ret;
 	}
 
@@ -192,7 +192,12 @@ public class PointsService extends Service {
 
 			@Override
 			public Category cursorToObject(Cursor cursor) {
-				return new Category(cursor);
+				return new Category(cursor, 0);
+			}
+
+			@Override
+			public int getId(Category category) {
+				return category.getId();
 			}
 		};
 	}
@@ -206,7 +211,12 @@ public class PointsService extends Service {
 
 			@Override
 			public Point cursorToObject(Cursor cursor) {
-				return new Point(cursor);
+				return new Point(cursor, 1);
+			}
+
+			@Override
+			public int getId(Point point) {
+				throw new UnsupportedOperationException("Point doesn't has public id");
 			}
 		};
 	}
@@ -221,6 +231,11 @@ public class PointsService extends Service {
 			@Override
 			public Disability cursorToObject(Cursor cursor) {
 				return new Disability(cursor);
+			}
+
+			@Override
+			public int getId(Disability disability) {
+				throw new UnsupportedOperationException("Point doesn't has public id");
 			}
 		};
 	}

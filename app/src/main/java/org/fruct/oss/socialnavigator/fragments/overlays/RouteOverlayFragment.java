@@ -216,6 +216,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 			obstaclesListView.setAdapter(
 					new ObstacleAdapter(StaticTranslations.createDefault(getResources()),
 							currentListPoints));
+
 			obstaclesListView.addOnItemTouchListener(new RecyclerItemClickListener(getActivity(), this));
 		} else {
 			lengthTextView.setText(getResources().getString(R.string.str_path_not_found));

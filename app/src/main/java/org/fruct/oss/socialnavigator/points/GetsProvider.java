@@ -96,7 +96,7 @@ public class GetsProvider implements PointsProvider {
 
 			List<Point> points = ((Kml) parsedResponse.getContent()).getPoints();
 			for (Point point : points) {
-				point.setCategoryId(category.getId());
+				point.setCategory(category);
 			}
 			return points;
 		} catch (IOException ex) {

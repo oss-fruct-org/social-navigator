@@ -24,37 +24,37 @@ public class Point implements Parcelable {
 	private String url;
 	private int latE6;
 	private int lonE6;
-	private int categoryId;
+	private Category category;
 	private String provider;
 	private String uuid;
 	private int difficulty;
 
-	public Point(String name, String description, String url, double lat, double lon, int categoryId, String provider, String uuid, int difficulty) {
-		this(name, description, url, (int) (lat * 1e6), (int) (lon * 1e6), categoryId, provider, uuid, difficulty);
+	public Point(String name, String description, String url, double lat, double lon, Category category, String provider, String uuid, int difficulty) {
+		this(name, description, url, (int) (lat * 1e6), (int) (lon * 1e6), category, provider, uuid, difficulty);
 	}
 
-	public Point(String name, String description, String url, int latE6, int lonE6, int categoryId, String provider, String uuid, int difficulty) {
+	public Point(String name, String description, String url, int latE6, int lonE6, Category category, String provider, String uuid, int difficulty) {
 		this.name = name;
 		this.description = description;
 		this.url = url;
 		this.latE6 = latE6;
 		this.lonE6 = lonE6;
-		this.categoryId = categoryId;
+		this.category = category;
 		this.provider = provider;
 		this.uuid = uuid;
 		this.difficulty = difficulty;
 	}
 
-	public Point(Cursor cursor) {
-		this.name = cursor.getString(1);
-		this.description = cursor.getString(2);
-		this.url = cursor.getString(3);
-		this.latE6 = cursor.getInt(4);
-		this.lonE6 = cursor.getInt(5);
-		this.categoryId = cursor.getInt(6);
-		this.provider = cursor.getString(7);
-		this.uuid = cursor.getString(8);
-		this.difficulty = cursor.getInt(9);
+	public Point(Cursor cursor, int offset) {
+		this.name = cursor.getString(offset);
+		this.description = cursor.getString(offset + 1);
+		this.url = cursor.getString(offset + 2);
+		this.latE6 = cursor.getInt(offset + 3);
+		this.lonE6 = cursor.getInt(offset + 4);
+		this.provider = cursor.getString(offset + 5);
+		this.uuid = cursor.getString(offset + 6);
+		this.difficulty = cursor.getInt(offset + 7);
+		this.category = new Category(cursor, offset + 8);
 	}
 
 	public Point(Parcel source) {
@@ -63,7 +63,7 @@ public class Point implements Parcelable {
 		this.url = source.readString();
 		this.latE6 = source.readInt();
 		this.lonE6 = source.readInt();
-		this.categoryId = source.readInt();
+		this.category = source.readParcelable(Point.class.getClassLoader());
 		this.provider = source.readString();
 		this.uuid = source.readString();
 		this.difficulty = source.readInt();
@@ -102,8 +102,8 @@ public class Point implements Parcelable {
 	}
 
 
-	public int getCategoryId() {
-		return categoryId;
+	public Category getCategory() {
+		return category;
 	}
 
 	public String getProvider() {
@@ -118,8 +118,8 @@ public class Point implements Parcelable {
 		return difficulty;
 	}
 
-	public void setCategoryId(int categoryId) {
-		this.categoryId = categoryId;
+	public void setCategory(Category category) {
+		this.category = category;
 	}
 
 	// TODO: can be optimized
@@ -249,7 +249,7 @@ public class Point implements Parcelable {
 		dest.writeString(url);
 		dest.writeInt(latE6);
 		dest.writeInt(lonE6);
-		dest.writeInt(categoryId);
+		dest.writeParcelable(category, flags);
 		dest.writeString(provider);
 		dest.writeString(uuid);
 		dest.writeInt(difficulty);

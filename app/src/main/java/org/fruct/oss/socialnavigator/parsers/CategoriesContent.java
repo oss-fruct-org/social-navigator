@@ -2,6 +2,7 @@ package org.fruct.oss.socialnavigator.parsers;
 
 import org.fruct.oss.mapcontent.content.utils.XmlUtil;
 import org.fruct.oss.socialnavigator.points.Category;
+import org.fruct.oss.socialnavigator.utils.GetsProperties;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -44,8 +45,9 @@ public class CategoriesContent implements IContent {
 	private static Category parseCategory(XmlPullParser parser) throws IOException, XmlPullParserException {
 		long id = 0;
 		String name = null;
-		String description = null;
-		String url = null;
+
+		String rawDescription = null;
+		String rawUrl = null;
 
 		parser.require(XmlPullParser.START_TAG, null, "category");
 
@@ -60,9 +62,9 @@ public class CategoriesContent implements IContent {
 			} else if (tagName.equals("name")) {
 				name = GetsResponse.readText(parser);
 			} else if (tagName.equals("description")) {
-				description = GetsResponse.readText(parser);
+				rawDescription = GetsResponse.readText(parser);
 			} else if (tagName.equals("url")) {
-				url = GetsResponse.readText(parser);
+				rawUrl = GetsResponse.readText(parser);
 			} else {
 				XmlUtil.skip(parser);
 			}
@@ -70,7 +72,15 @@ public class CategoriesContent implements IContent {
 
 		parser.require(XmlPullParser.END_TAG, null, "category");
 
-		return new Category(name, description, url, (int) id);
+		GetsProperties getsProperties = new GetsProperties();
+		getsProperties.addJson("description", rawDescription);
+		getsProperties.addJson("url", rawUrl);
+
+		return new Category(name,
+				getsProperties.getProperty("description", ""),
+				getsProperties.getProperty("url", ""),
+				getsProperties.getProperty("icon", ""),
+				(int) id);
 	}
 
 	public List<Category> getCategories() {

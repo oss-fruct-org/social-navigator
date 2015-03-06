@@ -94,7 +94,7 @@ public class CreatePointDialog extends DialogFragment {
 
 				Category category = categories.get(categorySpinner.getSelectedItemPosition());
 
-				Point point = new Point(title, description, url, geoPoint.getLatitudeE6(), geoPoint.getLongitudeE6(), category.getId(), "local", UUID.randomUUID().toString(), difficulty);
+				Point point = new Point(title, description, url, geoPoint.getLatitudeE6(), geoPoint.getLongitudeE6(), category, "local", UUID.randomUUID().toString(), difficulty);
 				if (listener != null) {
 					listener.pointCreated(point);
 				}

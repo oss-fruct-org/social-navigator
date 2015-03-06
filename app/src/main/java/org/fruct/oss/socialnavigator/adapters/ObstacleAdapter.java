@@ -18,12 +18,11 @@ public class ObstacleAdapter extends RecyclerView.Adapter<ObstacleAdapter.Holder
 	public ObstacleAdapter(StaticTranslations translator, Point[] points) {
 		this.translator = translator;
 		this.points = points;
-
 	}
 
 	@Override
 	public Holder onCreateViewHolder(ViewGroup viewGroup, int i) {
-		View view = LayoutInflater.from(viewGroup.getContext()).inflate(android.R.layout.simple_list_item_2, viewGroup, false);
+		View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.list_item_icon_two_line, viewGroup, false);
 		return new Holder(view);
 	}
 
