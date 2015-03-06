@@ -59,6 +59,7 @@ public class PointsDatabase implements Closeable {
 		cv.put("name", category.getName());
 		cv.put("description", category.getDescription());
 		cv.put("url", category.getUrl());
+		cv.put("iconUrl", category.getIconUrl());
 
 		if (!isCategoryExists(category)) {
 			cv.put("_id", category.getId());

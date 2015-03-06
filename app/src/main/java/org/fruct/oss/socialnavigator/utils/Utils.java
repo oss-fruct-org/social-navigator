@@ -47,6 +47,10 @@ public class Utils {
 	private static final Logger log = LoggerFactory.getLogger(Utils.class);
 	private static final int MAX_RECURSION = 10;
 
+	public static boolean isNullOrEmpty(String string) {
+		return string == null || string.isEmpty();
+	}
+
 	public static String stringDistance(Resources res, double meters) {
 		int kmPart = (int) (meters / 1000);
 		int meterPart = (int) (meters - kmPart * 1000);
