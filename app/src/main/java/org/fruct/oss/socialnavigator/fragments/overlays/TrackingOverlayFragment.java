@@ -17,6 +17,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.fruct.oss.socialnavigator.App;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
@@ -24,8 +25,8 @@ import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.utils.EarthSpace;
 import org.fruct.oss.socialnavigator.utils.Space;
+import org.fruct.oss.socialnavigator.utils.StaticTranslations;
 import org.fruct.oss.socialnavigator.utils.TrackPath;
-import org.fruct.oss.socialnavigator.utils.Turn;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.util.GeoPoint;
@@ -56,10 +57,13 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	private TextView turnTextView;
 
 	private ImageView turnImageView;
+	private ImageView obstacleImageView;
 
 	private PathOverlay pathOverlay;
 	private ChoicePath initialPath;
 	private List<Space.Point> pointList;
+
+	private StaticTranslations translator;
 
 	private Space space = new EarthSpace();
 
@@ -70,6 +74,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		getActivity().bindService(new Intent(getActivity(), RoutingService.class),
 				routingServiceConnection, Context.BIND_AUTO_CREATE);
 
+		translator = StaticTranslations.createDefault(getResources());
 	}
 
 	@Override
@@ -96,6 +101,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		obstacleTextViewDist = (TextView) view.findViewById(R.id.next_obstacle_dist_text_view);
 
 		turnImageView = (ImageView) view.findViewById(R.id.turn_image_view);
+		obstacleImageView = (ImageView) view.findViewById(R.id.obstacle_image_view);
 
 		return view;
 	}
@@ -188,7 +194,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		// Fill obstacle panel
 		if (lastQueryResult.nextPointData != null) {
 			obstacleTextViewTitle.setText(R.string.str_next_obstacle);
-			obstacleTextView.setText(lastQueryResult.nextPointData.getName());
+			obstacleTextView.setText(translator.getString(lastQueryResult.nextPointData.getName()));
 			float[] dist = new float[1];
 			Location.distanceBetween(
 					lastQueryResult.nextPointData.getLat(),
@@ -196,10 +202,16 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 					lastQueryResult.currentPosition.x,
 					lastQueryResult.currentPosition.y, dist);
 			obstacleTextViewDist.setText(Utils.stringDistance(getResources(), dist[0]));
+			String categoryIconUrl = lastQueryResult.nextPointData.getCategory().getIconUrl();
+			if (!Utils.isNullOrEmpty(categoryIconUrl)) {
+				App.getImageLoader().displayImage(categoryIconUrl, obstacleImageView);
+			}
+
 		} else {
 			obstacleTextViewTitle.setText(R.string.str_no_obstacles);
 			obstacleTextView.setText("");
 			obstacleTextViewDist.setText("");
+			obstacleImageView.setImageResource(android.R.color.transparent);
 		}
 
 		// Fill turn panel

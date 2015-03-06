@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
                android:layout_width="match_parent"
-               android:layout_height="@dimen/route_panel_height"
+               android:layout_height="wrap_content"
+               android:minHeight="@dimen/route_panel_height"
                android:background="@drawable/shadow"
                android:alpha="0.9"
                android:visibility="gone"
@@ -35,6 +36,12 @@
             android:gravity="center_horizontal"
             android:textSize="16sp"
             />
+
+        <ImageView
+            android:id="@+id/obstacle_image_view"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal" />
 
     </LinearLayout>
 
@@ -72,7 +79,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:src="@drawable/ic_left_arrow"/>
-
 
     </LinearLayout>
 
