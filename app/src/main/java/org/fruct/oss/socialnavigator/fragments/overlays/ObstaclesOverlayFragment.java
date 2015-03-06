@@ -34,7 +34,9 @@ import java.util.Map;
 public class ObstaclesOverlayFragment extends OverlayFragment
 		implements ItemizedIconOverlay.OnItemGestureListener<ObstaclesOverlayFragment.Obstacle>, RoutingService.Listener, PointsService.Listener, SharedPreferences.OnSharedPreferenceChangeListener {
 	private static final Logger log = LoggerFactory.getLogger(ObstaclesOverlayFragment.class);
+
 	public static final int POINT_UPDATE_INTERVAL = 60 * 3600;
+	public static final int POINT_UPDATE_DISTANCE = 1000;
 
 	private RoutingServiceConnection routingServiceConnection;
 	private PointsServiceConnection pointsServiceConnection;
@@ -149,6 +151,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	public void onDataUpdated() {
 		long currentTime = System.currentTimeMillis();
 		appPreferences.setLastPointsUpdateTimestamp(currentTime);
+		appPreferences.setLastPointsUpdateLocation(new GeoPoint(routingService.getLastLocation()));
 	}
 
 	private void updateOverlay() {
@@ -174,8 +177,12 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		long lastUpdateTime = appPreferences.getLastPointsUpdateTimestamp();
 		long currentTime = System.currentTimeMillis();
 
-		if (lastUpdateTime < 0 || currentTime - lastUpdateTime > POINT_UPDATE_INTERVAL) {
-			pointsService.refresh();
+		GeoPoint currentLocation = new GeoPoint(routingService.getLastLocation());
+		GeoPoint lastLocation = appPreferences.getLastPointsUpdateLocation();
+
+		if (lastUpdateTime < 0 || currentTime - lastUpdateTime > POINT_UPDATE_INTERVAL
+				|| lastLocation == null || currentLocation.distanceTo(lastLocation) > POINT_UPDATE_DISTANCE) {
+			pointsService.refresh(currentLocation);
 			return true;
 		} else {
 			return false;

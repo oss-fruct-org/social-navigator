@@ -11,6 +11,7 @@ import android.os.Looper;
 import org.fruct.oss.socialnavigator.BuildConfig;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.utils.Function;
+import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,7 +108,7 @@ public class PointsService extends Service {
 		}
 	};
 
-	public void refresh() {
+	public void refresh(final GeoPoint geoPoint) {
 		if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
 			refreshProvidersTask.cancel(true);
 
@@ -117,7 +118,7 @@ public class PointsService extends Service {
 				try {
 					log.info("Starting points refresh");
 					long refreshStartTime = System.nanoTime();
-					refreshRemote();
+					refreshRemote(geoPoint);
 					long refreshEndTime = System.nanoTime();
 					log.info("Points refresh time: {}", (refreshEndTime - refreshStartTime) * 1e-9f);
 
@@ -241,7 +242,7 @@ public class PointsService extends Service {
 	}
 
 	@Blocking
-	private void refreshRemote() throws PointsException {
+	private void refreshRemote(GeoPoint geoPoint) throws PointsException {
 		PointsProvider pointsProvider = setupProvider();
 		
 		List<Disability> disabilities = pointsProvider.loadDisabilities();
@@ -262,7 +263,7 @@ public class PointsService extends Service {
 			List<Point> points;
 			try {
 				log.debug("Loading points for category {}", category.getName());
-				points = pointsProvider.loadPoints(category);
+				points = pointsProvider.loadPoints(category, geoPoint);
 				log.debug("Points loaded");
 			} catch (PointsException ex) {
 				continue;

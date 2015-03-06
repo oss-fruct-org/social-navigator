@@ -29,8 +29,11 @@ import org.fruct.oss.socialnavigator.adapters.PointAdapter;
 import org.fruct.oss.socialnavigator.points.Disability;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.routing.Routing;
+import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.utils.Checker;
 import org.fruct.oss.socialnavigator.utils.Function;
+import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +44,10 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	private PointAdapter adapter;
 
 	private ServiceConnection pointConnection = new PointConnection();
+	private ServiceConnection routingConnection = new RoutingConnection();
 	private PointsService pointsService;
+	private RoutingService routingService;
+
 	private SwipeRefreshLayout refreshLayout;
 
 	public PointFragment() {
@@ -68,6 +74,9 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		// Bind service
 		Intent intent = new Intent(getActivity(), PointsService.class);
 		getActivity().bindService(intent, pointConnection, Context.BIND_AUTO_CREATE);
+
+		Intent intent2 = new Intent(getActivity(), RoutingService.class);
+		getActivity().bindService(intent2, routingConnection, Context.BIND_AUTO_CREATE);
 
 		setHasOptionsMenu(true);
 	}
@@ -99,6 +108,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		}
 
 		getActivity().unbindService(pointConnection);
+		getActivity().unbindService(routingConnection);
 
 		super.onDestroy();
 	}
@@ -127,6 +137,17 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	}
 
 	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		boolean isEnabled = checkServices();
+		menu.findItem(R.id.action_refresh).setEnabled(isEnabled);
+		menu.findItem(R.id.action_open_map).setEnabled(isEnabled);
+	}
+
+	private boolean checkServices() {
+		return routingService != null && pointsService != null;
+	}
+
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.action_refresh:
@@ -144,6 +165,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		this.pointsService = service;
 		pointsService.addListener(this);
 		refreshList();
+		getActivity().supportInvalidateOptionsMenu();
 	}
 
 	@Override
@@ -176,8 +198,8 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 	@Override
 	public void onRefresh() {
-		if (pointsService != null) {
-			pointsService.refresh();
+		if (checkServices()) {
+			pointsService.refresh(new GeoPoint(routingService.getLastLocation()));
 			refreshLayout.setRefreshing(true);
 		}
 	}
@@ -197,6 +219,19 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			pointsService = null;
+		}
+	}
+
+	private class RoutingConnection implements ServiceConnection {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder binder) {
+			routingService = ((RoutingService.Binder) binder).getService();
+			getActivity().supportInvalidateOptionsMenu();
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			routingService = null;
 		}
 	}
 }

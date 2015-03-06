@@ -1,22 +1,21 @@
 package org.fruct.oss.socialnavigator.points;
 
-import android.content.Context;
 import android.util.Xml;
 
 import org.fruct.oss.socialnavigator.BuildConfig;
+import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.parsers.CategoriesContent;
 import org.fruct.oss.socialnavigator.parsers.GetsException;
 import org.fruct.oss.socialnavigator.parsers.GetsResponse;
 import org.fruct.oss.socialnavigator.parsers.Kml;
 import org.fruct.oss.socialnavigator.utils.Utils;
+import org.osmdroid.util.GeoPoint;
 import org.xmlpull.v1.XmlSerializer;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class GetsProvider implements PointsProvider {
 	public static final String GETS_SERVER;
@@ -75,13 +74,16 @@ public class GetsProvider implements PointsProvider {
 	}
 
 	@Override
-	public List<Point> loadPoints(Category category) throws PointsException {
+	public List<Point> loadPoints(Category category, GeoPoint geoPoint) throws PointsException {
 		XmlSerializer serializer = Xml.newSerializer();
 		StringWriter writer = new StringWriter();
 
 		try {
 			serializer.setOutput(writer);
 			createRequestTop(serializer);
+			serializer.startTag(null, "latitude").text(String.valueOf(geoPoint.getLatitude())).endTag(null, "latitude");
+			serializer.startTag(null, "longitude").text(String.valueOf(geoPoint.getLongitude())).endTag(null, "longitude");
+			serializer.startTag(null, "radius").text(String.valueOf(ObstaclesOverlayFragment.POINT_UPDATE_DISTANCE * 4)).endTag(null, "radius");
 			serializer.startTag(null, "category_id").text(String.valueOf(category.getId())).endTag(null, "category_id");
 			createRequestBottom(serializer);
 			String request = writer.toString();

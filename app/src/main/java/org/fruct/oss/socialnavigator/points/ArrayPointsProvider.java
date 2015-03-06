@@ -1,7 +1,8 @@
 package org.fruct.oss.socialnavigator.points;
 
+import org.osmdroid.util.GeoPoint;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ArrayPointsProvider implements PointsProvider {
@@ -55,7 +56,7 @@ public class ArrayPointsProvider implements PointsProvider {
 	}
 
 	@Override
-	public List<Point> loadPoints(Category category) throws PointsException {
+	public List<Point> loadPoints(Category category, GeoPoint geoPoint) throws PointsException {
 		List<Point> catPoints = new ArrayList<Point>();
 		for (Point point : pointList) {
 			if (point.getCategory().equals(category)) {
