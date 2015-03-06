@@ -17,20 +17,15 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 
 import org.fruct.oss.socialnavigator.R;
-import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
-import org.fruct.oss.socialnavigator.utils.Space;
-import org.fruct.oss.socialnavigator.utils.TrackPath;
-import org.fruct.oss.socialnavigator.utils.Turn;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import java.util.List;
 import java.util.Map;
 
 public class PositionOverlayFragment extends OverlayFragment implements RoutingService.Listener {
@@ -148,12 +143,12 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	@Override
-	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
+	public void progressStateChanged(boolean isActive) {
 
 	}
 
 	@Override
-	public void pathsCleared() {
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
 
 	}
 

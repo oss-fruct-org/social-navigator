@@ -26,12 +26,12 @@ import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionList
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.EarthSpace;
 import org.fruct.oss.socialnavigator.utils.NamedThreadFactory;
 import org.fruct.oss.socialnavigator.utils.Space;
 import org.fruct.oss.socialnavigator.utils.Timer;
 import org.fruct.oss.socialnavigator.utils.TrackPath;
-import org.fruct.oss.socialnavigator.utils.Turn;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,37 +53,28 @@ import java.util.concurrent.TimeUnit;
 
 public class RoutingService extends Service implements PointsService.Listener,
 		LocationReceiver.Listener,	ContentServiceConnectionListener {
-	private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
-
 	public static final String ARG_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_LOCATION";
-
 	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
-
 	public static final RoutingType[] REQUIRED_ROUTING_TYPES = {
 			RoutingType.SAFE,
 			RoutingType.NORMAL,
 			RoutingType.FASTEST};
 	public static final int TRACKING_FINISH_DISTANCE = 10;
-
-
+	private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
 	private final Binder binder = new Binder();
-	private final ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("RoutingServiceThread"));
+	private final ExecutorService executor
+			= Executors.newSingleThreadExecutor(new NamedThreadFactory("RoutingServiceThread"));
 
-	// Tasks
-	private Future<?> routeFuture;
-
-	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
-
-	private Routing routing;
-
-	// Locks current target point ad current paths
+	// Locks current target point at current paths
 	private final Object mutex = new Object();
-
-	private final Map<RoutingType, ChoicePath> currentPathsMap = Collections.synchronizedMap(new EnumMap<RoutingType, ChoicePath>(RoutingType.class));
 
 	// Locks services assignment
 	private final Object serviceMutex = new Object();
 
+	// Tasks
+	private Future<?> routeFuture;
+	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
+	private Routing routing;
 	private PointsServiceConnection pointsServiceConnection;
 	private PointsService pointsService;
 
@@ -91,24 +82,34 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private ContentService contentService;
 
 	private LocationReceiver locationReceiver;
-	//private GeofencesManager geofencesManager;
 
 	private Handler handler;
 
 	private ContentItem recommendedContentItem;
 
+	private boolean isChoiceNeedsUpdate;
+	private boolean isTrackingNeedsUpdate;
+	private final Map<RoutingType, ChoicePath> currentPathsMap = Collections.synchronizedMap(new EnumMap<RoutingType, ChoicePath>(RoutingType.class));
+	private TrackingState trackingState;
 
 	// Variables that represent routing and must be persistent
-	private GeoPoint currentLocation;
-	private GeoPoint targetLocation;
+	private GeoPoint sourceLocation;
+	private GeoPoint destinationLocation;
+	private RoutingType currentRoutingType;
 	private State state;
-	private TrackingState trackingState;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
-		state = State.IDLE;
+		restoreCurrentState();
+
+		if (state == null) {
+			state = State.IDLE;
+		}
+
+		isChoiceNeedsUpdate = true;
+		isTrackingNeedsUpdate = true;
 
 		handler = new Handler(Looper.getMainLooper());
 
@@ -116,13 +117,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		locationReceiver.setListener(this);
 		locationReceiver.start();
 
-		//geofencesManager = new SimpleGeofencesManager();
-		//geofencesManager.addListener(this);
-
 		routing = new Routing();
-
-		//GEOFENCE_TOKEN_OBSTACLES = geofencesManager.createToken();
-		//GEOFENCE_TOKEN_INFO = geofencesManager.createToken();
 
 		bindService(new Intent(this, PointsService.class),
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
@@ -132,6 +127,13 @@ public class RoutingService extends Service implements PointsService.Listener,
 		contentServiceConnection.bindService(this);
 
 		log.info("created");
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		handler.removeCallbacks(stopRunnable);
+
+		return RoutingService.START_NOT_STICKY;
 	}
 
 	@Override
@@ -163,42 +165,20 @@ public class RoutingService extends Service implements PointsService.Listener,
 			contentService.removeListener(contentListener);
 		}
 
-		unbindService(pointsServiceConnection);
-		pointsServiceConnection = null;
 
 		locationReceiver.stop();
 		locationReceiver.setListener(null);
 
+		unbindService(pointsServiceConnection);
 		contentServiceConnection.unbindService(this);
 
+		pointsServiceConnection = null;
+
+		saveCurrentState();
+
 		log.info("destroyed");
+
 		super.onDestroy();
-	}
-
-	@Override
-	public boolean onUnbind(Intent intent) {
-		handler.postDelayed(stopRunnable, 10000);
-		return true;
-	}
-
-	@Override
-	public void onRebind(Intent intent) {
-		super.onRebind(intent);
-		handler.removeCallbacks(stopRunnable);
-	}
-
-	private Runnable stopRunnable = new Runnable() {
-		@Override
-		public void run() {
-			stopSelf();
-		}
-	};
-
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		handler.removeCallbacks(stopRunnable);
-
-		return RoutingService.START_NOT_STICKY;
 	}
 
 	@Override
@@ -206,249 +186,17 @@ public class RoutingService extends Service implements PointsService.Listener,
 		return binder;
 	}
 
-
-	public void startTracking(RoutingType routingType) {
-		ChoicePath activePath = currentPathsMap.get(routingType);
-
-		List<Space.Point> points = new ArrayList<Space.Point>();
-
-		PointList ghPointList = activePath.getResponse().getPoints();
-		for (int i = 0; i < ghPointList.size(); i++) {
-			points.add(new Space.Point(ghPointList.getLat(i), ghPointList.getLon(i)));
-		}
-
-		trackingState = new TrackingState();
-		trackingState.initialPath = activePath;
-		trackingState.trackingPath = new TrackPath<Point>(new EarthSpace(), points);
-
-		Point[] pointsOnPath = activePath.getPoints();
-		for (Point point : pointsOnPath) {
-			trackingState.trackingPath.addPoint(point.getLat(), point.getLon(), point);
-		}
-
-		trackingState.lastQueryResult = trackingState.trackingPath.query(
-				currentLocation.getLatitude(),
-				currentLocation.getLongitude());
-
-		changeRoutingState(State.TRACKING);
-		notifyActivePathUpdated(trackingState);
-	}
-
-	public void stopTracking() {
-		trackingState = null;
-		changeRoutingState(State.IDLE);
-		recalculatePaths();
-	}
-
-	public void setTargetPoint(GeoPoint targetPoint) {
-		this.targetLocation = targetPoint;
-
-		if (state == State.IDLE || state == State.CHOICE || state == State.UPDATING) {
-			recalculatePaths();
-		}
-	}
-
-	public void clearTargetPoint() {
-		synchronized (mutex) {
-			if (routeFuture != null) {
-				routeFuture.cancel(true);
-			}
-
-			currentPathsMap.clear();
-			targetLocation = null;
-		}
-
-		changeRoutingState(State.IDLE);
-		notifyPathsCleared();
-	}
-
-	public void sendLastResult() {
-		synchronized (mutex) {
-			if (state == State.UPDATING || state == State.CHOICE) {
-				notifyPathsUpdated(targetLocation, currentPathsMap);
-			} else if (state == State.TRACKING) {
-				notifyActivePathUpdated(trackingState);
-			}
-
-			notifyRoutingStateChanged(state);
-		}
-	}
-
-	public void sendLastLocation() {
-		locationReceiver.sendLastLocation();
-	}
-
-	public void setCurrentLocation(GeoPoint currentLocation) {
-		if (locationReceiver == null)
-			return;
-
-		Location location = new Location(LocationReceiver.MOCK_PROVIDER);
-		location.setLatitude(currentLocation.getLatitude());
-		location.setLongitude(currentLocation.getLongitude());
-		location.setTime(System.currentTimeMillis());
-		location.setAccuracy(1);
-
-		if (Build.VERSION.SDK_INT >= 17) {
-			location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-		}
-
-		locationReceiver.mockLocation(location);
-	}
-
 	@Override
-	public void newLocation(Location location) {
-		Intent intent = new Intent(BC_LOCATION);
-		intent.putExtra(ARG_LOCATION, location);
-		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
-		if (state == State.CHOICE) {
-			recalculatePaths();
-		} else if (state == State.TRACKING) {
-			updateActivePath(location);
-		}
-
-		if (contentService != null) {
-			contentService.setLocation(location);
-		}
-	}
-
-	public Location getLastLocation() {
-		return locationReceiver.getOldLocation();
-	}
-
-	private void updateActivePath(Location location) {
-		Timer timer = new Timer().start();
-		trackingState.lastQueryResult = trackingState.trackingPath.query(
-				location.getLatitude(), location.getLongitude());
-		log.debug("Updating active path took {} seconds", timer.stop().getSeconds());
-		if (trackingState.lastQueryResult.remainingDist < TRACKING_FINISH_DISTANCE) {
-			targetLocation = null;
-			stopTracking();
-		} else {
-			notifyActivePathUpdated(trackingState);
-		}
-	}
-
-	private void recalculatePaths() {
-		synchronized (mutex) {
-			if (routeFuture != null) {
-				routeFuture.cancel(true);
-			}
-
-			if (targetLocation == null) {
-				log.info("Trying to recalculate paths with null target point");
-				return;
-			}
-
-			final Location currentLocation = locationReceiver.getOldLocation();
-			if (currentLocation == null) {
-				log.warn("No location");
-				return;
-			}
-
-			final GeoPoint targetPoint = this.targetLocation;
-
-			routeFuture = executor.submit(new Runnable() {
-				@Override
-				public void run() {
-					if (!routing.isReady()) {
-						return;
-					}
-
-					changeRoutingState(State.UPDATING);
-					log.info("Starting paths calculation for point " + targetPoint.toString());
-					for (RoutingType requiredRoutingType : REQUIRED_ROUTING_TYPES) {
-						ChoicePath path = routing.route(currentLocation.getLatitude(),
-								currentLocation.getLongitude(),
-								targetPoint.getLatitude(),
-								targetPoint.getLongitude(),
-								requiredRoutingType);
-
-						if (path != null) {
-							currentPathsMap.put(requiredRoutingType, path);
-						} else {
-							currentPathsMap.remove(requiredRoutingType);
-						}
-					}
-
-					// FIXME: don't notify if service already in another state
-					RoutingService.this.currentLocation = new GeoPoint(getLastLocation());
-					if (!currentPathsMap.isEmpty()) {
-						notifyPathsUpdated(targetPoint, currentPathsMap);
-						changeRoutingState(State.CHOICE);
-					} else {
-						changeRoutingState(State.IDLE);
-					}
-				}
-			});
-		}
-	}
-
-	@Blocking
-	private boolean initializeRouting(ContentItem contentItem) {
-		try {
-			String path = contentService.requestContentItem(contentItem);
-			routing.loadFromPref(this, path);
-			setObstaclesPoints();
-		} catch (Exception ex) {
-			log.error("Error initializing routing for contentItem {}", contentItem.getName(), ex);
-			return false;
-		}
-
+	public boolean onUnbind(Intent intent) {
+		handler.postDelayed(stopRunnable, 10000);
+		saveCurrentState();
 		return true;
 	}
 
-	private void setObstaclesPoints() {
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				List<Point> obstaclesPoints;
-				synchronized (serviceMutex) {
-					if (!routing.isReady() || pointsService == null) {
-						return;
-					}
-
-					// Set obstacles
-					obstaclesPoints = pointsService.queryList(pointsService.requestPoints());
-					routing.setObstacles(obstaclesPoints);
-				}
-
-				if (state == State.CHOICE || state == State.UPDATING) {
-					recalculatePaths();
-				}
-
-				// Set geofences
-				/*geofencesManager.removeGeofences(GEOFENCE_TOKEN_OBSTACLES);
-				for (Point point : obstaclesPoints) {
-					Bundle data = new Bundle(1);
-					data.putParcelable("point", point);
-
-					geofencesManager.addGeofence(GEOFENCE_TOKEN_OBSTACLES, point.getLat(), point.getLon(), PROXIMITY_RADIUS, data);
-				}*/
-			}
-		});
-	}
-
-	private void changeRoutingState(State state) {
-		if (BuildConfig.DEBUG && !this.state.checkTransition(state)) {
-			throw new IllegalStateException("Can't change state from " + this.state + " to " + state);
-		}
-
-		this.state = state;
-		notifyRoutingStateChanged(state);
-	}
-
-	private void onPointsServiceReady(PointsService pointsService) {
-		synchronized (serviceMutex) {
-			this.pointsService = pointsService;
-		}
-		pointsService.addListener(this);
-	}
-
-	private void onPointsServiceDisconnected() {
-		synchronized (serviceMutex) {
-			this.pointsService = null;
-		}
+	@Override
+	public void onRebind(Intent intent) {
+		super.onRebind(intent);
+		handler.removeCallbacks(stopRunnable);
 	}
 
 	@Override
@@ -467,6 +215,135 @@ public class RoutingService extends Service implements PointsService.Listener,
 		}
 	}
 
+	@Override
+	public void onDataUpdated() {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				setObstaclesPoints();
+			}
+		});
+	}
+
+	@Override
+	public void onDataUpdateFailed(Throwable throwable) {
+	}
+
+	public void startTracking(final RoutingType routingType) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				currentRoutingType = routingType;
+				boolean changed = changeRoutingState(State.TRACKING);
+				ensureStateValid();
+				if (changed) {
+					notifyRoutingStateChanged(State.TRACKING);
+				}
+			}
+		});
+	}
+
+	public void stopTracking() {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				isChoiceNeedsUpdate = true;
+				State newState = destinationLocation == null ? State.IDLE : State.CHOICE;
+				boolean changed = changeRoutingState(newState);
+				ensureStateValid();
+				if (changed) {
+					notifyRoutingStateChanged(newState);
+				}
+			}
+		});
+	}
+
+	public void setTargetPoint(final GeoPoint targetPoint) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				destinationLocation = targetPoint;
+				isChoiceNeedsUpdate = true;
+				boolean changed = changeRoutingState(State.CHOICE);
+				ensureStateValid();
+				if (changed) {
+					notifyRoutingStateChanged(State.CHOICE);
+				}
+			}
+		});
+	}
+
+	public void clearTargetPoint() {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				sourceLocation = null;
+				destinationLocation = null;
+				isChoiceNeedsUpdate = true;
+				boolean changed = changeRoutingState(State.IDLE);
+				ensureStateValid();
+				if (changed) {
+					notifyRoutingStateChanged(State.IDLE);
+				}
+			}
+		});
+	}
+
+	public void sendLastResult() {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				ensureStateValid();
+				notifyRoutingStateChanged(state);
+			}
+		});
+	}
+
+	public void sendLastLocation() {
+		locationReceiver.sendLastLocation();
+	}
+
+	public void forceLocation(GeoPoint currentLocation) {
+		if (locationReceiver == null)
+			return;
+
+		Location location = new Location(LocationReceiver.MOCK_PROVIDER);
+		location.setLatitude(currentLocation.getLatitude());
+		location.setLongitude(currentLocation.getLongitude());
+		location.setTime(System.currentTimeMillis());
+		location.setAccuracy(1);
+
+		if (Build.VERSION.SDK_INT >= 17) {
+			location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+		}
+
+		locationReceiver.mockLocation(location);
+	}
+
+	@Override
+	public void newLocation(final Location location) {
+		Intent intent = new Intent(BC_LOCATION);
+		intent.putExtra(ARG_LOCATION, location);
+		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
+		if (contentService != null) {
+			contentService.setLocation(location);
+		}
+
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				isChoiceNeedsUpdate = true;
+				isTrackingNeedsUpdate = true;
+				ensureStateValid();
+			}
+		});
+	}
+
+	public Location getLastLocation() {
+		return locationReceiver.getOldLocation();
+	}
+
 	public void addListener(Listener listener) {
 		listeners.add(listener);
 	}
@@ -475,13 +352,210 @@ public class RoutingService extends Service implements PointsService.Listener,
 		listeners.remove(listener);
 	}
 
-	@Override
-	public void onDataUpdated() {
-		setObstaclesPoints();
+	private void saveCurrentState() {
+		Preferences appPref = new Preferences(this);
+		appPref.setGeoPoint("source_location", sourceLocation);
+		appPref.setGeoPoint("target_location", destinationLocation);
+		appPref.setEnum("routing-service-state", state);
+		appPref.setEnum("routing-service-routing-type", currentRoutingType);
 	}
 
-	@Override
-	public void onDataUpdateFailed(Throwable throwable) {
+	private void restoreCurrentState() {
+		Preferences appPref = new Preferences(this);
+
+		sourceLocation = appPref.getGeoPoint("source_location");
+		destinationLocation = appPref.getGeoPoint("target_location");
+		state = appPref.getEnum("routing-service-state", State.class);
+		currentRoutingType = appPref.getEnum("routing-service-routing-type", RoutingType.class);
+	}
+
+	private void ensureStateValid() {
+		State oldState = state;
+
+		switch (state) {
+		case IDLE:
+			trackingState = null;
+			currentPathsMap.clear();
+			isChoiceNeedsUpdate = true;
+			isTrackingNeedsUpdate = true;
+			break;
+
+		case TRACKING:
+			if (trackingState == null) {
+				if (!initializeTrackingState()) {
+					break;
+				}
+			}
+
+			if (isTrackingNeedsUpdate) {
+				updateActivePath(locationReceiver.getOldLocation());
+			}
+
+			break;
+
+		case CHOICE:
+			trackingState = null;
+			isTrackingNeedsUpdate = true;
+
+			if (isChoiceNeedsUpdate) {
+				ensureChoiceStateValid();
+			}
+			break;
+		}
+
+		if (state != oldState) {
+			ensureStateValid();
+		}
+	}
+
+	private boolean initializeTrackingState() {
+		if (!routing.isReady()) {
+			return false;
+		}
+
+		if (sourceLocation == null || destinationLocation == null) {
+			changeRoutingState(State.IDLE);
+			return false;
+		}
+
+		ChoicePath activePath = currentPathsMap.get(currentRoutingType);
+		if (activePath == null) {
+			activePath = updateChoiceRoute(sourceLocation, destinationLocation, currentRoutingType);
+		}
+
+		if (activePath == null) {
+			changeRoutingState(State.IDLE);
+			return false;
+		}
+
+		List<Space.Point> points = new ArrayList<Space.Point>();
+
+		PointList ghPointList = activePath.getResponse().getPoints();
+		for (int i = 0; i < ghPointList.size(); i++) {
+			points.add(new Space.Point(ghPointList.getLat(i), ghPointList.getLon(i)));
+		}
+
+		trackingState = new TrackingState();
+		trackingState.initialPath = activePath;
+		trackingState.trackingPath = new TrackPath<Point>(new EarthSpace(), points);
+
+		Point[] pointsOnPath = activePath.getPoints();
+		for (Point point : pointsOnPath) {
+			trackingState.trackingPath.addPoint(point.getLat(), point.getLon(), point);
+		}
+
+		trackingState.lastQueryResult = trackingState.trackingPath.query(
+				sourceLocation.getLatitude(),
+				sourceLocation.getLongitude());
+
+		return true;
+	}
+
+	private void ensureChoiceStateValid() {
+		if (!routing.isReady()) {
+			return;
+		}
+
+		sourceLocation = new GeoPoint(locationReceiver.getOldLocation());
+
+		if (destinationLocation == null) {
+			changeRoutingState(State.IDLE);
+			return;
+		}
+
+		notifyProgressStateChanged(true);
+
+		for (final RoutingType routingType : REQUIRED_ROUTING_TYPES) {
+			updateChoiceRoute(sourceLocation, destinationLocation, routingType);
+		}
+
+		notifyProgressStateChanged(false);
+
+		isChoiceNeedsUpdate = false;
+
+		notifyPathsUpdated(destinationLocation, currentPathsMap);
+	}
+
+	@Blocking
+	private ChoicePath updateChoiceRoute(GeoPoint sourceLocation, GeoPoint targetLocation,
+								   RoutingType routingType) {
+		ChoicePath path = routing.route(sourceLocation, targetLocation, routingType);
+
+		if (path != null) {
+			currentPathsMap.put(routingType, path);
+		} else {
+			currentPathsMap.remove(routingType);
+		}
+
+		return path;
+	}
+
+	private void updateActivePath(Location location) {
+		Timer timer = new Timer().start();
+		trackingState.lastQueryResult = trackingState.trackingPath.query(
+				location.getLatitude(), location.getLongitude());
+		log.debug("Updating active path took {} seconds", timer.stop().getSeconds());
+		if (trackingState.lastQueryResult.remainingDist < TRACKING_FINISH_DISTANCE) {
+			destinationLocation = null;
+			stopTracking();
+		} else {
+			isTrackingNeedsUpdate = false;
+			notifyActivePathUpdated(trackingState);
+		}
+	}
+
+	@Blocking
+	private boolean initializeRouting(ContentItem contentItem) {
+		try {
+			String path = contentService.requestContentItem(contentItem);
+			routing.loadFromPref(this, path);
+			setObstaclesPoints();
+		} catch (Exception ex) {
+			log.error("Error initializing routing for contentItem {}", contentItem.getName(), ex);
+			return false;
+		}
+
+		return true;
+	}
+
+	private void setObstaclesPoints() {
+		List<Point> obstaclesPoints;
+		synchronized (serviceMutex) {
+			if (!routing.isReady() || pointsService == null) {
+				return;
+			}
+
+			// Set obstacles
+			obstaclesPoints = pointsService.queryList(pointsService.requestPoints());
+			routing.setObstacles(obstaclesPoints);
+		}
+
+		isTrackingNeedsUpdate = true;
+		isChoiceNeedsUpdate = true;
+		ensureStateValid();
+	}
+
+	private boolean changeRoutingState(State state) {
+		if (BuildConfig.DEBUG && !this.state.checkTransition(state)) {
+			throw new IllegalStateException("Can't change state from " + this.state + " to " + state);
+		}
+
+		boolean ret = this.state != state;
+		this.state = state;
+		return ret;
+	}
+
+	private void onPointsServiceReady(PointsService pointsService) {
+		synchronized (serviceMutex) {
+			this.pointsService = pointsService;
+		}
+		pointsService.addListener(this);
+	}
+
+	private void onPointsServiceDisconnected() {
+		synchronized (serviceMutex) {
+			this.pointsService = null;
+		}
 	}
 
 	private void notifyRoutingStateChanged(final State state) {
@@ -490,6 +564,17 @@ public class RoutingService extends Service implements PointsService.Listener,
 			public void run() {
 				for (Listener listener : listeners) {
 					listener.routingStateChanged(state);
+				}
+			}
+		});
+	}
+
+	private void notifyProgressStateChanged(final boolean isActive) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (Listener listener : listeners) {
+					listener.progressStateChanged(isActive);
 				}
 			}
 		});
@@ -511,17 +596,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 		});
 	}
 
-	private void notifyPathsCleared() {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				for (Listener listener : listeners) {
-					listener.pathsCleared();
-				}
-			}
-		});
-	}
-
 	private void notifyActivePathUpdated(final TrackingState trackingState) {
 		handler.post(new Runnable() {
 			@Override
@@ -533,33 +607,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		});
 	}
 
-	/*
-		public void setRoutingTypeActive(RoutingType activeRoutingType) {
-			this.currentRoutingType = activeRoutingType;
-			ChoicePath activePath = currentPathsMap.get(currentRoutingType);
-			updateActivePathWayInformation(activePath);
-			synchronized (mutex) {
-				notifyPathsUpdated(targetLocation, currentPathsMap);
-			}
-		}
-
-		public void updateActivePathWayInformation(ChoicePath activePath) {
-			Turn newTurn = activePath.getPointList().checkTurn();
-			if (newTurn != null) {
-				if (currentTurn == null || !currentTurn.equals(newTurn)) {
-					currentTurn = newTurn;
-					Bundle data = new Bundle(1);
-					data.putParcelable("turn", newTurn);
-					geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
-					geofencesManager.addGeofence(GEOFENCE_TOKEN_INFO,
-							newTurn.getPoint().x, newTurn.getPoint().y, PROXIMITY_RADIUS, data);
-				}
-			} else {
-				geofencesManager.removeGeofences(GEOFENCE_TOKEN_INFO);
-			}
-		}
-	*/
-	private ContentService.Listener contentListener = new ContentListenerAdapter() {
+	private final ContentService.Listener contentListener = new ContentListenerAdapter() {
 		@Override
 		public void recommendedRegionItemReady(final ContentItem contentItem) {
 			log.debug("Recommended content item received");
@@ -596,19 +644,51 @@ public class RoutingService extends Service implements PointsService.Listener,
 		}
 	};
 
-	public class Binder extends android.os.Binder {
-		public RoutingService getService() {
-			return RoutingService.this;
+	private final Runnable stopRunnable = new Runnable() {
+		@Override
+		public void run() {
+			stopSelf();
+		}
+	};
+
+	public static enum State {
+		IDLE, CHOICE, TRACKING;
+
+		private Set<State> allowedNextStates;
+
+		static {
+			IDLE.setAllowedNextStates( CHOICE);
+			CHOICE.setAllowedNextStates(IDLE, TRACKING);
+			TRACKING.setAllowedNextStates(IDLE, CHOICE);
+		}
+
+		private void setAllowedNextStates(State... nextStates) {
+			allowedNextStates = new HashSet<State>(Arrays.asList(nextStates));
+		}
+
+		private boolean checkTransition(State state) {
+			return allowedNextStates.contains(state);
 		}
 	}
 
 	public static interface Listener {
 		void routingStateChanged(State state);
+		void progressStateChanged(boolean isActive);
 
 		void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths);
-		void pathsCleared();
-
 		void activePathUpdated(TrackingState trackingState);
+	}
+
+	public static class TrackingState {
+		public ChoicePath initialPath;
+		public TrackPath<Point> trackingPath;
+		public TrackPath.Result<Point> lastQueryResult;
+	}
+
+	public class Binder extends android.os.Binder {
+		public RoutingService getService() {
+			return RoutingService.this;
+		}
 	}
 
 	private class PointsServiceConnection implements ServiceConnection {
@@ -622,33 +702,5 @@ public class RoutingService extends Service implements PointsService.Listener,
 		public void onServiceDisconnected(ComponentName name) {
 			onPointsServiceDisconnected();
 		}
-	}
-
-	public static enum State {
-		IDLE, UPDATING, CHOICE, TRACKING;
-
-		private Set<State> allowedNextStates;
-
-		static {
-			IDLE.setAllowedNextStates(UPDATING, CHOICE);
-			UPDATING.setAllowedNextStates(CHOICE);
-			CHOICE.setAllowedNextStates(UPDATING, IDLE, TRACKING);
-			TRACKING.setAllowedNextStates(IDLE, UPDATING, CHOICE);
-		}
-
-		private void setAllowedNextStates(State... nextStates) {
-			allowedNextStates = new HashSet<State>(Arrays.asList(nextStates));
-		}
-
-		private boolean checkTransition(State state) {
-			return allowedNextStates.contains(state);
-		}
-	}
-
-
-	public static class TrackingState {
-		public ChoicePath initialPath;
-		public TrackPath<Point> trackingPath;
-		public TrackPath.Result<Point> lastQueryResult;
 	}
 }

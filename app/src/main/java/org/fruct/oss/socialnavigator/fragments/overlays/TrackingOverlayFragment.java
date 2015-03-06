@@ -178,11 +178,12 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	@Override
-	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
+	public void progressStateChanged(boolean isActive) {
+
 	}
 
 	@Override
-	public void pathsCleared() {
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
 	}
 
 	@Override

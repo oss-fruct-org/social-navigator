@@ -14,6 +14,7 @@ import com.graphhopper.util.PointList;
 import org.fruct.oss.ghpriority.FootPriorityFlagEncoder;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.jetbrains.annotations.Nullable;
+import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +75,7 @@ public class Routing {
 	}
 
 	@Nullable
-	public synchronized ChoicePath route(double fromLat, double fromLon, double toLat, double toLon, RoutingType routingType) {
+	public synchronized ChoicePath route(GeoPoint from, GeoPoint to, RoutingType routingType) {
 		if (gh == null) {
 			log.warn("Routing with null graphhopper");
 			return null;
@@ -82,7 +83,8 @@ public class Routing {
 
 		gh.setObstaclesIndex(obstaclesIndex);
 
-		GHRequest request = new GHRequest(fromLat, fromLon, toLat, toLon);
+		GHRequest request = new GHRequest(from.getLatitude(), from.getLongitude(),
+				to.getLatitude(), to.getLongitude());
 		request.setVehicle(routingType.getVehicle());
 		request.setWeighting(routingType.getWeighting());
 
@@ -116,7 +118,8 @@ public class Routing {
 			log.info("{} obstacles on path found", pointsOnPath.size());
 
 			return new ChoicePath(response, routingType,
-					pointsOnPath.toArray(new Point[pointsOnPath.size()]));
+					pointsOnPath.toArray(new Point[pointsOnPath.size()]),
+					from, to);
 		} catch (Exception ex) {
 			log.error("Routing error for routing type: {}", routingType, ex);
 			return null;

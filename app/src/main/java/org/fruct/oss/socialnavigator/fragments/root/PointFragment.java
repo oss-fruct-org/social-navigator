@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ListFragment;
@@ -199,8 +200,11 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	@Override
 	public void onRefresh() {
 		if (checkServices()) {
-			pointsService.refresh(new GeoPoint(routingService.getLastLocation()));
-			refreshLayout.setRefreshing(true);
+			Location lastLocation = routingService.getLastLocation();
+			if (lastLocation != null) {
+				pointsService.refresh(new GeoPoint(lastLocation));
+				refreshLayout.setRefreshing(true);
+			}
 		}
 	}
 

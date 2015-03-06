@@ -11,7 +11,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.PopupMenu;
@@ -33,8 +32,6 @@ import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.Overlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.crypto.spec.RC2ParameterSpec;
 
 public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, CreatePointDialog.Listener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
@@ -133,7 +130,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 	private void place() {
 		if (routingService != null) {
-			routingService.setCurrentLocation(selectedPoint);
+			routingService.forceLocation(selectedPoint);
 		}
 	}
 

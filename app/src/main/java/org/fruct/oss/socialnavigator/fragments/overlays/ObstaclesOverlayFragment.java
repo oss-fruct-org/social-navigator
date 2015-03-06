@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 
@@ -16,9 +17,6 @@ import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.settings.Preferences;
-import org.fruct.oss.socialnavigator.utils.Space;
-import org.fruct.oss.socialnavigator.utils.TrackPath;
-import org.fruct.oss.socialnavigator.utils.Turn;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -37,6 +35,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	public static final int POINT_UPDATE_INTERVAL = 60 * 3600;
 	public static final int POINT_UPDATE_DISTANCE = 1000;
+	public static final String PREF_LAST_UPDATE = "last_update";
 
 	private RoutingServiceConnection routingServiceConnection;
 	private PointsServiceConnection pointsServiceConnection;
@@ -46,8 +45,10 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	private PointsService pointsService;
 	private ItemizedIconOverlay<Obstacle> overlay;
 	private MapView mapView;
-	private Map<RoutingType, ChoicePath> paths;
 	private Preferences appPreferences;
+
+	private Map<RoutingType, ChoicePath> paths;
+	private RoutingService.TrackingState trackingState;
 
 	@Override
 	public void onCreate(Bundle in) {
@@ -109,6 +110,10 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	private void onRoutingServiceConnected(RoutingService service) {
 		routingService = service;
 		routingService.addListener(this);
+
+		if (pointsService != null) {
+			autoUpdatePoints();
+		}
 	}
 
 	private void onRoutingServiceDisconnected() {
@@ -119,7 +124,9 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		pointsService = service;
 		pointsService.addListener(this);
 
-		autoUpdatePoints();
+		if (routingService != null) {
+			autoUpdatePoints();
+		}
 	}
 
 	private void onPointsServiceDisconnected() {
@@ -128,35 +135,37 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	@Override
 	public void routingStateChanged(RoutingService.State state) {
+		if (state == RoutingService.State.IDLE) {
+			overlay.removeAllItems();
+		}
+	}
 
+	@Override
+	public void progressStateChanged(boolean isActive) {
 	}
 
 	@Override
 	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
 		this.paths = paths;
-		updateOverlay();
-	}
-
-	@Override
-	public void pathsCleared() {
-		overlay.removeAllItems();
+		RoutingType activeRoutingType = appPreferences.getActiveRoutingType();
+		ChoicePath activePath = paths.get(activeRoutingType);
+		updateOverlay(activePath);
 	}
 
 	@Override
 	public void activePathUpdated(RoutingService.TrackingState trackingState) {
-
+		this.trackingState = trackingState;
+		updateOverlay(trackingState.initialPath);
 	}
 
 	@Override
 	public void onDataUpdated() {
 		long currentTime = System.currentTimeMillis();
 		appPreferences.setLastPointsUpdateTimestamp(currentTime);
-		appPreferences.setLastPointsUpdateLocation(new GeoPoint(routingService.getLastLocation()));
+		appPreferences.setGeoPoint(PREF_LAST_UPDATE, new GeoPoint(routingService.getLastLocation()));
 	}
 
-	private void updateOverlay() {
-		RoutingType activeRoutingType = appPreferences.getActiveRoutingType();
-		ChoicePath activePath = paths.get(activeRoutingType);
+	private void updateOverlay(ChoicePath activePath) {
 		if (activePath == null) {
 			return;
 		}
@@ -177,8 +186,14 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		long lastUpdateTime = appPreferences.getLastPointsUpdateTimestamp();
 		long currentTime = System.currentTimeMillis();
 
-		GeoPoint currentLocation = new GeoPoint(routingService.getLastLocation());
-		GeoPoint lastLocation = appPreferences.getLastPointsUpdateLocation();
+		Location lastLocation1 = routingService.getLastLocation();
+		if (lastLocation1 == null) {
+			return false;
+		}
+
+		GeoPoint currentLocation = new GeoPoint(lastLocation1);
+		GeoPoint lastLocation = appPreferences.getGeoPoint("last_update");
+
 
 		if (lastUpdateTime < 0 || currentTime - lastUpdateTime > POINT_UPDATE_INTERVAL
 				|| lastLocation == null || currentLocation.distanceTo(lastLocation) > POINT_UPDATE_DISTANCE) {
@@ -196,7 +211,9 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 		if (key.equals(Preferences.PREF_ACTIVE_ROUTING_TYPE)) {
-			updateOverlay();
+			RoutingType activeRoutingType = appPreferences.getActiveRoutingType();
+			ChoicePath activePath = paths.get(activeRoutingType);
+			updateOverlay(activePath);
 		}
 	}
 

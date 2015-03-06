@@ -18,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -49,7 +48,6 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SimpleTimeZone;
 
 public class RouteOverlayFragment extends OverlayFragment implements RoutingService.Listener, RecyclerItemClickListener.OnItemClickListener {
 	private static final Logger log = LoggerFactory.getLogger(RouteOverlayFragment.class);
@@ -352,18 +350,16 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	@Override
 	public void routingStateChanged(RoutingService.State state) {
 		switch (state) {
-		case UPDATING:
-			showPanel();
-			setPanelUpdatingState(true);
-			break;
 		case CHOICE:
 			showPanel();
-			setPanelUpdatingState(false);
 			break;
+
 		case IDLE:
 			hidePanel();
 			setPanelUpdatingState(false);
+			pathsCleared();
 			break;
+
 		case TRACKING:
 			pathsCleared();
 			break;
@@ -371,6 +367,15 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		default:
 			hidePanel();
 		}
+	}
+
+	@Override
+	public void progressStateChanged(boolean isActive) {
+		if (isActive) {
+			showPanel();
+		}
+
+		setPanelUpdatingState(isActive);
 	}
 
 	private void setPanelUpdatingState(boolean isUpdating) {
@@ -400,8 +405,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		updateOverlays();
 	}
 
-	@Override
-	public void pathsCleared() {
+	private void pathsCleared() {
 		mapView.getOverlayManager().removeAll(pathOverlays);
 		mapView.getOverlayManager().remove(targetPointOverlay);
 
