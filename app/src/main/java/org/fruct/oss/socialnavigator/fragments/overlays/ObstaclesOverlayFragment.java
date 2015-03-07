@@ -9,6 +9,10 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Point;
@@ -57,6 +61,8 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 		appPreferences = new Preferences(getActivity());
 		appPreferences.getPref().registerOnSharedPreferenceChangeListener(this);
+
+		setHasOptionsMenu(true);
 	}
 
 	@Override
@@ -94,6 +100,28 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
 
 		this.mapView = mapView;
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+
+		inflater.inflate(R.menu.refresh, menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.action_refresh) {
+			Toast.makeText(getActivity(), R.string.str_refreshing_obstacles, Toast.LENGTH_SHORT).show();
+			if (routingService != null && pointsService != null) {
+				Location lastLocation = routingService.getLastLocation();
+				if (lastLocation != null) {
+					pointsService.refresh(new GeoPoint(lastLocation));
+				}
+			}
+		}
+
+		return super.onOptionsItemSelected(item);
 	}
 
 	@Override
@@ -163,6 +191,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		long currentTime = System.currentTimeMillis();
 		appPreferences.setLastPointsUpdateTimestamp(currentTime);
 		appPreferences.setGeoPoint(PREF_LAST_UPDATE, new GeoPoint(routingService.getLastLocation()));
+		Toast.makeText(getActivity(), R.string.str_data_refresh_complete, Toast.LENGTH_SHORT).show();
 	}
 
 	private void updateOverlay(ChoicePath activePath) {
@@ -206,6 +235,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	@Override
 	public void onDataUpdateFailed(Throwable throwable) {
+		Toast.makeText(getActivity(), R.string.str_data_refresh_failed, Toast.LENGTH_SHORT).show();
 	}
 
 	@Override

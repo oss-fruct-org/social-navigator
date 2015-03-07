@@ -5,5 +5,5 @@
     <item android:id="@+id/action_position"
           android:title="@string/action_position"
           android:icon="@drawable/ic_action_location_found"
-          app:showAsAction="ifRoom" />
+          app:showAsAction="always" />
 </menu>

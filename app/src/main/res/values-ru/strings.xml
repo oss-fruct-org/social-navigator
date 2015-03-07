@@ -71,6 +71,7 @@
     </plurals>
     <string name="action_open_categories">Показать категории</string>
     <string name="action_open_map">Показать карту</string>
+    <string name="str_refreshing_obstacles">Обновление препятствий</string>
 
 
 </resources>
