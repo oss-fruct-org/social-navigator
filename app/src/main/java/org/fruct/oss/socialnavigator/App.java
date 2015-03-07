@@ -27,6 +27,9 @@ public class App extends Application {
 		super.onCreate();
 		StaticLoggerBinder.getSingleton();
 
+		context = getApplicationContext();
+		app = this;
+
 		File baseCacheDir = new File("/sdcard/debug/sn-cache");
 		if (!BuildConfig.DEBUG) {
 			baseCacheDir = new File(context.getCacheDir(), "base");
@@ -35,8 +38,6 @@ public class App extends Application {
 		File httpCacheDir = new File(baseCacheDir, "http");
 		File imageCacheDir = new File(baseCacheDir, "image");
 
-		context = getApplicationContext();
-		app = this;
 		imageLoader = setupImageLoader(imageCacheDir);
 
 		try {

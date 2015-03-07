@@ -13,13 +13,13 @@ android {
         applicationId "org.fruct.oss.socialnavigator"
         minSdkVersion 10
         targetSdkVersion 21
-        versionCode 5
-        versionName "0.0.4.1"
+        versionCode 6
+        versionName "0.0.5"
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
