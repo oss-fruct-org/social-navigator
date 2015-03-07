@@ -14,6 +14,8 @@ import org.slf4j.impl.StaticLoggerBinder;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class App extends Application {
 	private static Context context;
