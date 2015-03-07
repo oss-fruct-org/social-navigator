@@ -14,6 +14,7 @@ public class RootContentFragment extends ContentFragment {
 	}
 
 	public static final String[] REMOTE_CONTENT_URLS = {
+			"http://kappa.cs.petrsu.ru/~ivashov/mordor.xml",
 			"http://oss.fruct.org/projects/roadsigns/root.xml"};
 
 	public RootContentFragment() {
@@ -29,6 +30,6 @@ public class RootContentFragment extends ContentFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setRootUrls(new String[] { "http://kappa.cs.petrsu.ru/~ivashov/mordor.xml" });
+		setRootUrls(REMOTE_CONTENT_URLS);
 	}
 }
