@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.fruct.oss.socialnavigator"
-    android:installLocation="auto">
+    android:installLocation="auto" >
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -11,13 +11,13 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
-        android:name="org.fruct.oss.socialnavigator.App"
+        android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="org.fruct.oss.socialnavigator.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTop" >
             <intent-filter>
@@ -28,20 +28,28 @@
         </activity>
 
         <service
-            android:name="org.fruct.oss.socialnavigator.points.PointsService"
+            android:name=".points.PointsService"
             android:enabled="true"
             android:exported="false" >
         </service>
         <service
-            android:name="org.fruct.oss.socialnavigator.routing.RoutingService"
+            android:name=".routing.RoutingService"
             android:enabled="true"
             android:exported="false" >
         </service>
 
         <activity
-            android:name="org.fruct.oss.socialnavigator.settings.SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:label="@string/title_section4"
-            android:parentActivityName="org.fruct.oss.socialnavigator.MainActivity" >
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.fruct.oss.socialnavigator.MainActivity" />
+        </activity>
+        <activity
+            android:name=".GetsLoginActivity"
+            android:label="@string/title_activity_gets_login"
+            android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.fruct.oss.socialnavigator.MainActivity" />

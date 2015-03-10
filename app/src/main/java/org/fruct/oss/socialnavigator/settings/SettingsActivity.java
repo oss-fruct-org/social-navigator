@@ -1,7 +1,9 @@
 package org.fruct.oss.socialnavigator.settings;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.ListPreference;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
@@ -9,15 +11,20 @@ import android.os.Bundle;
 import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnection;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionListener;
+import org.fruct.oss.socialnavigator.GetsLoginActivity;
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.points.GetsProvider;
 import org.fruct.oss.socialnavigator.utils.Utils;
 
 public class SettingsActivity extends PreferenceActivity implements ContentServiceConnectionListener {
+	private static final int REQUEST_CODE = 2;
+
 	private ListPreference storagePathPref;
 	private SharedPreferences pref;
 
 	private ContentServiceConnection contentServiceConnection = new ContentServiceConnection(this);
 	private ContentService contentService;
+	private Preference getsPref;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +35,10 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
 
 		storagePathPref = (ListPreference) findPreference(org.fruct.oss.mapcontent.content.Settings.PREF_STORAGE_PATH);
+		getsPref = (Preference) findPreference(Preferences.PREF_GETS_TOKEN);
+
+		setupGetsPreference();
+
 		contentServiceConnection.bindService(this);
 	}
 
@@ -40,7 +51,33 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 	@Override
 	protected void onStart() {
 		super.onStart();
+		setupGetsPreference();
+	}
 
+	private void setupGetsPreference() {
+		String token = pref.getString(Preferences.PREF_GETS_TOKEN, null);
+
+		final boolean isLogIn = !Utils.isNullOrEmpty(token);
+
+		if (isLogIn) {
+			getsPref.setSummary("Click to logout");
+		} else {
+			getsPref.setSummary("Click to login");
+		}
+
+		getsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				if (isLogIn) {
+					pref.edit().remove(Preferences.PREF_GETS_TOKEN).apply();
+					setupGetsPreference();
+				} else {
+					Intent intent = new Intent(SettingsActivity.this, GetsLoginActivity.class);
+					startActivity(intent);
+				}
+				return true;
+			}
+		});
 	}
 
 	private void setupStoragePathPreference() {
