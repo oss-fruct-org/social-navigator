@@ -68,9 +68,12 @@ public class Routing {
 	public synchronized void close() {
 		if (gh != null) {
 			isReady = false;
-			obstaclesIndex.clear();
 			gh.close();
 			gh = null;
+		}
+
+		if (obstaclesIndex != null) {
+			obstaclesIndex.clear();
 		}
 	}
 
