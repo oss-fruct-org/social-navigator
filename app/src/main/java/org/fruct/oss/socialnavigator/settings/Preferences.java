@@ -13,6 +13,7 @@ import org.osmdroid.util.GeoPoint;
 public class Preferences {
 	public static final String PREF_ACTIVE_ROUTING_TYPE = "pref-active-routing-type";
 	public static final String PREF_LAST_POINTS_UPDATE_TIMESTAMP = "pref-last-points-update-timestamp";
+	public static final String PREF_GETS_TOKEN = "pref-gets-token";
 
 	private SharedPreferences pref;
 
@@ -47,6 +48,15 @@ public class Preferences {
 
 	public long getLastPointsUpdateTimestamp() {
 		return pref.getLong(PREF_LAST_POINTS_UPDATE_TIMESTAMP, -1);
+	}
+
+	@Nullable
+	public String getGetsToken() {
+		return pref.getString(PREF_GETS_TOKEN, null);
+	}
+
+	public void setGetsToken(@Nullable String token) {
+		pref.edit().putString(PREF_GETS_TOKEN, token).apply();
 	}
 
 	public void setGeoPoint(String suffix, @Nullable GeoPoint geoPoint) {

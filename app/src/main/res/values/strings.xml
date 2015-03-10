@@ -66,4 +66,5 @@
         <item quantity="many">%d obstacles</item>
         <item quantity="other">Obstacles: %d</item>
     </plurals>
+    <string name="title_activity_gets_login">GetsLoginActivity</string>
 </resources>

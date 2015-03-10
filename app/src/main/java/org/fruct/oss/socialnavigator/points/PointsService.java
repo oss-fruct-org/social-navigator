@@ -10,6 +10,7 @@ import android.os.Looper;
 
 import org.fruct.oss.socialnavigator.BuildConfig;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
+import org.fruct.oss.socialnavigator.gets.DisabilitiesTask;
 import org.fruct.oss.socialnavigator.utils.Function;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
@@ -269,38 +270,9 @@ public class PointsService extends Service {
 				continue;
 			}
 
-			// Check points
-			/*if (BuildConfig.DEBUG) {
-				for (Point point : points) {
-					log.trace(" Point received: {}", point.getName());
-
-					if (point.getCategoryId() != category.getId()) {
-						log.error(" Point's category doesn't equals category it loaded from: '{}' != '{}'",
-								point.getCategoryId(), category.getId());
-					}
-				}
-			}*/
-
 			log.debug("Inserting points to database");
 			database.insertPoints(points);
 			log.debug("Points inserted to database");
-		}
-	}
-
-	public void awaitBackgroundTasks() {
-		final CountDownLatch latch = new CountDownLatch(1);
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				latch.countDown();
-			}
-		});
-
-		try {
-			if (!latch.await(100, TimeUnit.MILLISECONDS)) {
-				throw new RuntimeException("Too long wait");
-			}
-		} catch (InterruptedException ignore) {
 		}
 	}
 
