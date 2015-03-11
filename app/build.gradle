@@ -1,7 +1,6 @@
 apply plugin: 'com.android.application'
 
 ext {
-    debugProguard = true
     debugCoverage = false
 }
 
@@ -23,11 +22,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
-        if (debugProguard) {
-            debug {
-                minifyEnabled true
-                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            }
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        nogoogle.initWith(buildTypes.debug)
+        nogoogle {
+            minifyEnabled false
         }
     }
 
@@ -37,25 +39,6 @@ android {
         // but continue the build even when errors are found:
         abortOnError false
     }
-
-    /*if (debugCoverage) {
-        buildTypes {
-            debug {
-                debug {
-                    testCoverageEnabled = true
-                }
-            }
-        }
-
-        jacoco {
-            version = '0.7.2.201409121644'
-        }
-
-        compileOptions {
-            sourceCompatibility JavaVersion.VERSION_1_5
-            targetCompatibility JavaVersion.VERSION_1_5
-        }
-    }*/
 }
 
 dependencies {
@@ -74,6 +57,9 @@ dependencies {
     compile 'org.jetbrains:annotations:13.0'
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
 
-    compile 'com.google.android.gms:play-services-identity:6.5.87'
-    compile "com.google.android.gms:play-services-plus:6.5.87"
+    debugCompile 'com.google.android.gms:play-services-identity:6.5.87'
+    debugCompile "com.google.android.gms:play-services-plus:6.5.87"
+
+    releaseCompile 'com.google.android.gms:play-services-identity:6.5.87'
+    releaseCompile "com.google.android.gms:play-services-plus:6.5.87"
 }

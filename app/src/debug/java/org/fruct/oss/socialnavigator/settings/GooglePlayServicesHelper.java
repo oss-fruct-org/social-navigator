@@ -1,6 +1,7 @@
-package org.fruct.oss.socialnavigator.utils;
+package org.fruct.oss.socialnavigator.settings;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.AsyncTask;
@@ -11,25 +12,22 @@ import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 
-import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.parsers.AuthParameters;
 import org.fruct.oss.socialnavigator.parsers.GetsException;
 import org.fruct.oss.socialnavigator.parsers.GetsResponse;
-import org.fruct.oss.socialnavigator.parsers.Kml;
 import org.fruct.oss.socialnavigator.parsers.TokenContent;
 import org.fruct.oss.socialnavigator.points.GetsProvider;
-import org.fruct.oss.socialnavigator.points.Point;
-import org.fruct.oss.socialnavigator.points.PointsException;
+import org.fruct.oss.socialnavigator.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.List;
 
 public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 	private static final Logger log = LoggerFactory.getLogger(GooglePlayServicesHelper.class);
@@ -57,6 +55,10 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 
 	public void setListener(Listener listener) {
 		this.listener = listener;
+	}
+
+	public static boolean isAvailable(Context context) {
+		return GooglePlayServicesUtil.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS;
 	}
 
 	@Override

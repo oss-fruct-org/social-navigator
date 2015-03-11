@@ -12,16 +12,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-
 import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnection;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionListener;
 import org.fruct.oss.socialnavigator.GetsLoginActivity;
 import org.fruct.oss.socialnavigator.R;
-import org.fruct.oss.socialnavigator.points.GetsProvider;
-import org.fruct.oss.socialnavigator.utils.GooglePlayServicesHelper;
 import org.fruct.oss.socialnavigator.utils.Utils;
 
 public class SettingsActivity extends PreferenceActivity implements ContentServiceConnectionListener, GooglePlayServicesHelper.Listener {
@@ -106,7 +101,7 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 	}
 
 	private void startLogin() {
-		if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
+		if (!GooglePlayServicesHelper.isAvailable(this)) {
 			Intent intent = new Intent(SettingsActivity.this, GetsLoginActivity.class);
 			startActivity(intent);
 		} else {
