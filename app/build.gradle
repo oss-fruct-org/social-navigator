@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 ext {
-    debugProguard = false
+    debugProguard = true
     debugCoverage = false
 }
 
@@ -60,22 +60,20 @@ android {
 
 dependencies {
     //compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile('com.graphhopper:graphhopper:0.4.0') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    }
+    compile project(':mapcontent')
+    compile project(':graphhopper-priority')
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile 'com.android.support:recyclerview-v7:21.0.3'
     compile 'com.android.support:support-v4:21.0.3'
-
     compile 'org.slf4j:slf4j-api:1.7.7'
-
     compile 'org.osmdroid:osmdroid-android:4.2'
     compile 'org.mapsforge:mapsforge-map-android:0.5.0'
-    compile ('com.graphhopper:graphhopper:0.4.0') {
-        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-    }
-
     compile 'org.jetbrains:annotations:13.0'
-
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
 
-    compile project(':mapcontent')
-    compile project(':graphhopper-priority')
+    compile 'com.google.android.gms:play-services-identity:6.5.87'
+    compile "com.google.android.gms:play-services-plus:6.5.87"
 }

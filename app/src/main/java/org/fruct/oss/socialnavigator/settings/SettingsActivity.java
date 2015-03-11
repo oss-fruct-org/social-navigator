@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator.settings;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.ListPreference;
@@ -7,6 +8,12 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnection;
@@ -14,9 +21,10 @@ import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionList
 import org.fruct.oss.socialnavigator.GetsLoginActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.GetsProvider;
+import org.fruct.oss.socialnavigator.utils.GooglePlayServicesHelper;
 import org.fruct.oss.socialnavigator.utils.Utils;
 
-public class SettingsActivity extends PreferenceActivity implements ContentServiceConnectionListener {
+public class SettingsActivity extends PreferenceActivity implements ContentServiceConnectionListener, GooglePlayServicesHelper.Listener {
 	private static final int REQUEST_CODE = 2;
 
 	private ListPreference storagePathPref;
@@ -25,6 +33,7 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 	private ContentServiceConnection contentServiceConnection = new ContentServiceConnection(this);
 	private ContentService contentService;
 	private Preference getsPref;
+	private GooglePlayServicesHelper googlePlayServicesHelper;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +54,12 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 	@Override
 	protected void onDestroy() {
 		contentServiceConnection.unbindService(this);
+
+		if (googlePlayServicesHelper != null) {
+			googlePlayServicesHelper.setListener(null);
+			googlePlayServicesHelper.interrupt();
+		}
+
 		super.onDestroy();
 	}
 
@@ -52,6 +67,17 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 	protected void onStart() {
 		super.onStart();
 		setupGetsPreference();
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if ((requestCode == GooglePlayServicesHelper.RC_SIGN_IN
+				|| requestCode == GooglePlayServicesHelper.RC_GET_CODE)
+				&& googlePlayServicesHelper != null) {
+			googlePlayServicesHelper.onActivityResult(requestCode, resultCode, data);
+		} else {
+			super.onActivityResult(requestCode, resultCode, data);
+		}
 	}
 
 	private void setupGetsPreference() {
@@ -72,12 +98,68 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 					pref.edit().remove(Preferences.PREF_GETS_TOKEN).apply();
 					setupGetsPreference();
 				} else {
-					Intent intent = new Intent(SettingsActivity.this, GetsLoginActivity.class);
-					startActivity(intent);
+					startLogin();
 				}
 				return true;
 			}
 		});
+	}
+
+	private void startLogin() {
+		if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
+			Intent intent = new Intent(SettingsActivity.this, GetsLoginActivity.class);
+			startActivity(intent);
+		} else {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+			View view = getLayoutInflater().inflate(R.layout.dialog_login_method, null);
+
+			Button browserButton = (Button) view.findViewById(R.id.button_login_web_browser);
+			Button googleButton = (Button) view.findViewById(R.id.button_login_google);
+
+			builder.setView(view);
+			builder.setTitle(R.string.str_login_how);
+
+			final AlertDialog dialog = builder.show();
+
+			browserButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Intent intent = new Intent(SettingsActivity.this, GetsLoginActivity.class);
+					startActivity(intent);
+					dialog.dismiss();
+				}
+			});
+
+			googleButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					startGoogleLogin();
+					dialog.dismiss();
+				}
+			});
+		}
+	}
+
+	private void startGoogleLogin() {
+		googlePlayServicesHelper = new GooglePlayServicesHelper(this);
+		googlePlayServicesHelper.setListener(this);
+		googlePlayServicesHelper.login();
+	}
+
+	@Override
+	public void onGoogleAuthFailed() {
+		Toast.makeText(this, R.string.str_google_login_error, Toast.LENGTH_LONG).show();
+		googlePlayServicesHelper.setListener(null);
+		googlePlayServicesHelper.interrupt();
+	}
+
+	@Override
+	public void onGoogleAuthCompleted(String getsToken) {
+		Toast.makeText(this, R.string.str_google_login_success, Toast.LENGTH_LONG).show();
+		Preferences appPref = new Preferences(this);
+		appPref.setGetsToken(getsToken);
+		setupGetsPreference();
 	}
 
 	private void setupStoragePathPreference() {

@@ -26,7 +26,7 @@ public class GetsProvider implements PointsProvider {
 			GETS_SERVER = "http://gets.cs.petrsu.ru/obstacle/service";
 			DISABILITIES_LIST = "http://gets.cs.petrsu.ru/obstacle/config/disabilities.xml";
 		} else {
-			GETS_SERVER = "http://gets.cs.petrsu.ru/obstacle/service";
+			GETS_SERVER = "http://getsi.ddns.net/getslocal";
 			DISABILITIES_LIST = "http://gets.cs.petrsu.ru/obstacle/config/disabilities.xml";
 		}
 	}

@@ -3,7 +3,6 @@ package org.fruct.oss.socialnavigator.parsers;
 import android.util.Xml;
 
 import org.fruct.oss.mapcontent.content.utils.XmlUtil;
-import org.fruct.oss.socialnavigator.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParser;
@@ -62,6 +61,13 @@ public class GetsResponse {
 			@Override
 			public IContent parse(XmlPullParser parser) throws IOException, XmlPullParserException {
 				return CategoriesContent.parse(parser);
+			}
+		});
+
+		contentParsers.put(AuthParameters.class, new ContentParser() {
+			@Override
+			public IContent parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+				return AuthParameters.parse(parser);
 			}
 		});
 	}

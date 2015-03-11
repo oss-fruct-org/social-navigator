@@ -173,11 +173,14 @@ public class GetsLoginActivity extends ActionBarActivity {
 
 				if (token == null) {
 					Toast.makeText(GetsLoginActivity.this,
-							R.string.str_data_refresh_failed,
+							R.string.str_google_login_error,
 							Toast.LENGTH_LONG).show();
 				} else {
 					Preferences appPref = new Preferences(GetsLoginActivity.this);
 					appPref.setGetsToken(token);
+					Toast.makeText(GetsLoginActivity.this,
+							R.string.str_google_login_success,
+							Toast.LENGTH_LONG).show();
 					finish();
 				}
 			}
