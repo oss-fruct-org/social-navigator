@@ -11,17 +11,25 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.view.ActionMode;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.PopupMenu;
-import android.view.Menu;
-import android.view.MenuInflater;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.dialogs.CreatePointDialog;
+import org.fruct.oss.socialnavigator.points.Category;
+import org.fruct.oss.socialnavigator.points.PointsProvider;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.utils.Utils;
@@ -33,7 +41,9 @@ import org.osmdroid.views.overlay.Overlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, CreatePointDialog.Listener {
+import java.util.List;
+
+public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
 
 	private PlaceOverlay placeOverlay;
@@ -47,13 +57,65 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	private RoutingConnection routingServiceConnection;
 	private RoutingService routingService;
 
-	@Override
-	public void onCreate(Bundle in) {
-		super.onCreate(in);
+	private EditText titleEdit;
+	private View view;
 
-		CreatePointDialog createPointDialog = (CreatePointDialog) getFragmentManager().findFragmentByTag("create-point-dialog");
-		if (createPointDialog != null) {
-			createPointDialog.setListener(this);
+	private List<Category> categories;
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+		view = inflater.inflate(R.layout.fragment_overlay_create_point, container, false);
+
+		titleEdit = (EditText) view.findViewById(R.id.text_title);
+
+		final Spinner difficultySpinner = (Spinner) view.findViewById(R.id.spinner_difficulty);
+		difficultySpinner.setAdapter(createDifficultySpinnerAdapter());
+
+		final Spinner categoriesSpinner = (Spinner) view.findViewById(R.id.spinner_category);
+
+		ImageButton acceptButton = (ImageButton) view.findViewById(R.id.create_button_accept);
+		ImageButton closeButton = (ImageButton) view.findViewById(R.id.create_button_close);
+
+		acceptButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String title = titleEdit.getText().toString();
+				int difficulty = Integer.parseInt(((String) difficultySpinner.getSelectedItem()));
+				Category category = categories.get(categoriesSpinner.getSelectedItemPosition());
+
+				createPoint(title, difficulty, selectedPoint, category);
+
+				mapView.getOverlayManager().remove(placeOverlay);
+				selectedPoint = null;
+				hidePanel();
+				mapView.invalidate();
+			}
+		});
+
+		closeButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mapView.getOverlayManager().remove(placeOverlay);
+				selectedPoint = null;
+				hidePanel();
+				mapView.invalidate();
+			}
+		});
+
+		return view;
+	}
+
+	private void createPoint(String title, int difficulty, GeoPoint geoPoint, Category category) {
+		log.info("Creating point {} with difficulty {} category {}", title, difficulty, category.getName());
+
+		org.fruct.oss.socialnavigator.points.Point point
+				= new org.fruct.oss.socialnavigator.points.Point(title, "User created point", "http://example.com",
+				geoPoint.getLatitude(), geoPoint.getLongitude(),
+				category,org.fruct.oss.socialnavigator.points. Point.LOCAL_PROVIDER,
+				"point-" + geoPoint.toString(), difficulty);
+
+		if (pointsService != null) {
+			pointsService.addPoint(point);
 		}
 	}
 
@@ -87,9 +149,18 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 				routingServiceConnection = new RoutingConnection(), Context.BIND_AUTO_CREATE);
 	}
 
-
 	private void onPointsServiceConnected(PointsService service) {
 		pointsService = service;
+
+		Spinner categorySpinner = (Spinner) view.findViewById(R.id.spinner_category);
+
+		ArrayAdapter<String> categorySpinnerAdapter = createCategorySpinnerAdapter();
+		categorySpinner.setAdapter(categorySpinnerAdapter);
+
+		categories = pointsService.queryList(pointsService.requestCategories());
+		for (Category category : categories) {
+			categorySpinnerAdapter.add(category.getDescription());
+		}
 	}
 
 	private void onPointsServiceDisconnected() {
@@ -135,9 +206,11 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	}
 
 	private void createPoint() {
-		((ActionBarActivity) getActivity()).startSupportActionMode(new CreatePointActionMode());
+		/*((ActionBarActivity) getActivity()).startSupportActionMode(new CreatePointActionMode());*/
+
 		mapView.getOverlayManager().add(placeOverlay = new PlaceOverlay(getActivity(), selectedPoint));
 		mapView.invalidate();
+		showPanel();
 	}
 
 	@Override
@@ -162,49 +235,57 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		return true;
 	}
 
-	@Override
-	public void pointCreated(org.fruct.oss.socialnavigator.points.Point point) {
-		if (pointsService != null) {
-			pointsService.addPoint(point);
+	private void showPanel() {
+		if (view.getVisibility() != View.GONE)
+			return;
+
+		Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_up);
+
+		if (view != null) {
+			view.startAnimation(anim);
+			view.setVisibility(View.VISIBLE);
 		}
 	}
 
-	private class CreatePointActionMode implements ActionMode.Callback {
-		private boolean isCancelled = false;
+	private void hidePanel() {
+		if (view.getVisibility() == View.GONE)
+			return;
 
-		@Override
-		public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-			MenuInflater inflater = actionMode.getMenuInflater();
-			inflater.inflate(R.menu.action_mode_create_point, menu);
-			actionMode.setTitle(R.string.str_point_action_mode);
-			return true;
-		}
-
-		@Override
-		public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
-			return true;
-		}
-
-		@Override
-		public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-			if (menuItem.getItemId() == R.id.action_cancel) {
-				isCancelled = true;
+		Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_down);
+		anim.setAnimationListener(new Animation.AnimationListener() {
+			@Override
+			public void onAnimationStart(Animation animation) {
 			}
-			actionMode.finish();
-			return false;
-		}
 
-		@Override
-		public void onDestroyActionMode(ActionMode actionMode) {
-			mapView.getOverlayManager().remove(placeOverlay);
-
-			if (!isCancelled) {
-				selectedPoint = placeOverlay.geoPoint;
-				CreatePointDialog dialog = CreatePointDialog.newInstance(selectedPoint);
-				dialog.setListener(CreatePointOverlayFragment.this);
-				dialog.show(getFragmentManager(), "create-point-dialog");
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				if (view != null) {
+					view.setVisibility(View.GONE);
+				}
 			}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+			}
+		});
+
+		if (view != null) {
+			view.startAnimation(anim);
 		}
+	}
+
+	private SpinnerAdapter createDifficultySpinnerAdapter() {
+		String[] arr = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
+		ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, arr);
+		arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		return arrayAdapter;
+	}
+
+	private ArrayAdapter<String> createCategorySpinnerAdapter() {
+		ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item);
+		arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+		return arrayAdapter;
 	}
 
 	private class PlaceOverlay extends Overlay {

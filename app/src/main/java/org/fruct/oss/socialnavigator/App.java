@@ -2,6 +2,8 @@ package org.fruct.oss.socialnavigator;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.disc.impl.ext.LruDiscCache;
@@ -10,6 +12,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.download.BaseImageDownloader;
 
+import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.slf4j.impl.StaticLoggerBinder;
 import org.xmlpull.v1.XmlPullParserFactory;
 
@@ -26,6 +29,9 @@ public class App extends Application {
 	public void onCreate() {
 		super.onCreate();
 		StaticLoggerBinder.getSingleton();
+
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		String str = pref.getString(Preferences.PREF_GETS_TOKEN, null);
 
 		context = getApplicationContext();
 		app = this;

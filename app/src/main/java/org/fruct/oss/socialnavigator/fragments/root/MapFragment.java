@@ -165,15 +165,15 @@ public class MapFragment extends Fragment {
 			overlayFragments.add(positionOverlayFragment);
 
 			ObstaclesOverlayFragment obstaclesOverlayFragment = new ObstaclesOverlayFragment();
-			trans.add(obstaclesOverlayFragment, "obstacle-overlay-gragment");
+			trans.add(obstaclesOverlayFragment, "obstacle-overlay-fragment");
 			overlayFragments.add(obstaclesOverlayFragment);
 
 			CreatePointOverlayFragment createPointOverlayFragment = new CreatePointOverlayFragment();
-			trans.add(createPointOverlayFragment, "create-point-overlay-gragment");
+			trans.add(R.id.overlay_create_point, createPointOverlayFragment, "create-point-overlay-fragment");
 			overlayFragments.add(createPointOverlayFragment);
 
 			RouteOverlayFragment routeOverlayFragment = new RouteOverlayFragment();
-			trans.add(R.id.overlay_route, routeOverlayFragment, "route-overlay-gragment");
+			trans.add(R.id.overlay_route, routeOverlayFragment, "route-overlay-fragment");
 			overlayFragments.add(routeOverlayFragment);
 
 			TrackingOverlayFragment trackingOverlayFragment = new TrackingOverlayFragment();
