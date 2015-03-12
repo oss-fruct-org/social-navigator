@@ -242,8 +242,10 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 		if (key.equals(Preferences.PREF_ACTIVE_ROUTING_TYPE)) {
 			RoutingType activeRoutingType = appPreferences.getActiveRoutingType();
-			ChoicePath activePath = paths.get(activeRoutingType);
-			updateOverlay(activePath);
+			if (paths != null) {
+				ChoicePath activePath = paths.get(activeRoutingType);
+				updateOverlay(activePath);
+			}
 		}
 	}
 
