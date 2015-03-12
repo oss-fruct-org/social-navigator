@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class PointsDatabase implements Closeable {
-	public static final int VERSION = 8;
+	public static final int VERSION = 8; // Published 8
 	private final Context context;
 	private final Helper helper;
 	private final SQLiteDatabase db;
@@ -241,12 +241,28 @@ public class PointsDatabase implements Closeable {
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			if (oldVersion != newVersion) {
+			switch (oldVersion) {
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+				db.execSQL("DROP INDEX point_uuid_index;");
 				db.execSQL("DROP TABLE point;");
 				db.execSQL("DROP TABLE category;");
 				db.execSQL("DROP TABLE disability;");
 				db.execSQL("DROP TABLE disability_category;");
 				onCreate(db);
+/*
+			case 8: // to 9
+				db.execSQL("CREATE TABLE point_upload " +
+						"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+						"pointId INTEGER, " +
+						"FOREIGN KEY(pointId) REFERENCES point(_id) ON DELETE CASCADE);");
+						*/
 			}
 		}
 

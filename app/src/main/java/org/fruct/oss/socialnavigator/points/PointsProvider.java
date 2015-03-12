@@ -11,5 +11,5 @@ public interface PointsProvider {
 	List<Category> loadCategories() throws PointsException;
 	List<Point> loadPoints(Category category, GeoPoint geoPoint) throws PointsException;
 
-
+	void uploadPoint(Point point);
 }

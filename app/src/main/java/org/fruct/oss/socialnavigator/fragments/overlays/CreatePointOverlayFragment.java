@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -27,11 +28,12 @@ import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 
 import org.fruct.oss.socialnavigator.R;
-import org.fruct.oss.socialnavigator.dialogs.CreatePointDialog;
 import org.fruct.oss.socialnavigator.points.Category;
-import org.fruct.oss.socialnavigator.points.PointsProvider;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
+import org.fruct.oss.socialnavigator.routing.RoutingType;
+import org.fruct.oss.socialnavigator.utils.TrackPath;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.util.GeoPoint;
@@ -42,8 +44,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
-public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener {
+public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, RoutingService.Listener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
 
 	private PlaceOverlay placeOverlay;
@@ -61,6 +64,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	private View view;
 
 	private List<Category> categories;
+	private RoutingService.TrackingState trackingState;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -123,6 +127,10 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	public void onDestroy() {
 		super.onDestroy();
 
+		if (routingService != null) {
+			routingService.removeListener(this);
+		}
+
 		if (pointsServiceConnection != null) {
 			getActivity().unbindService(pointsServiceConnection);
 			pointsServiceConnection = null;
@@ -149,6 +157,28 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 				routingServiceConnection = new RoutingConnection(), Context.BIND_AUTO_CREATE);
 	}
 
+	// Routing callbacks
+	@Override
+	public void routingStateChanged(RoutingService.State state) {
+		if (state != RoutingService.State.TRACKING) {
+			trackingState = null;
+		}
+	}
+
+	@Override
+	public void progressStateChanged(boolean isActive) {
+	}
+
+	@Override
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
+	}
+
+	@Override
+	public void activePathUpdated(RoutingService.TrackingState trackingState) {
+		this.trackingState = trackingState;
+	}
+
+
 	private void onPointsServiceConnected(PointsService service) {
 		pointsService = service;
 
@@ -169,6 +199,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 	private void onRoutingServiceConnected(RoutingService service) {
 		routingService = service;
+		routingService.addListener(this);
 	}
 
 	private void onRoutingServiceDisconnected() {
@@ -208,7 +239,14 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	private void createPoint() {
 		/*((ActionBarActivity) getActivity()).startSupportActionMode(new CreatePointActionMode());*/
 
-		mapView.getOverlayManager().add(placeOverlay = new PlaceOverlay(getActivity(), selectedPoint));
+		TrackPath<org.fruct.oss.socialnavigator.points.Point> trackingPath;
+		if (trackingState != null) {
+			trackingPath = trackingState.trackingPath;
+		} else {
+			trackingPath = null;
+		}
+
+		mapView.getOverlayManager().add(placeOverlay = new PlaceOverlay(getActivity(), selectedPoint, trackingPath));
 		mapView.invalidate();
 		showPanel();
 	}
@@ -289,12 +327,19 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	}
 
 	private class PlaceOverlay extends Overlay {
-		private final int ITEM_SIZE = Utils.getDP(32);
+		private final int ITEM_SIZE = Utils.getDP(48);
+		private final int CIRCLE_SIZE = Utils.getDP(8);
 
 		private final GeoPoint geoPoint;
+		private final GeoPoint geoPointProjected = new GeoPoint(0, 0);
+
 		private final Drawable drawable;
 
 		private final Point point = new Point();
+		private final TrackPath<org.fruct.oss.socialnavigator.points.Point> trackPath;
+
+		private Paint projectedPaint;
+		private Paint mainPaint;
 
 		private boolean isDragging;
 		private int hookX;
@@ -303,20 +348,38 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		private int dragStartX;
 		private int dragStartY;
 
-		public PlaceOverlay(Context ctx, GeoPoint geoPoint) {
+		public PlaceOverlay(Context ctx, GeoPoint initialPoint, TrackPath<org.fruct.oss.socialnavigator.points.Point> trackPath) {
 			super(ctx);
+			this.trackPath = trackPath;
 
-			this.geoPoint = geoPoint;
+			this.geoPoint = new GeoPoint(initialPoint);
 			this.drawable = ctx.getResources().getDrawable(R.drawable.blank);
+
+			this.projectedPaint = new Paint();
+			projectedPaint.setAntiAlias(true);
+			projectedPaint.setColor(0xff4432ff);
+
+			this.mainPaint = new Paint();
+			mainPaint.setAntiAlias(true);
+			mainPaint.setColor(0x334432ff);
 		}
 
 		@Override
 		protected void draw(Canvas c, MapView mapView, boolean shadow) {
 			Projection proj = mapView.getProjection();
-			proj.toPixels(geoPoint, point);
 
+			/*proj.toPixels(geoPoint, point);
 			drawable.setBounds(point.x - ITEM_SIZE, point.y - 2 * ITEM_SIZE, point.x + ITEM_SIZE, point.y);
-			drawable.draw(c);
+			drawable.draw(c);*/
+
+			proj.toPixels(geoPoint, point);
+			c.drawCircle(point.x, point.y, ITEM_SIZE, mainPaint);
+			c.drawCircle(point.x, point.y, CIRCLE_SIZE, projectedPaint);
+
+			if (trackPath != null) {
+				proj.toPixels(geoPointProjected, point);
+				c.drawCircle(point.x, point.y, CIRCLE_SIZE, projectedPaint);
+			}
 		}
 
 		@Override
@@ -333,8 +396,8 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 				proj.toPixels(geoPoint, point);
 
-				if (dragStartX < point.x - ITEM_SIZE || dragStartY < point.y - 2 * ITEM_SIZE
-						|| dragStartX > point.x + ITEM_SIZE || dragStartY > point.y) {
+				if (dragStartX < point.x - ITEM_SIZE || dragStartY < point.y - ITEM_SIZE
+						|| dragStartX > point.x + ITEM_SIZE || dragStartY > point.y + ITEM_SIZE) {
 					return false;
 				}
 
@@ -346,14 +409,35 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 			} else if (isDragging && e.getAction() == MotionEvent.ACTION_MOVE) {
 				Projection proj = mapView.getProjection();
 				proj.fromPixels((int) e.getX() + hookX, (int) e.getY() + hookY, geoPoint);
+				moveSelectedPoint(geoPoint);
 				mapView.invalidate();
 				return true;
 			} else if (isDragging && e.getAction() == MotionEvent.ACTION_UP) {
 				isDragging = false;
+				if (trackPath == null) {
+					selectedPoint = new GeoPoint(geoPoint);
+				} else {
+					selectedPoint = new GeoPoint(geoPointProjected);
+				}
 				return true;
 			}
 
 			return super.onTouchEvent(e, mapView);
+		}
+
+		private void moveSelectedPoint(GeoPoint geoPoint) {
+			geoPoint.setLatitudeE6(geoPoint.getLatitudeE6());
+			geoPoint.setLongitudeE6(geoPoint.getLongitudeE6());
+
+			if (trackPath != null) {
+				// TODO: can be optimized
+				TrackPath.ProjectedPoint projectedPoint
+						= trackPath.projectPoint(geoPoint.getLatitude(),
+						geoPoint.getLongitude());
+
+				geoPointProjected.setCoordsE6((int) (projectedPoint.getProjX() * 1e6),
+						(int) (projectedPoint.getProjY() * 1e6));
+			}
 		}
 	}
 

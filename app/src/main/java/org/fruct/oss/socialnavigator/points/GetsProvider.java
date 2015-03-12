@@ -108,6 +108,11 @@ public class GetsProvider implements PointsProvider {
 		}
 	}
 
+	@Override
+	public void uploadPoint(Point point) {
+
+	}
+
 	private void createRequestTop(XmlSerializer xmlSerializer) throws IOException {
 		xmlSerializer.startDocument("UTF-8", true);
 		xmlSerializer.startTag(null, "request").startTag(null, "params");

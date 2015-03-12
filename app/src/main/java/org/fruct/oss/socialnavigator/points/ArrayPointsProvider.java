@@ -74,4 +74,9 @@ public class ArrayPointsProvider implements PointsProvider {
 */
 		return catPoints;
 	}
+
+	@Override
+	public void uploadPoint(Point point) {
+
+	}
 }

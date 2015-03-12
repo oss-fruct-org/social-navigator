@@ -107,7 +107,7 @@ public class TrackPath<T> {
 		}
 	}
 
-	private ProjectedPoint projectPoint(double x, double y) {
+	public ProjectedPoint projectPoint(double x, double y) {
 		Space.Point sourcePoint = new Space.Point(x, y);
 
 		Segment nearestSegment = null;
@@ -136,7 +136,7 @@ public class TrackPath<T> {
 				nearestSegment.accumulatedDistance + space.dist(nearestSegment.a, tmpPoint));
 	}
 
-	private static class ProjectedPoint extends Space.Point implements Comparable<ProjectedPoint> {
+	public static class ProjectedPoint extends Space.Point implements Comparable<ProjectedPoint> {
 		private double projX;
 		private double projY;
 		private Segment nearestSegment;
@@ -151,6 +151,13 @@ public class TrackPath<T> {
 			this.distanceOnPath = distanceOnPath;
 		}
 
+		public double getProjX() {
+			return projX;
+		}
+
+		public double getProjY() {
+			return projY;
+		}
 
 		@Override
 		public int compareTo(@NonNull ProjectedPoint another) {
