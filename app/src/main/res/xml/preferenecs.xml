@@ -7,8 +7,4 @@
         android:entries="@array/stub_array"
         android:entryValues="@array/stub_array"
         />
-    <Preference
-        android:title="Gets"
-        android:key="pref-gets-token"
-        />
 </PreferenceScreen>

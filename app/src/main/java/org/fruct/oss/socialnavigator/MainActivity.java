@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.fruct.oss.mapcontent.content.ContentService;
+import org.fruct.oss.socialnavigator.fragments.root.GetsFragment;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
 import org.fruct.oss.socialnavigator.fragments.root.RootContentFragment;
@@ -45,6 +46,7 @@ public class MainActivity extends ActionBarActivity
      */
     private CharSequence mTitle;
 	private int mNavigationMode;
+	private ActivityResultListener mResultListener;
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,8 +107,13 @@ public class MainActivity extends ActionBarActivity
 			break;
 
 		case 3:
+			fragment = GetsFragment.newInstance();
+			break;
+
+		case 4:
 			startActivity(new Intent(this, SettingsActivity.class));
 			return;
+
 
 		default:
 			fragment = PlaceholderFragment.newInstance(position + 1);
@@ -143,12 +150,22 @@ public class MainActivity extends ActionBarActivity
 		}
 	}
 
-	public void onSectionAttached(String title, int navigationMode) {
+	public void onSectionAttached(String title, int navigationMode, ActivityResultListener resultListener) {
 		mTitle = title;
 		mNavigationMode = navigationMode;
+		mResultListener = resultListener;
     }
 
-    public void restoreActionBar() {
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		if (mResultListener != null) {
+			mResultListener.onActivityResult(requestCode, resultCode, data);
+		}
+	}
+
+	public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(mNavigationMode);
         actionBar.setDisplayShowTitleEnabled(true);
@@ -212,8 +229,11 @@ public class MainActivity extends ActionBarActivity
         @Override
         public void onAttach(Activity activity) {
             super.onAttach(activity);
-			((MainActivity) activity).onSectionAttached("Placeholder", ActionBar.NAVIGATION_MODE_STANDARD);
+			((MainActivity) activity).onSectionAttached("Placeholder", ActionBar.NAVIGATION_MODE_STANDARD, null);
 		}
     }
 
+	public static interface ActivityResultListener {
+		void onActivityResult(int requestCode, int resultCode, Intent data);
+	}
 }

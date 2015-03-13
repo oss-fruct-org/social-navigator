@@ -28,9 +28,7 @@ import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.adapters.PointAdapter;
 import org.fruct.oss.socialnavigator.points.Disability;
-import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
-import org.fruct.oss.socialnavigator.routing.Routing;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.utils.Checker;
 import org.fruct.oss.socialnavigator.utils.Function;
@@ -62,7 +60,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 
-		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section2), ActionBar.NAVIGATION_MODE_STANDARD);
+		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section2), ActionBar.NAVIGATION_MODE_STANDARD, null);
 	}
 
 	@Override

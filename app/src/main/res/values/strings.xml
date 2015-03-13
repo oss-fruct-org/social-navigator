@@ -5,7 +5,8 @@
     <string name="title_section1">Map</string>
     <string name="title_section2">Categories</string>
     <string name="title_section3">Content</string>
-    <string name="title_section4">Preferences</string>
+    <string name="title_section4">Server</string>
+    <string name="title_section5">Preferences</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -71,5 +72,6 @@
     <string name="str_login_google">Google</string>
     <string name="str_login_how">How to login?</string>
     <string name="str_google_login_error">Can\'t login using android account. Try web browser method.</string>
-    <string name="str_google_login_success">Login successfull</string>
+    <string name="str_google_login_success">Login successful</string>
+    <string name="str_logout">Logout</string>
 </resources>

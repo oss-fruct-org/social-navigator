@@ -5,6 +5,7 @@
         <item>@string/title_section2</item>
         <item>@string/title_section3</item>
         <item>@string/title_section4</item>
+        <item>@string/title_section5</item>
     </string-array>
 
     <string-array name="stub_array">

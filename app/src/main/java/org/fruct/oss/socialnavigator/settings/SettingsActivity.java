@@ -19,7 +19,7 @@ import org.fruct.oss.socialnavigator.GetsLoginActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.utils.Utils;
 
-public class SettingsActivity extends PreferenceActivity implements ContentServiceConnectionListener, GooglePlayServicesHelper.Listener {
+public class SettingsActivity extends PreferenceActivity implements ContentServiceConnectionListener {
 	private static final int REQUEST_CODE = 2;
 
 	private ListPreference storagePathPref;
@@ -41,8 +41,6 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 		storagePathPref = (ListPreference) findPreference(org.fruct.oss.mapcontent.content.Settings.PREF_STORAGE_PATH);
 		getsPref = (Preference) findPreference(Preferences.PREF_GETS_TOKEN);
 
-		setupGetsPreference();
-
 		contentServiceConnection.bindService(this);
 	}
 
@@ -56,105 +54,6 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 		}
 
 		super.onDestroy();
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-		setupGetsPreference();
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if ((requestCode == GooglePlayServicesHelper.RC_SIGN_IN
-				|| requestCode == GooglePlayServicesHelper.RC_GET_CODE)
-				&& googlePlayServicesHelper != null) {
-			googlePlayServicesHelper.onActivityResult(requestCode, resultCode, data);
-		} else {
-			super.onActivityResult(requestCode, resultCode, data);
-		}
-	}
-
-	private void setupGetsPreference() {
-		String token = pref.getString(Preferences.PREF_GETS_TOKEN, null);
-
-		final boolean isLogIn = !Utils.isNullOrEmpty(token);
-
-		if (isLogIn) {
-			getsPref.setSummary("Click to logout");
-		} else {
-			getsPref.setSummary("Click to login");
-		}
-
-		getsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-			@Override
-			public boolean onPreferenceClick(Preference preference) {
-				if (isLogIn) {
-					pref.edit().remove(Preferences.PREF_GETS_TOKEN).apply();
-					setupGetsPreference();
-				} else {
-					startLogin();
-				}
-				return true;
-			}
-		});
-	}
-
-	private void startLogin() {
-		if (!GooglePlayServicesHelper.isAvailable(this)) {
-			Intent intent = new Intent(SettingsActivity.this, GetsLoginActivity.class);
-			startActivity(intent);
-		} else {
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-			View view = getLayoutInflater().inflate(R.layout.dialog_login_method, null);
-
-			Button browserButton = (Button) view.findViewById(R.id.button_login_web_browser);
-			Button googleButton = (Button) view.findViewById(R.id.button_login_google);
-
-			builder.setView(view);
-			builder.setTitle(R.string.str_login_how);
-
-			final AlertDialog dialog = builder.show();
-
-			browserButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					Intent intent = new Intent(SettingsActivity.this, GetsLoginActivity.class);
-					startActivity(intent);
-					dialog.dismiss();
-				}
-			});
-
-			googleButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					startGoogleLogin();
-					dialog.dismiss();
-				}
-			});
-		}
-	}
-
-	private void startGoogleLogin() {
-		googlePlayServicesHelper = new GooglePlayServicesHelper(this);
-		googlePlayServicesHelper.setListener(this);
-		googlePlayServicesHelper.login();
-	}
-
-	@Override
-	public void onGoogleAuthFailed() {
-		Toast.makeText(this, R.string.str_google_login_error, Toast.LENGTH_LONG).show();
-		googlePlayServicesHelper.setListener(null);
-		googlePlayServicesHelper.interrupt();
-	}
-
-	@Override
-	public void onGoogleAuthCompleted(String getsToken) {
-		Toast.makeText(this, R.string.str_google_login_success, Toast.LENGTH_LONG).show();
-		Preferences appPref = new Preferences(this);
-		appPref.setGetsToken(getsToken);
-		setupGetsPreference();
 	}
 
 	private void setupStoragePathPreference() {

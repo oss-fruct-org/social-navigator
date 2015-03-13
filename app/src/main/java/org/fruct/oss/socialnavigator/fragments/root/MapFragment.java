@@ -17,7 +17,6 @@ import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.widget.SlidingPaneLayout;
 import android.support.v7.app.ActionBar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,7 +25,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
 
 import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
@@ -38,9 +36,6 @@ import org.fruct.oss.socialnavigator.fragments.overlays.RouteOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.TrackingOverlayFragment;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.osmdroid.DefaultResourceProxyImpl;
-import org.osmdroid.events.MapListener;
-import org.osmdroid.events.ScrollEvent;
-import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.IRegisterReceiver;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.modules.MapTileDownloader;
@@ -87,7 +82,7 @@ public class MapFragment extends Fragment {
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 
-		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section1), ActionBar.NAVIGATION_MODE_STANDARD);
+		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section1), ActionBar.NAVIGATION_MODE_STANDARD, null);
 	}
 
 	@Override

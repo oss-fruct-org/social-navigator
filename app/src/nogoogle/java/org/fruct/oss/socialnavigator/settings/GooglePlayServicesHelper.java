@@ -16,7 +16,7 @@ public class GooglePlayServicesHelper {
 
 	}
 
-	public void setListener(Object o) {
+	public void setListener(Listener o) {
 	}
 
 	public void interrupt() {
