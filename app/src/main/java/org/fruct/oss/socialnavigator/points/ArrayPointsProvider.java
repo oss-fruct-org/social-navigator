@@ -76,7 +76,7 @@ public class ArrayPointsProvider implements PointsProvider {
 	}
 
 	@Override
-	public void uploadPoint(Point point) {
-
+	public String uploadPoint(Point point) {
+		throw new UnsupportedOperationException("Not implemented");
 	}
 }

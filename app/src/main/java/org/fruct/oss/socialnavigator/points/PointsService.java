@@ -10,11 +10,14 @@ import android.os.Looper;
 
 import org.fruct.oss.socialnavigator.BuildConfig;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
+import org.fruct.oss.socialnavigator.parsers.GetsException;
+import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.Function;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,12 +27,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 public class PointsService extends Service {
 	private static final Logger log = LoggerFactory.getLogger(PointsService.class);
 
 	private final Binder binder = new Binder();
+
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	private final List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
@@ -40,6 +45,7 @@ public class PointsService extends Service {
 
 	// Tasks
 	private Future<?> refreshProvidersTask;
+	private Future<?> synchronizationTask;
 
 	private boolean isTestMode;
 
@@ -76,14 +82,16 @@ public class PointsService extends Service {
 		if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
 			refreshProvidersTask.cancel(true);
 
+		if (synchronizationTask != null && !synchronizationTask.isDone())
+			synchronizationTask.cancel(true);
+
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				database.close();
 			}
 		});
-
-		executor.shutdown();
+		executor.shutdownNow();
 
 		log.info("destroyed");
 		super.onDestroy();
@@ -130,6 +138,38 @@ public class PointsService extends Service {
 				}
 			}
 		});
+	}
+
+	public void synchronize() {
+		if (synchronizationTask != null && !synchronizationTask.isDone())
+			return;
+
+		synchronizationTask = executor.submit(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					doSynchronize();
+					log.info("Points successfully synchronized");
+				} catch (PointsException ex) {
+					log.error("Points synchronization failed", ex);
+					// TODO: report user
+				}
+			}
+		});
+	}
+
+	@Blocking
+	private void doSynchronize() throws PointsException {
+		PointsProvider provider = setupProvider();
+		Cursor pointsToUpload = database.loadNotSynchronizedPoints();
+
+		while (pointsToUpload.moveToNext()) {
+			Point point = new Point(pointsToUpload, 1);
+			String newUuid = provider.uploadPoint(point);
+			database.markAsUploaded(point, newUuid);
+		}
+
+		pointsToUpload.close();
 	}
 
 	private void notifyDataUpdated() {
@@ -284,24 +324,17 @@ public class PointsService extends Service {
 	}
 
 	private PointsProvider setupProvider() {
+		Preferences appPref = new Preferences(this);
+
 		GetsProvider getsProvider;
-		getsProvider = new GetsProvider();
+		getsProvider = new GetsProvider(appPref.getGetsToken());
 		return getsProvider;
-/*
-		ArrayPointsProvider arrayPointsProvider = new ArrayPointsProvider("array-provider");
-		arrayPointsProvider.setCategories("test-category");
-
-		arrayPointsProvider.addPointDesc("Test point", "Test description", "http://example.com",
-				"test-category", 61.786136, 34.355825, 7);
-		arrayPointsProvider.addPointDesc("Test point 2", "Test description 2", "http://example.com",
-				"test-category", 61.78623, 34.356029, 7);
-
-		setPointsProvider(arrayPointsProvider);*/
 	}
 
 	public void addPoint(Point point) {
 		database.insertPoint(point);
 		notifyDataUpdated();
+		synchronize();
 	}
 
 	public void setDisabilityState(Disability disability, boolean isActive) {

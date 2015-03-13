@@ -29,6 +29,8 @@ public class Point implements Parcelable {
 	private String uuid;
 	private int difficulty;
 
+	private boolean isPrivate;
+
 	public Point(String name, String description, String url, double lat, double lon, Category category, String provider, String uuid, int difficulty) {
 		this(name, description, url, (int) (lat * 1e6), (int) (lon * 1e6), category, provider, uuid, difficulty);
 	}
@@ -54,7 +56,9 @@ public class Point implements Parcelable {
 		this.provider = cursor.getString(offset + 5);
 		this.uuid = cursor.getString(offset + 6);
 		this.difficulty = cursor.getInt(offset + 7);
-		this.category = new Category(cursor, offset + 8);
+		this.isPrivate = cursor.getInt(offset + 8) != 0;
+
+		this.category = new Category(cursor, offset + 9);
 	}
 
 	public Point(Parcel source) {
@@ -67,6 +71,7 @@ public class Point implements Parcelable {
 		this.provider = source.readString();
 		this.uuid = source.readString();
 		this.difficulty = source.readInt();
+		this.isPrivate = source.readInt() != 0;
 	}
 
 	private Point() {
@@ -118,9 +123,23 @@ public class Point implements Parcelable {
 		return difficulty;
 	}
 
+	public boolean isPrivate() {
+		return isPrivate;
+	}
+
+
 	public void setCategory(Category category) {
 		this.category = category;
 	}
+
+	public void setProvider(String provider) {
+		this.provider = provider;
+	}
+
+	public void setPrivate(boolean isPrivate) {
+		this.isPrivate = isPrivate;
+	}
+
 
 	// TODO: can be optimized
 	public GeoPoint toGeoPoint() {
@@ -145,13 +164,18 @@ public class Point implements Parcelable {
 				continue;
 
 			String tagName = parser.getName();
-			if (tagName.equals("name")) {
+			switch (tagName) {
+			case "name":
 				point.name = GetsResponse.readText(parser);
 				parser.require(XmlPullParser.END_TAG, null, "name");
-			} else if (tagName.equals("description")) {
+				break;
+
+			case "description":
 				point.description = GetsResponse.readText(parser);
 				parser.require(XmlPullParser.END_TAG, null, "description");
-			} else if (tagName.equals("Point")) {
+				break;
+
+			case "Point":
 				parser.nextTag();
 				parser.require(XmlPullParser.START_TAG, null, "coordinates");
 
@@ -159,11 +183,16 @@ public class Point implements Parcelable {
 
 				parser.nextTag();
 				parser.require(XmlPullParser.END_TAG, null, "Point");
-			} else if (tagName.equals("ExtendedData")) {
+				break;
+
+			case "ExtendedData":
 				readExtendedData(parser, point);
 				parser.require(XmlPullParser.END_TAG, null, "ExtendedData");
-			} else {
+				break;
+
+			default:
 				XmlUtil.skip(parser);
+				break;
 			}
 		}
 
@@ -253,6 +282,7 @@ public class Point implements Parcelable {
 		dest.writeString(provider);
 		dest.writeString(uuid);
 		dest.writeInt(difficulty);
+		dest.writeInt(isPrivate ? 1 : 0);
 	}
 
 	public static final Creator<Point> CREATOR = new Creator<Point>() {

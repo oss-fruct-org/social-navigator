@@ -21,6 +21,8 @@ public class GetsProvider implements PointsProvider {
 	public static final String GETS_SERVER;
 	public static final String DISABILITIES_LIST;
 
+	private final String authToken;
+
 	static {
 		if (!BuildConfig.DEBUG) {
 			GETS_SERVER = "http://gets.cs.petrsu.ru/obstacle/service";
@@ -29,6 +31,11 @@ public class GetsProvider implements PointsProvider {
 			GETS_SERVER = "http://getsi.ddns.net/getslocal";
 			DISABILITIES_LIST = "http://getsi.ddns.net/static/disabilities.xml";
 		}
+	}
+
+
+	public GetsProvider(String authToken) {
+		this.authToken = authToken;
 	}
 
 	@Override
@@ -81,10 +88,18 @@ public class GetsProvider implements PointsProvider {
 		try {
 			serializer.setOutput(writer);
 			createRequestTop(serializer);
+
+			if (authToken != null)
+				serializer.startTag(null, "auth_token").text(authToken).endTag(null, "auth_token");
+
 			serializer.startTag(null, "latitude").text(String.valueOf(geoPoint.getLatitude())).endTag(null, "latitude");
 			serializer.startTag(null, "longitude").text(String.valueOf(geoPoint.getLongitude())).endTag(null, "longitude");
 			serializer.startTag(null, "radius").text(String.valueOf(ObstaclesOverlayFragment.POINT_UPDATE_DISTANCE * 4)).endTag(null, "radius");
 			serializer.startTag(null, "category_id").text(String.valueOf(category.getId())).endTag(null, "category_id");
+
+			if (authToken != null)
+				serializer.startTag(null, "space").text("all").endTag(null, "space");
+
 			createRequestBottom(serializer);
 			String request = writer.toString();
 			String response = Utils.downloadUrl(GETS_SERVER + "/loadPoints.php", request);
@@ -98,6 +113,7 @@ public class GetsProvider implements PointsProvider {
 
 			List<Point> points = ((Kml) parsedResponse.getContent()).getPoints();
 			for (Point point : points) {
+				point.setProvider(Point.GETS_PROVIDER);
 				point.setCategory(category);
 			}
 			return points;
@@ -109,8 +125,41 @@ public class GetsProvider implements PointsProvider {
 	}
 
 	@Override
-	public void uploadPoint(Point point) {
+	public String uploadPoint(Point point) throws PointsException {
+		XmlSerializer serializer = Xml.newSerializer();
+		StringWriter writer = new StringWriter();
 
+		try {
+			serializer.setOutput(writer);
+			createRequestTop(serializer);
+
+			serializer.startTag(null, "auth_token").text(authToken).endTag(null, "auth_token");
+			serializer.startTag(null, "category_id").text(String.valueOf(point.getCategory().getId())).endTag(null, "category_id");
+			serializer.startTag(null, "title").text(point.getName()).endTag(null, "title");
+			serializer.startTag(null, "link").text(point.getUrl()).endTag(null, "link");
+			serializer.startTag(null, "latitude").text(String.valueOf(point.getLat())).endTag(null, "latitude");
+			serializer.startTag(null, "longitude").text(String.valueOf(point.getLon())).endTag(null, "longitude");
+
+			serializer.startTag(null, "extended_data");
+			serializer.startTag(null, "difficulty").text(String.valueOf(point.getDifficulty())).endTag(null, "difficulty");
+			serializer.endTag(null, "extended_data");
+
+			createRequestBottom(serializer);
+
+			String request = writer.toString();
+			String response = Utils.downloadUrl(GETS_SERVER + "/addPoint.php", request);
+
+			GetsResponse parsedResponse = GetsResponse.parse(response, Kml.class);
+
+			if (parsedResponse.getCode() != 0) {
+				throw new PointsException("Can't upload point " + point.getName() + ". Message " + parsedResponse.getMessage());
+			}
+
+			Point newPoint = ((Kml) parsedResponse.getContent()).getPoints().get(0);
+			return newPoint.getUuid();
+		} catch (IOException | GetsException e) {
+			throw new PointsException("Can't upload point " + point.getName(), e);
+		}
 	}
 
 	private void createRequestTop(XmlSerializer xmlSerializer) throws IOException {

@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class PointsDatabase implements Closeable {
-	public static final int VERSION = 8; // Published 8
+	public static final int VERSION = 9; // Published 8
 	private final Context context;
 	private final Helper helper;
 	private final SQLiteDatabase db;
@@ -82,6 +82,14 @@ public class PointsDatabase implements Closeable {
 		}
 	}
 
+	public void markAsUploaded(Point oldPoint, String newUuid) {
+		ContentValues cv = new ContentValues(1);
+		cv.put("uuid", oldPoint.getUuid());
+		cv.put("provider", Point.GETS_PROVIDER);
+
+		db.update("point", cv, "uuid=?", toArray(oldPoint.getUuid()));
+	}
+
 	public void insertPoint(Point point) {
 		if (point == null) {
 			throw new IllegalArgumentException("Point can't be null");
@@ -96,6 +104,7 @@ public class PointsDatabase implements Closeable {
 		cv.put("categoryId", point.getCategory().getId());
 		cv.put("provider", point.getProvider());
 		cv.put("difficulty", point.getDifficulty());
+		cv.put("private", point.isPrivate());
 
 		int affected = db.update("point", cv, "uuid=?", toArray(point.getUuid()));
 		if (affected == 0) {
@@ -151,14 +160,24 @@ public class PointsDatabase implements Closeable {
 
 	public Cursor loadPoints() {
 		return db.rawQuery("SELECT DISTINCT point._id, point.name, point.description, point.url, " +
-				"point.lat, point.lon, point.provider, point.uuid, point.difficulty, " +
+				"point.lat, point.lon, point.provider, point.uuid, point.difficulty, point.private, " +
 				"category._id, category.name, category.description, category.url, category.iconUrl " +
+
 				"FROM point INNER JOIN category ON point.categoryId = category._id " +
 				"INNER JOIN disability_category ON disability_category.categoryId = category._id " +
 				"INNER JOIN disability ON disability_category.disabilityId = disability._id " +
 				"WHERE disability.active = 1", null);
 
 		//return db.query("point", COLUMNS_POINT, null, null, null, null, null);
+	}
+
+	public Cursor loadNotSynchronizedPoints() {
+		return db.rawQuery("SELECT DISTINCT point._id, point.name, point.description, point.url, " +
+				"point.lat, point.lon, point.provider, point.uuid, point.difficulty, point.private, " +
+				"category._id, category.name, category.description, category.url, category.iconUrl " +
+
+				"FROM point INNER JOIN category ON point.categoryId = category._id " +
+				"WHERE point.provider=?", toArray(Point.LOCAL_PROVIDER));
 	}
 
 	public Cursor loadDisabilities() {
@@ -199,44 +218,43 @@ public class PointsDatabase implements Closeable {
 	}
 
 	private static class Helper extends SQLiteOpenHelper {
+
+		public static final String V8_TABLE_CATEGORY = "CREATE TABLE category " +
+				"(_id INTEGER PRIMARY KEY," +
+				"name TEXT," +
+				"description TEXT," +
+				"url TEXT," +
+				"iconUrl TEXT);";
+		public static final String V8_TABLE_POINT = "CREATE TABLE point " +
+				"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+				"name TEXT, " +
+				"description TEXT, " +
+				"url TEXT, " +
+				"lat INTEGER, " +
+				"lon INTEGER, " +
+				"categoryId INTEGER, " +
+				"provider TEXT, " +
+				"uuid TEXT, " +
+				"difficulty INTEGER, " +
+				"FOREIGN KEY(categoryId) REFERENCES category(_id));";
+		public static final String V8_TABLE_DISABILITY = "CREATE TABLE disability " +
+				"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+				"active INTEGER, " +
+				"name TEXT);";
+		public static final String V8_DISABILITY_CATEGORY = "CREATE TABLE disability_category " +
+				"(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+				"categoryId INTEGER," +
+				"disabilityId INTEGER, " +
+				"FOREIGN KEY(disabilityId) REFERENCES disability(_id));";
+		public static final String V9_TABLE_POINT = "ALTER TABLE point ADD COLUMN private INTEGER DEFAULT 0;";
+
 		public Helper(Context context) {
 			super(context, "points-db", null, VERSION);
 		}
 
 		@Override
 		public void onCreate(SQLiteDatabase db) {
-			db.execSQL("CREATE TABLE category " +
-					"(_id INTEGER PRIMARY KEY," +
-					"name TEXT," +
-					"description TEXT," +
-					"url TEXT," +
-					"iconUrl TEXT);");
-
-			db.execSQL("CREATE TABLE point " +
-					"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-					"name TEXT, " +
-					"description TEXT, " +
-					"url TEXT, " +
-					"lat INTEGER, " +
-					"lon INTEGER, " +
-					"categoryId INTEGER, " +
-					"provider TEXT, " +
-					"uuid TEXT, " +
-					"difficulty INTEGER, " +
-					"FOREIGN KEY(categoryId) REFERENCES category(_id));");
-
-			db.execSQL("CREATE TABLE disability " +
-					"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-					"active INTEGER, " +
-					"name TEXT);");
-
-			db.execSQL("CREATE TABLE disability_category " +
-					"(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-					"categoryId INTEGER," +
-					"disabilityId INTEGER, " +
-					"FOREIGN KEY(disabilityId) REFERENCES disability(_id));");
-
-			db.execSQL("CREATE UNIQUE INDEX point_uuid_index ON point (uuid);");
+			onUpgrade(db, 0, VERSION);
 		}
 
 		@Override
@@ -250,19 +268,22 @@ public class PointsDatabase implements Closeable {
 			case 5:
 			case 6:
 			case 7:
-				db.execSQL("DROP INDEX point_uuid_index;");
-				db.execSQL("DROP TABLE point;");
-				db.execSQL("DROP TABLE category;");
-				db.execSQL("DROP TABLE disability;");
-				db.execSQL("DROP TABLE disability_category;");
-				onCreate(db);
-/*
+				db.execSQL("DROP INDEX IF EXISTS point_uuid_index;");
+				db.execSQL("DROP TABLE IF EXISTS point;");
+				db.execSQL("DROP TABLE IF EXISTS category;");
+				db.execSQL("DROP TABLE IF EXISTS disability;");
+				db.execSQL("DROP TABLE IF EXISTS disability_category;");
+
+				db.execSQL(V8_TABLE_CATEGORY);
+				db.execSQL(V8_TABLE_POINT);
+				db.execSQL(V8_TABLE_DISABILITY);
+				db.execSQL(V8_DISABILITY_CATEGORY);
+
+				db.execSQL("CREATE UNIQUE INDEX point_uuid_index ON point (uuid);");
+
+
 			case 8: // to 9
-				db.execSQL("CREATE TABLE point_upload " +
-						"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-						"pointId INTEGER, " +
-						"FOREIGN KEY(pointId) REFERENCES point(_id) ON DELETE CASCADE);");
-						*/
+				db.execSQL(V9_TABLE_POINT);
 			}
 		}
 
