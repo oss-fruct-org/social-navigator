@@ -60,6 +60,7 @@ public class PointsDatabase implements Closeable {
 		cv.put("description", category.getDescription());
 		cv.put("url", category.getUrl());
 		cv.put("iconUrl", category.getIconUrl());
+		cv.put("published", category.isPublished());
 
 		if (!isCategoryExists(category)) {
 			cv.put("_id", category.getId());
@@ -161,7 +162,7 @@ public class PointsDatabase implements Closeable {
 	public Cursor loadPoints() {
 		return db.rawQuery("SELECT DISTINCT point._id, point.name, point.description, point.url, " +
 				"point.lat, point.lon, point.provider, point.uuid, point.difficulty, point.private, " +
-				"category._id, category.name, category.description, category.url, category.iconUrl " +
+				"category._id, category.name, category.description, category.url, category.iconUrl, category.published " +
 
 				"FROM point INNER JOIN category ON point.categoryId = category._id " +
 				"INNER JOIN disability_category ON disability_category.categoryId = category._id " +

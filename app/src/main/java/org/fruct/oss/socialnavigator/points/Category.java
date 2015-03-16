@@ -10,7 +10,7 @@ public class Category implements Parcelable {
 	private final String url;
 	private final String iconUrl;
 	private final int id;
-	private final boolean published;
+	private boolean published;
 
 	public Category(String name, String description, String url, String iconUrl, int id, boolean published) {
 		this.name = name;
@@ -61,6 +61,10 @@ public class Category implements Parcelable {
 
 	public boolean isPublished() {
 		return published;
+	}
+
+	public void setPublished(boolean published) {
+		this.published = published;
 	}
 
 	@Override

@@ -81,10 +81,7 @@ public class GetsResponse {
 			parser.setInput(new StringReader(responseXml));
 			parser.nextTag();
 			return readGetsResponse(parser, contentClass);
-		} catch (XmlPullParserException e) {
-			throw new GetsException(e);
-		} catch (IOException e) {
-			// Shouldn't happen because of StringReader
+		} catch (XmlPullParserException | IOException e) {
 			throw new GetsException(e);
 		}
 	}

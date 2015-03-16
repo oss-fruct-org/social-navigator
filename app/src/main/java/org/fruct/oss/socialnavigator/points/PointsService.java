@@ -337,6 +337,10 @@ public class PointsService extends Service {
 		synchronize();
 	}
 
+	public void addCategory(Category category) {
+		database.insertCategory(category);
+	}
+
 	public void setDisabilityState(Disability disability, boolean isActive) {
 		database.setDisabilityState(disability, isActive);
 	}

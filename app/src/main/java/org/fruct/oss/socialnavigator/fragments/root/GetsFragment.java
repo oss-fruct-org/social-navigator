@@ -8,6 +8,8 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,18 +19,30 @@ import android.widget.Toast;
 import org.fruct.oss.socialnavigator.GetsLoginActivity;
 import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.adapters.CategoriesAdapter;
+import org.fruct.oss.socialnavigator.points.Category;
+import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.points.PointsServiceConnection;
+import org.fruct.oss.socialnavigator.points.PointsServiceConnectionListener;
 import org.fruct.oss.socialnavigator.settings.GooglePlayServicesHelper;
 import org.fruct.oss.socialnavigator.settings.Preferences;
 
+import java.util.List;
+
 public class GetsFragment extends Fragment implements View.OnClickListener, GooglePlayServicesHelper.Listener,
-		MainActivity.ActivityResultListener {
+		MainActivity.ActivityResultListener, PointsServiceConnectionListener {
 	private GooglePlayServicesHelper googlePlayServicesHelper;
 
 	private Button webLoginButton;
 	private Button googleLoginButton;
 	private Button logoutButton;
+	private RecyclerView listView;
+
+	private PointsService pointsService;
+	private PointsServiceConnection pointsServiceConnection = new PointsServiceConnection(this);
 
 	private SharedPreferences pref;
+	private CategoriesAdapter adapter;
 
 	public static GetsFragment newInstance() {
 		return new GetsFragment();
@@ -53,14 +67,26 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		webLoginButton = (Button) view.findViewById(R.id.button_login_web_browser);
 		googleLoginButton = (Button) view.findViewById(R.id.button_login_google);
 		logoutButton = (Button) view.findViewById(R.id.button_logout);
+		listView = (RecyclerView) view.findViewById(android.R.id.list);
 
 		webLoginButton.setOnClickListener(this);
 		googleLoginButton.setOnClickListener(this);
 		logoutButton.setOnClickListener(this);
 
+		listView.setHasFixedSize(true);
+		listView.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
+
 		updateViewState();
+		setupAdapter();
 
 		return view;
+	}
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		pointsServiceConnection.bindService(getActivity());
 	}
 
 	@Override
@@ -74,6 +100,12 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		if (googlePlayServicesHelper != null) {
 			googlePlayServicesHelper.setListener(null);
 			googlePlayServicesHelper.interrupt();
+		}
+
+		pointsServiceConnection.unbindService(getActivity());
+
+		if (adapter != null) {
+			adapter.close();
 		}
 
 		super.onDestroy();
@@ -109,6 +141,18 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		}
 	}
 
+	@Override
+	public void onPointsServiceReady(PointsService pointsService) {
+		this.pointsService = pointsService;
+		setupAdapter();
+	}
+
+	@Override
+	public void onPointsServiceDisconnected() {
+		this.pointsService = null;
+		adapter.setPointsService(null);
+	}
+
 	private void updateViewState() {
 		Preferences appPref = new Preferences(getActivity());
 		boolean isLogged = appPref.getGetsToken() != null;
@@ -123,6 +167,17 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 					? View.VISIBLE : View.GONE);
 			logoutButton.setVisibility(View.GONE);
 		}
+	}
+
+	private void setupAdapter() {
+		if (pointsService == null) {
+			return;
+		}
+
+		List<Category> categories = pointsService.queryList(pointsService.requestCategories());
+		adapter = new CategoriesAdapter(categories.toArray(new Category[categories.size()]));
+		adapter.setPointsService(pointsService);
+		listView.setAdapter(adapter);
 	}
 
 	private void startGoogleLogin() {
