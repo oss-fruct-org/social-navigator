@@ -172,8 +172,8 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 
 			@Override
 			protected String doInBackground(Void... params) {
-				Bundle appActivities = new Bundle();
-				appActivities.putString(GoogleAuthUtil.KEY_REQUEST_VISIBLE_ACTIVITIES,
+				Bundle bundle = new Bundle();
+				bundle.putString(GoogleAuthUtil.KEY_REQUEST_VISIBLE_ACTIVITIES,
 						"http://schemas.google.com/AddActivity");
 
 				String scopeFull = "oauth2:server:client_id:" + clientId + ":api_scope:" + scope;
@@ -181,8 +181,7 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 					String exchangeToken = GoogleAuthUtil.getToken(
 							activity,
 							Plus.AccountApi.getAccountName(client),
-							scopeFull,
-							appActivities
+							scopeFull
 					);
 
 					log.info("Exchange token received {}", exchangeToken);

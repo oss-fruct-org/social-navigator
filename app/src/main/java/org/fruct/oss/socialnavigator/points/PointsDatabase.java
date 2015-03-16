@@ -23,7 +23,7 @@ public class PointsDatabase implements Closeable {
 
 	private static final String[] COLUMNS_DISABILITY = { "_id", "name", "active" };
 	private static final String[] COLUMNS_ID = { "_id" };
-	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url", "iconUrl"};
+	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url", "iconUrl", "published"};
 	private static final String[] COLUMNS_POINT = { "_id", "name", "description", "url", "lat", "lon", "categoryId", "provider", "uuid", "difficulty" };
 
 	public PointsDatabase(Context context) {
@@ -225,6 +225,7 @@ public class PointsDatabase implements Closeable {
 				"description TEXT," +
 				"url TEXT," +
 				"iconUrl TEXT);";
+
 		public static final String V8_TABLE_POINT = "CREATE TABLE point " +
 				"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
 				"name TEXT, " +
@@ -237,16 +238,21 @@ public class PointsDatabase implements Closeable {
 				"uuid TEXT, " +
 				"difficulty INTEGER, " +
 				"FOREIGN KEY(categoryId) REFERENCES category(_id));";
+
 		public static final String V8_TABLE_DISABILITY = "CREATE TABLE disability " +
 				"(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
 				"active INTEGER, " +
 				"name TEXT);";
+
 		public static final String V8_DISABILITY_CATEGORY = "CREATE TABLE disability_category " +
 				"(_id INTEGER PRIMARY KEY AUTOINCREMENT," +
 				"categoryId INTEGER," +
 				"disabilityId INTEGER, " +
 				"FOREIGN KEY(disabilityId) REFERENCES disability(_id));";
+
+
 		public static final String V9_TABLE_POINT = "ALTER TABLE point ADD COLUMN private INTEGER DEFAULT 0;";
+		public static final String V9_TABLE_CATEGORY = "ALTER TABLE category ADD COLUMN published INTEGER DEFAULT 0;";
 
 		public Helper(Context context) {
 			super(context, "points-db", null, VERSION);
@@ -284,6 +290,7 @@ public class PointsDatabase implements Closeable {
 
 			case 8: // to 9
 				db.execSQL(V9_TABLE_POINT);
+				db.execSQL(V9_TABLE_CATEGORY);
 			}
 		}
 

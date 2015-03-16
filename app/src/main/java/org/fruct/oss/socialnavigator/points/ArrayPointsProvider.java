@@ -18,7 +18,7 @@ public class ArrayPointsProvider implements PointsProvider {
 		categories = new ArrayList<Category>();
 		int c = 0;
 		for (String name : names) {
-			categories.add(new Category(name, name, "http://example.com", "", ++c));
+			categories.add(new Category(name, name, "http://example.com", "", ++c, false));
 		}
 	}
 

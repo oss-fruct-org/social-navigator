@@ -45,6 +45,7 @@ public class CategoriesContent implements IContent {
 	private static Category parseCategory(XmlPullParser parser) throws IOException, XmlPullParserException {
 		long id = 0;
 		String name = null;
+		boolean published = false;
 
 		String rawDescription = null;
 		String rawUrl = null;
@@ -57,16 +58,25 @@ public class CategoriesContent implements IContent {
 
 			String tagName = parser.getName();
 
-			if (tagName.equals("id")) {
+			switch (tagName) {
+			case "id":
 				id = Long.parseLong(GetsResponse.readText(parser));
-			} else if (tagName.equals("name")) {
+				break;
+			case "name":
 				name = GetsResponse.readText(parser);
-			} else if (tagName.equals("description")) {
+				break;
+			case "description":
 				rawDescription = GetsResponse.readText(parser);
-			} else if (tagName.equals("url")) {
+				break;
+			case "url":
 				rawUrl = GetsResponse.readText(parser);
-			} else {
+				break;
+			case "published":
+				published = Utils.isTrueString(GetsResponse.readText(parser));
+				break;
+			default:
 				XmlUtil.skip(parser);
+				break;
 			}
 		}
 
@@ -80,7 +90,7 @@ public class CategoriesContent implements IContent {
 				getsProperties.getProperty("description", ""),
 				getsProperties.getProperty("url", ""),
 				getsProperties.getProperty("icon", ""),
-				(int) id);
+				(int) id, published);
 	}
 
 	public List<Category> getCategories() {

@@ -46,7 +46,6 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		pref = PreferenceManager.getDefaultSharedPreferences(activity);
 	}
 
-
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_gets, container, false);
@@ -62,6 +61,12 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		updateViewState();
 
 		return view;
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		updateViewState();
 	}
 
 	@Override
@@ -88,6 +93,7 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 
 		case R.id.button_logout:
 			pref.edit().remove(Preferences.PREF_GETS_TOKEN).apply();
+			updateViewState();
 			break;
 		}
 	}

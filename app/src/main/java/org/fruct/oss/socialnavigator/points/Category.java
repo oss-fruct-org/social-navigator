@@ -10,13 +10,15 @@ public class Category implements Parcelable {
 	private final String url;
 	private final String iconUrl;
 	private final int id;
+	private final boolean published;
 
-	public Category(String name, String description, String url, String iconUrl, int id) {
+	public Category(String name, String description, String url, String iconUrl, int id, boolean published) {
 		this.name = name;
 		this.description = description;
 		this.url = url;
 		this.id = id;
 		this.iconUrl = iconUrl;
+		this.published = published;
 	}
 
 	public Category(Cursor cursor, int offset) {
@@ -25,14 +27,16 @@ public class Category implements Parcelable {
 		this.description = cursor.getString(offset + 2);
 		this.url = cursor.getString(offset + 3);
 		this.iconUrl = cursor.getString(offset + 4);
+		this.published = cursor.getInt(offset + 5) != 0;
 	}
 
 	public Category(Parcel source) {
-		name = source.readString();
-		description = source.readString();
-		url = source.readString();
-		iconUrl = source.readString();
-		id = source.readInt();
+		this.name = source.readString();
+		this.description = source.readString();
+		this.url = source.readString();
+		this.iconUrl = source.readString();
+		this.id = source.readInt();
+		this.published = source.readInt() != 0;
 	}
 
 	public String getName() {
@@ -53,6 +57,10 @@ public class Category implements Parcelable {
 
 	public int getId() {
 		return id;
+	}
+
+	public boolean isPublished() {
+		return published;
 	}
 
 	@Override
@@ -84,6 +92,7 @@ public class Category implements Parcelable {
 		dest.writeString(url);
 		dest.writeString(iconUrl);
 		dest.writeInt(id);
+		dest.writeInt(published ? 1 : 0);
 	}
 
 	public static final Creator<Category> CREATOR = new Creator<Category>() {

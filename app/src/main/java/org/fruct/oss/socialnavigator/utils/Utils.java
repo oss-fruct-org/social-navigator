@@ -38,7 +38,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.toRadians;
@@ -46,6 +49,11 @@ import static java.lang.Math.toRadians;
 public class Utils {
 	private static final Logger log = LoggerFactory.getLogger(Utils.class);
 	private static final int MAX_RECURSION = 10;
+
+	public static boolean isTrueString(String str) {
+		str = str.toLowerCase();
+		return "true".equals(str) || "1".equals(str) || "yes".equals(str);
+	}
 
 	public static boolean isNullOrEmpty(String string) {
 		return string == null || string.isEmpty();

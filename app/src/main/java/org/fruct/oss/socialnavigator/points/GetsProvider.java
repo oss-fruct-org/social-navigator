@@ -61,6 +61,8 @@ public class GetsProvider implements PointsProvider {
 		try {
 			serializer.setOutput(writer);
 			createRequestTop(serializer);
+			if (authToken != null)
+				serializer.startTag(null, "auth_token").text(authToken).endTag(null, "auth_token");
 			createRequestBottom(serializer);
 			String request = writer.toString();
 			String response = Utils.downloadUrl(GETS_SERVER + "/getCategories.php", request);

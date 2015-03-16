@@ -26,6 +26,8 @@ import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionList
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
+import org.fruct.oss.socialnavigator.points.PointsServiceConnection;
+import org.fruct.oss.socialnavigator.points.PointsServiceConnectionListener;
 import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.EarthSpace;
 import org.fruct.oss.socialnavigator.utils.NamedThreadFactory;
@@ -52,7 +54,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class RoutingService extends Service implements PointsService.Listener,
-		LocationReceiver.Listener,	ContentServiceConnectionListener {
+		LocationReceiver.Listener,	ContentServiceConnectionListener, PointsServiceConnectionListener {
 	public static final String ARG_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.ARG_LOCATION";
 	public static final String BC_LOCATION = "org.fruct.oss.socialnavigator.routing.RoutingService.BC_LOCATION";
 	public static final RoutingType[] REQUIRED_ROUTING_TYPES = {
@@ -75,7 +77,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private Future<?> routeFuture;
 	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 	private Routing routing;
-	private PointsServiceConnection pointsServiceConnection;
+	private PointsServiceConnection pointsServiceConnection = new PointsServiceConnection(this);
 	private PointsService pointsService;
 
 	private ContentServiceConnection contentServiceConnection = new ContentServiceConnection(this);
@@ -119,11 +121,9 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 		routing = new Routing();
 
-		bindService(new Intent(this, PointsService.class),
-				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
-
 		currentPathsMap.clear();
 
+		pointsServiceConnection.bindService(this);
 		contentServiceConnection.bindService(this);
 
 		log.info("created");
@@ -169,10 +169,8 @@ public class RoutingService extends Service implements PointsService.Listener,
 		locationReceiver.stop();
 		locationReceiver.setListener(null);
 
-		unbindService(pointsServiceConnection);
 		contentServiceConnection.unbindService(this);
-
-		pointsServiceConnection = null;
+		pointsServiceConnection.unbindService(this);
 
 		saveCurrentState();
 
@@ -545,14 +543,16 @@ public class RoutingService extends Service implements PointsService.Listener,
 		return ret;
 	}
 
-	private void onPointsServiceReady(PointsService pointsService) {
+	@Override
+	public void onPointsServiceReady(PointsService pointsService) {
 		synchronized (serviceMutex) {
 			this.pointsService = pointsService;
 		}
 		pointsService.addListener(this);
 	}
 
-	private void onPointsServiceDisconnected() {
+	@Override
+	public void onPointsServiceDisconnected() {
 		synchronized (serviceMutex) {
 			this.pointsService = null;
 		}
@@ -688,19 +688,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 	public class Binder extends android.os.Binder {
 		public RoutingService getService() {
 			return RoutingService.this;
-		}
-	}
-
-	private class PointsServiceConnection implements ServiceConnection {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			PointsService pointsService = ((PointsService.Binder) service).getService();
-			onPointsServiceReady(pointsService);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			onPointsServiceDisconnected();
 		}
 	}
 }

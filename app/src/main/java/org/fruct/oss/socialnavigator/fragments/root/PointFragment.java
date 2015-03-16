@@ -44,6 +44,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 	private ServiceConnection pointConnection = new PointConnection();
 	private ServiceConnection routingConnection = new RoutingConnection();
+
 	private PointsService pointsService;
 	private RoutingService routingService;
 
@@ -160,7 +161,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		return super.onOptionsItemSelected(item);
 	}
 
-	public void onServiceReady(PointsService service) {
+	public void onPointsServiceReady(PointsService service) {
 		this.pointsService = service;
 		pointsService.addListener(this);
 		refreshList();
@@ -215,7 +216,7 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
 			PointsService service = ((PointsService.Binder) binder).getService();
-			onServiceReady(service);
+			onPointsServiceReady(service);
 		}
 
 		@Override

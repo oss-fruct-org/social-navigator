@@ -72,9 +72,9 @@ public class MainActivity extends ActionBarActivity
 		super.onDestroy();
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			HttpResponseCache.getInstalled().flush();
+			/*HttpResponseCache.getInstalled().flush();
 			log.info("HttpResponseCache network: {}", HttpResponseCache.getInstalled().getNetworkCount());
-			log.info("HttpResponseCache hits: {}", HttpResponseCache.getInstalled().getHitCount());
+			log.info("HttpResponseCache hits: {}", HttpResponseCache.getInstalled().getHitCount());*/
 		}
 	}
 

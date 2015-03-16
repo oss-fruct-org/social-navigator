@@ -46,7 +46,7 @@ public class App extends Application {
 
 		imageLoader = setupImageLoader(imageCacheDir);
 
-		try {
+		/*try {
 			if (!BuildConfig.DEBUG) {
 				httpCacheDir = new File(context.getCacheDir(), "http");
 			}
@@ -56,7 +56,7 @@ public class App extends Application {
 					.getMethod("install", File.class, long.class)
 					.invoke(null, httpCacheDir, httpCacheSize);
 		} catch (Exception ignore) {
-		}
+		}*/
 	}
 
 	private ImageLoader setupImageLoader(File imageCacheDir) {
