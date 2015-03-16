@@ -2,7 +2,6 @@ package org.fruct.oss.socialnavigator;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.net.http.HttpResponseCache;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -19,7 +18,7 @@ import android.view.ViewGroup;
 import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.socialnavigator.fragments.root.GetsFragment;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
-import org.fruct.oss.socialnavigator.fragments.root.PointFragment;
+import org.fruct.oss.socialnavigator.fragments.root.DisabilitiesFragment;
 import org.fruct.oss.socialnavigator.fragments.root.RootContentFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
@@ -99,7 +98,7 @@ public class MainActivity extends ActionBarActivity
 			break;
 
 		case 1:
-			fragment = PointFragment.newInstance();
+			fragment = DisabilitiesFragment.newInstance();
 			break;
 
 		case 2:

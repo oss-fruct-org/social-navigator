@@ -36,9 +36,8 @@ import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//FIXME: rename to category fragment
-public class PointFragment extends ListFragment implements PointsService.Listener, SwipeRefreshLayout.OnRefreshListener, Checker {
-	private static final Logger log = LoggerFactory.getLogger(PointFragment.class);
+public class DisabilitiesFragment extends ListFragment implements PointsService.Listener, SwipeRefreshLayout.OnRefreshListener, Checker {
+	private static final Logger log = LoggerFactory.getLogger(DisabilitiesFragment.class);
 
 	private PointAdapter adapter;
 
@@ -50,11 +49,11 @@ public class PointFragment extends ListFragment implements PointsService.Listene
 
 	private SwipeRefreshLayout refreshLayout;
 
-	public PointFragment() {
+	public DisabilitiesFragment() {
 	}
 
-	public static PointFragment newInstance() {
-		return new PointFragment();
+	public static DisabilitiesFragment newInstance() {
+		return new DisabilitiesFragment();
 	}
 
 	@Override
