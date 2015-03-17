@@ -175,7 +175,7 @@ public class PointsDatabase implements Closeable {
 	public Cursor loadNotSynchronizedPoints() {
 		return db.rawQuery("SELECT DISTINCT point._id, point.name, point.description, point.url, " +
 				"point.lat, point.lon, point.provider, point.uuid, point.difficulty, point.private, " +
-				"category._id, category.name, category.description, category.url, category.iconUrl " +
+				"category._id, category.name, category.description, category.url, category.iconUrl, category.published " +
 
 				"FROM point INNER JOIN category ON point.categoryId = category._id " +
 				"WHERE point.provider=?", toArray(Point.LOCAL_PROVIDER));

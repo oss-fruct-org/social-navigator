@@ -3,6 +3,7 @@ package org.fruct.oss.socialnavigator.utils;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Xml;
 
 import org.fruct.oss.socialnavigator.parsers.GetsException;
@@ -10,6 +11,7 @@ import org.fruct.oss.socialnavigator.parsers.GetsResponse;
 import org.fruct.oss.socialnavigator.points.Category;
 import org.fruct.oss.socialnavigator.points.GetsProvider;
 import org.fruct.oss.socialnavigator.settings.Preferences;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlSerializer;
@@ -20,6 +22,7 @@ import java.io.StringWriter;
 public class PublishingTask extends AsyncTask<Void, Void, PublishingTask.Result> {
 	private static final Logger log = LoggerFactory.getLogger(PublishingTask.class);
 
+	@Nullable
 	private final String authToken;
 	private final Mode mode;
 	private final Category category;
@@ -35,6 +38,10 @@ public class PublishingTask extends AsyncTask<Void, Void, PublishingTask.Result>
 
 	@Override
 	protected Result doInBackground(Void... voids) {
+		if (authToken == null) {
+			return Result.ERROR;
+		}
+
 		String request = createPublishRequest(authToken, category.getId());
 		try {
 			String ret = Utils.downloadUrl(GetsProvider.GETS_SERVER + mode.mode, request);
