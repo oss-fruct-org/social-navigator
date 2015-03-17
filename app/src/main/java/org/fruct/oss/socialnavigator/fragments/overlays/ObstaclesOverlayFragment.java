@@ -7,6 +7,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.Menu;
@@ -34,30 +35,39 @@ import java.util.List;
 import java.util.Map;
 
 public class ObstaclesOverlayFragment extends OverlayFragment
-		implements ItemizedIconOverlay.OnItemGestureListener<ObstaclesOverlayFragment.Obstacle>, RoutingService.Listener, PointsService.Listener, SharedPreferences.OnSharedPreferenceChangeListener {
+		implements ItemizedIconOverlay.OnItemGestureListener<ObstaclesOverlayFragment.Obstacle>,
+		RoutingService.Listener, PointsService.Listener,
+		SharedPreferences.OnSharedPreferenceChangeListener {
 	private static final Logger log = LoggerFactory.getLogger(ObstaclesOverlayFragment.class);
 
 	public static final int POINT_UPDATE_INTERVAL = 60 * 3600;
 	public static final int POINT_UPDATE_DISTANCE = 1000;
-	public static final String PREF_LAST_UPDATE = "last_update";
+	public static final String PREF_LAST_UPDATE = "pref_last_update";
 
 	private RoutingServiceConnection routingServiceConnection;
 	private PointsServiceConnection pointsServiceConnection;
 
 	private Drawable obstacleDrawable;
+	private Drawable obstacleDrawablePrivate;
+
 	private RoutingService routingService;
 	private PointsService pointsService;
-	private ItemizedIconOverlay<Obstacle> overlay;
+
+	private ItemizedIconOverlay<Obstacle> pathObstaclesOverlay;
+	private ItemizedIconOverlay<Obstacle> privateObstaclesOverlay;
+
 	private MapView mapView;
 	private Preferences appPreferences;
 
 	private Map<RoutingType, ChoicePath> paths;
-	private RoutingService.TrackingState trackingState;
+	private AsyncTask<Void, Void, List<Obstacle>> privateObstaclesTask;
+	private RoutingService.State routingState;
 
 	@Override
 	public void onCreate(Bundle in) {
 		super.onCreate(in);
 		obstacleDrawable = getActivity().getResources().getDrawable(R.drawable.blast);
+		obstacleDrawablePrivate = getActivity().getResources().getDrawable(R.drawable.blast2);
 
 		appPreferences = new Preferences(getActivity());
 		appPreferences.getPref().registerOnSharedPreferenceChangeListener(this);
@@ -68,6 +78,10 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	@Override
 	public void onDestroy() {
 		appPreferences.getPref().unregisterOnSharedPreferenceChangeListener(this);
+
+		if (privateObstaclesTask != null) {
+			privateObstaclesTask.cancel(false);
+		}
 
 		if (routingService != null) {
 			routingService.removeListener(this);
@@ -90,8 +104,13 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	@Override
 	public void onMapViewReady(MapView mapView) {
-		overlay = new ItemizedIconOverlay<Obstacle>(new ArrayList<Obstacle>(), this, new DefaultResourceProxyImpl(getActivity()));
-		mapView.getOverlayManager().add(overlay);
+		pathObstaclesOverlay = new ItemizedIconOverlay<>(new ArrayList<Obstacle>(),
+				this, new DefaultResourceProxyImpl(getActivity()));
+		mapView.getOverlayManager().add(pathObstaclesOverlay);
+
+		privateObstaclesOverlay = new ItemizedIconOverlay<>(new ArrayList<Obstacle>(),
+				this, new DefaultResourceProxyImpl(getActivity()));
+		mapView.getOverlayManager().add(privateObstaclesOverlay);
 
 		getActivity().bindService(new Intent(getActivity(), RoutingService.class),
 				routingServiceConnection = new RoutingServiceConnection(), Context.BIND_AUTO_CREATE);
@@ -100,6 +119,8 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 				pointsServiceConnection = new PointsServiceConnection(), Context.BIND_AUTO_CREATE);
 
 		this.mapView = mapView;
+
+		updatePrivateObstaclesOverlay();
 	}
 
 	@Override
@@ -163,8 +184,10 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 	@Override
 	public void routingStateChanged(RoutingService.State state) {
+		routingState = state;
 		if (state == RoutingService.State.IDLE) {
-			overlay.removeAllItems();
+			pathObstaclesOverlay.removeAllItems();
+			updatePrivateObstaclesOverlay();
 		}
 	}
 
@@ -177,13 +200,12 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		this.paths = paths;
 		RoutingType activeRoutingType = appPreferences.getActiveRoutingType();
 		ChoicePath activePath = paths.get(activeRoutingType);
-		updateOverlay(activePath);
+		updatePathObstaclesOverlay(activePath);
 	}
 
 	@Override
 	public void activePathUpdated(RoutingService.TrackingState trackingState) {
-		this.trackingState = trackingState;
-		updateOverlay(trackingState.initialPath);
+		updatePathObstaclesOverlay(trackingState.initialPath);
 	}
 
 	@Override
@@ -192,22 +214,66 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		appPreferences.setLastPointsUpdateTimestamp(currentTime);
 		appPreferences.setGeoPoint(PREF_LAST_UPDATE, new GeoPoint(routingService.getLastLocation()));
 		Toast.makeText(getActivity(), R.string.str_data_refresh_complete, Toast.LENGTH_SHORT).show();
+
+		if (routingState == RoutingService.State.IDLE) {
+			updatePrivateObstaclesOverlay();
+		}
 	}
 
-	private void updateOverlay(ChoicePath activePath) {
+	private void updatePrivateObstaclesOverlay() {
+		if (pointsService == null) {
+			return;
+		}
+
+		privateObstaclesTask = new AsyncTask<Void, Void, List<Obstacle>>() {
+			@Override
+			protected List<Obstacle> doInBackground(Void... params) {
+				List<Point> points = pointsService.queryList(pointsService.requestPrivatePoints());
+				List<Obstacle> obstacles = new ArrayList<>(points.size());
+
+				for (Point point : points) {
+					obstacles.add(new Obstacle(point.getName(), point.getDescription(),
+							new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleDrawablePrivate));
+				}
+
+				return obstacles;
+			}
+
+			@Override
+			protected void onPostExecute(List<Obstacle> obstacles) {
+				super.onPostExecute(obstacles);
+				privateObstaclesOverlay.removeAllItems();
+				privateObstaclesOverlay.addItems(obstacles);
+				mapView.invalidate();
+			}
+		};
+
+		privateObstaclesTask.execute();
+	}
+
+	private void clearPrivateObstaclesOverlay() {
+		if (privateObstaclesTask != null) {
+			privateObstaclesTask.cancel(false);
+		}
+
+		privateObstaclesOverlay.removeAllItems();
+	}
+
+	private void updatePathObstaclesOverlay(ChoicePath activePath) {
 		if (activePath == null) {
 			return;
 		}
 
-		overlay.removeAllItems();
+		clearPrivateObstaclesOverlay();
+		pathObstaclesOverlay.removeAllItems();
 
-		List<Obstacle> obstacles = new ArrayList<Obstacle>(activePath.getPoints().length);
+		List<Obstacle> obstacles = new ArrayList<>(activePath.getPoints().length);
 		for (Point point : activePath.getPoints()) {
 			obstacles.add(new Obstacle(point.getName(), point.getDescription(),
 					new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleDrawable));
 		}
 
-		overlay.addItems(obstacles);
+		pathObstaclesOverlay.addItems(obstacles);
 		mapView.invalidate();
 	}
 
@@ -244,7 +310,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 			RoutingType activeRoutingType = appPreferences.getActiveRoutingType();
 			if (paths != null) {
 				ChoicePath activePath = paths.get(activeRoutingType);
-				updateOverlay(activePath);
+				updatePathObstaclesOverlay(activePath);
 			}
 		}
 	}

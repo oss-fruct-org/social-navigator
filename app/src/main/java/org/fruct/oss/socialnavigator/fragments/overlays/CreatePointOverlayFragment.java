@@ -117,6 +117,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 				geoPoint.getLatitude(), geoPoint.getLongitude(),
 				category,org.fruct.oss.socialnavigator.points. Point.LOCAL_PROVIDER,
 				"point-" + geoPoint.toString(), difficulty);
+		point.setPrivate(true);
 
 		if (pointsService != null) {
 			pointsService.addPoint(point);

@@ -50,17 +50,22 @@ public class Kml implements IContent {
 				continue;
 
 			String tagName = parser.getName();
-			if (tagName.equals("name")) {
+			switch (tagName) {
+			case "name":
 				kml.name = GetsResponse.readText(parser);
 				parser.require(XmlPullParser.END_TAG, null, "name");
-			} else if (tagName.equals("open")) {
+				break;
+			case "open":
 				kml.open = Integer.parseInt(GetsResponse.readText(parser));
 				parser.require(XmlPullParser.END_TAG, null, "open");
-			} else if (tagName.equals("Placemark")) {
+				break;
+			case "Placemark":
 				points.add(Point.parse(parser));
 				parser.require(XmlPullParser.END_TAG, null, "Placemark");
-			} else {
+				break;
+			default:
 				XmlUtil.skip(parser);
+				break;
 			}
 		}
 

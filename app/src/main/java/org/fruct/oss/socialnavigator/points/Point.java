@@ -221,13 +221,22 @@ public class Point implements Parcelable {
 				parser.require(XmlPullParser.START_TAG, null, "value");
 				String value = GetsResponse.readText(parser);
 
-				if (key.equals("uuid"))
+				switch (key) {
+				case "uuid":
 					point.uuid = value;
-				else if (key.equals("difficulty") || key.equals("rating")) {
+					break;
+
+				case "difficulty":
+				case "rating":
 					try {
 						point.difficulty = Integer.parseInt(value);
 					} catch (NumberFormatException ignored) {
 					}
+					break;
+
+				case "access":
+					point.setPrivate("rw".equals(value));
+					break;
 				}
 				/*else if (key.equals("time"))
 					point.time = value;

@@ -262,6 +262,25 @@ public class PointsService extends Service {
 		};
 	}
 
+	public Request<Point> requestPrivatePoints() {
+		return new Request<Point>() {
+			@Override
+			public Cursor doQuery() {
+				return database.loadPrivatePoints();
+			}
+
+			@Override
+			public Point cursorToObject(Cursor cursor) {
+				return new Point(cursor, 1);
+			}
+
+			@Override
+			public int getId(Point point) {
+				throw new UnsupportedOperationException("Point doesn't has public id");
+			}
+		};
+	}
+
 	public Request<Disability> requestDisabilities() {
 		return new Request<Disability>() {
 			@Override
