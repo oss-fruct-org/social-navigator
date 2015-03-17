@@ -1,10 +1,7 @@
 package org.fruct.oss.socialnavigator.routing;
 
 import android.app.Service;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -214,7 +211,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 	@Override
-	public void onDataUpdated() {
+	public void onDataUpdated(boolean isRemoteUpdate) {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {

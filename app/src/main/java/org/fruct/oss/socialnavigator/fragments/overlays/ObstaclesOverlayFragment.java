@@ -209,11 +209,13 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	}
 
 	@Override
-	public void onDataUpdated() {
-		long currentTime = System.currentTimeMillis();
-		appPreferences.setLastPointsUpdateTimestamp(currentTime);
-		appPreferences.setGeoPoint(PREF_LAST_UPDATE, new GeoPoint(routingService.getLastLocation()));
-		Toast.makeText(getActivity(), R.string.str_data_refresh_complete, Toast.LENGTH_SHORT).show();
+	public void onDataUpdated(boolean isRemoteUpdate) {
+		if (isRemoteUpdate) {
+			long currentTime = System.currentTimeMillis();
+			appPreferences.setLastPointsUpdateTimestamp(currentTime);
+			appPreferences.setGeoPoint(PREF_LAST_UPDATE, new GeoPoint(routingService.getLastLocation()));
+			Toast.makeText(getActivity(), R.string.str_data_refresh_complete, Toast.LENGTH_SHORT).show();
+		}
 
 		if (routingState == RoutingService.State.IDLE) {
 			updatePrivateObstaclesOverlay();
@@ -287,7 +289,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		}
 
 		GeoPoint currentLocation = new GeoPoint(lastLocation1);
-		GeoPoint lastLocation = appPreferences.getGeoPoint("last_update");
+		GeoPoint lastLocation = appPreferences.getGeoPoint(PREF_LAST_UPDATE);
 
 
 		if (lastUpdateTime < 0 || currentTime - lastUpdateTime > POINT_UPDATE_INTERVAL

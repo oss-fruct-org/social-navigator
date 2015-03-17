@@ -168,7 +168,11 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 	}
 
 	@Override
-	public void onDataUpdated() {
+	public void onDataUpdated(boolean isRemoteUpdate) {
+		if (!isRemoteUpdate) {
+			return;
+		}
+
 		refreshLayout.setRefreshing(false);
 		refreshList();
 		Toast.makeText(getActivity(), R.string.str_data_refresh_complete, Toast.LENGTH_SHORT).show();

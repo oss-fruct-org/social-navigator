@@ -8,29 +8,25 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 
-import org.fruct.oss.socialnavigator.BuildConfig;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
-import org.fruct.oss.socialnavigator.parsers.GetsException;
 import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.Function;
 import org.osmdroid.util.GeoPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 
 public class PointsService extends Service {
+	public static final int UPDATE_LOCAL = 1;
+	public static final int UPDATE_REMOTE = 2;
+	public static final int UPDATE_DISABILITIES = 4;
+
 	private static final Logger log = LoggerFactory.getLogger(PointsService.class);
 
 	private final Binder binder = new Binder();
@@ -130,7 +126,7 @@ public class PointsService extends Service {
 					long refreshEndTime = System.nanoTime();
 					log.info("Points refresh time: {}", (refreshEndTime - refreshStartTime) * 1e-9f);
 
-					notifyDataUpdated();
+					notifyDataUpdated(true);
 				} catch (Exception ex) {
 					// TODO: refreshRemote should throw specific checked exception
 					log.error("Cannot refresh provider", ex);
@@ -172,12 +168,12 @@ public class PointsService extends Service {
 		pointsToUpload.close();
 	}
 
-	private void notifyDataUpdated() {
+	private void notifyDataUpdated(final boolean isRemoteUpdate) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
 				for (Listener listener : listeners) {
-					listener.onDataUpdated();
+					listener.onDataUpdated(isRemoteUpdate);
 				}
 			}
 		});
@@ -352,7 +348,7 @@ public class PointsService extends Service {
 
 	public void addPoint(Point point) {
 		database.insertPoint(point);
-		notifyDataUpdated();
+		notifyDataUpdated(false);
 		synchronize();
 	}
 
@@ -365,7 +361,7 @@ public class PointsService extends Service {
 	}
 
 	public void commitDisabilityStates() {
-		notifyDataUpdated();
+		notifyDataUpdated(false);
 	}
 
 	public class Binder extends android.os.Binder {
@@ -375,7 +371,7 @@ public class PointsService extends Service {
 	}
 
 	public interface Listener {
-		void onDataUpdated();
+		void onDataUpdated(boolean isRemoteUpdate);
 		void onDataUpdateFailed(Throwable throwable);
 	}
 }
