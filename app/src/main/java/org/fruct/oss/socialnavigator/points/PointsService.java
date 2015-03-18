@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.R;
@@ -133,15 +136,24 @@ public class PointsService extends Service implements SharedPreferences.OnShared
 		}
 	}
 
-	public void commitRefreshTimeAndLocation(long timestamp, GeoPoint location) {
+	public void commitRefreshTimeAndLocation(long timestamp, @Nullable GeoPoint location) {
 		Preferences appPref = new Preferences(this);
 
 		appPref.setLastPointsUpdateTimestamp(timestamp);
-		appPref.setGeoPoint(PREF_LAST_UPDATE, location);
+		if (location != null) {
+			appPref.setGeoPoint(PREF_LAST_UPDATE, location);
+		}
 	}
 
 	public void refreshIfNeed() {
 		if (lastLocation == null) {
+			return;
+		}
+
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+
+		if (networkInfo == null || !networkInfo.isConnected()) {
 			return;
 		}
 
@@ -175,13 +187,13 @@ public class PointsService extends Service implements SharedPreferences.OnShared
 				try {
 					log.info("Starting points refresh for geoPoint {}", geoPoint);
 					long refreshStartTime = System.nanoTime();
+					commitRefreshTimeAndLocation(System.currentTimeMillis(), geoPoint);
 					refreshRemote(geoPoint);
 					long refreshEndTime = System.nanoTime();
 					log.info("Points refresh time: {}", (refreshEndTime - refreshStartTime) * 1e-9f);
 
 					notifyDataUpdated(true);
 
-					commitRefreshTimeAndLocation(System.currentTimeMillis(), geoPoint);
 				} catch (Exception ex) {
 					// TODO: refreshRemote should throw specific checked exception
 					log.error("Cannot refresh provider", ex);
