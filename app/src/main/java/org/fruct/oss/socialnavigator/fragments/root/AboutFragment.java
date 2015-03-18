@@ -26,7 +26,7 @@ public class AboutFragment extends Fragment {
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 
-		((MainActivity) activity).onSectionAttached(getString(R.string.title_section6),
+		((MainActivity) activity).onSectionAttached(getString(R.string.title_section7),
 				ActionBar.NAVIGATION_MODE_STANDARD, null);
 	}
 

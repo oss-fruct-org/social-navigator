@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_1_test_title">Hello world</string>
+    <string name="help_1_test">Hello world test help</string>
+</resources>

@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.socialnavigator.fragments.root.AboutFragment;
 import org.fruct.oss.socialnavigator.fragments.root.GetsFragment;
+import org.fruct.oss.socialnavigator.fragments.root.HelpFragment;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.DisabilitiesFragment;
 import org.fruct.oss.socialnavigator.fragments.root.RootContentFragment;
@@ -115,6 +116,10 @@ public class MainActivity extends ActionBarActivity
 			return;
 
 		case 5:
+			fragment = HelpFragment.newInstance();
+			break;
+
+		case 6:
 			fragment = AboutFragment.newInstance();
 			break;
 
