@@ -141,6 +141,10 @@ public class PointsService extends Service implements SharedPreferences.OnShared
 	}
 
 	public void refreshIfNeed() {
+		if (lastLocation == null) {
+			return;
+		}
+
 		Preferences appPref = new Preferences(this);
 
 		long lastUpdateTime = appPref.getLastPointsUpdateTimestamp();
