@@ -46,12 +46,14 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, RoutingService.Listener {
+public class CreatePointOverlayFragment extends OverlayFragment implements PopupMenu.OnMenuItemClickListener, RoutingService.Listener, PopupMenu.OnDismissListener {
 	private static final Logger log = LoggerFactory.getLogger(CreatePointOverlayFragment.class);
 
 	private PlaceOverlay placeOverlay;
 
+	private GeoPoint touchedPoint;
 	private GeoPoint selectedPoint;
+
 	private MapView mapView;
 
 	private PointsConnection pointsServiceConnection;
@@ -213,27 +215,29 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		View anchorView = getActivity().findViewById(R.id.map_anchor);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			anchorView.setTranslationX(screenPoint.x);
-			anchorView.setTranslationY(screenPoint.y);
+			anchorView.setTranslationX(screenPoint.x - Utils.getDP(48));
+			anchorView.setTranslationY(screenPoint.y - Utils.getDP(48));
 		}
 
 		PopupMenu popupMenu = new PopupMenu(getActivity(), anchorView);
 		popupMenu.inflate(R.menu.popup_point);
 		popupMenu.setOnMenuItemClickListener(this);
+		popupMenu.setOnDismissListener(this);
 		popupMenu.show();
 
-		selectedPoint = new GeoPoint(geoPoint.getLatitudeE6(), geoPoint.getLongitudeE6());
+		touchedPoint = new GeoPoint(geoPoint.getLatitudeE6(), geoPoint.getLongitudeE6());
+		mapView.invalidate();
 	}
 
 	private void route() {
 		if (routingService != null) {
-			routingService.setTargetPoint(selectedPoint);
+			routingService.setTargetPoint(touchedPoint);
 		}
 	}
 
 	private void place() {
 		if (routingService != null) {
-			routingService.forceLocation(selectedPoint);
+			routingService.forceLocation(touchedPoint);
 		}
 	}
 
@@ -247,7 +251,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 			trackingPath = null;
 		}
 
-		mapView.getOverlayManager().add(placeOverlay = new PlaceOverlay(getActivity(), selectedPoint, trackingPath));
+		mapView.getOverlayManager().add(placeOverlay = new PlaceOverlay(getActivity(), touchedPoint, trackingPath));
 		mapView.invalidate();
 		showPanel();
 	}
@@ -271,7 +275,16 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 			return false;
 		}
 
+		touchedPoint = null;
+		mapView.invalidate();
+
 		return true;
+	}
+
+	@Override
+	public void onDismiss(PopupMenu popupMenu) {
+		touchedPoint = null;
+		mapView.invalidate();
 	}
 
 	private void showPanel() {
@@ -334,7 +347,6 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		private final GeoPoint geoPoint;
 		private final GeoPoint geoPointProjected = new GeoPoint(0, 0);
 
-		private final Drawable drawable;
 
 		private final Point point = new Point();
 		private final TrackPath<org.fruct.oss.socialnavigator.points.Point> trackPath;
@@ -354,7 +366,6 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 			this.trackPath = trackPath;
 
 			this.geoPoint = new GeoPoint(initialPoint);
-			this.drawable = ctx.getResources().getDrawable(R.drawable.blank);
 
 			this.projectedPaint = new Paint();
 			projectedPaint.setAntiAlias(true);
@@ -367,6 +378,9 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 		@Override
 		protected void draw(Canvas c, MapView mapView, boolean shadow) {
+			if (shadow)
+				return;
+
 			Projection proj = mapView.getProjection();
 
 			/*proj.toPixels(geoPoint, point);
@@ -443,12 +457,24 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	}
 
 	private class EventOverlay extends Overlay {
+		private final Drawable drawable;
+		private final Point point = new Point();
+
 		public EventOverlay(Context ctx) {
 			super(ctx);
+
+			drawable = ctx.getResources().getDrawable(R.drawable.star_red);
 		}
 
 		@Override
 		protected void draw(Canvas c, MapView osmv, boolean shadow) {
+			if (shadow || touchedPoint == null)
+				return;
+
+			Projection proj = mapView.getProjection();
+			proj.toPixels(touchedPoint, point);
+			drawable.setBounds(point.x - 16, point.y - 37, point.x + 16, point.y);
+			drawable.draw(c);
 		}
 
 		@Override

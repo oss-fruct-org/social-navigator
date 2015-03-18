@@ -33,8 +33,8 @@
                  android:layout_height="wrap_content"
                  android:layout_width="wrap_content"
 
-                 android:minHeight="8dp"
-                 android:minWidth="8dp"
+                 android:minHeight="64dp"
+                 android:minWidth="64dp"
 
                  android:background="#ffffffff"
 
