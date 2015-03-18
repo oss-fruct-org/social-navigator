@@ -161,11 +161,13 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 			webLoginButton.setVisibility(View.GONE);
 			googleLoginButton.setVisibility(View.GONE);
 			logoutButton.setVisibility(View.VISIBLE);
+			listView.setVisibility(View.VISIBLE);
 		} else {
 			webLoginButton.setVisibility(View.VISIBLE);
 			googleLoginButton.setVisibility(GooglePlayServicesHelper.isAvailable(getActivity())
 					? View.VISIBLE : View.GONE);
 			logoutButton.setVisibility(View.GONE);
+			listView.setVisibility(View.GONE);
 		}
 	}
 

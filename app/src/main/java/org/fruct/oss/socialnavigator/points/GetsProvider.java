@@ -96,7 +96,7 @@ public class GetsProvider implements PointsProvider {
 
 			serializer.startTag(null, "latitude").text(String.valueOf(geoPoint.getLatitude())).endTag(null, "latitude");
 			serializer.startTag(null, "longitude").text(String.valueOf(geoPoint.getLongitude())).endTag(null, "longitude");
-			serializer.startTag(null, "radius").text(String.valueOf(ObstaclesOverlayFragment.POINT_UPDATE_DISTANCE * 4)).endTag(null, "radius");
+			serializer.startTag(null, "radius").text(String.valueOf(PointsService.POINT_UPDATE_DISTANCE * 4)).endTag(null, "radius");
 			serializer.startTag(null, "category_id").text(String.valueOf(category.getId())).endTag(null, "category_id");
 
 			if (authToken != null)

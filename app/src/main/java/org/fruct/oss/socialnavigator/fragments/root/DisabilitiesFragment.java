@@ -202,11 +202,8 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 	@Override
 	public void onRefresh() {
 		if (checkServices()) {
-			Location lastLocation = routingService.getLastLocation();
-			if (lastLocation != null) {
-				pointsService.refresh(new GeoPoint(lastLocation));
-				refreshLayout.setRefreshing(true);
-			}
+			pointsService.refresh();
+			refreshLayout.setRefreshing(true);
 		}
 	}
 

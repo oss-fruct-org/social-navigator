@@ -40,9 +40,6 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		SharedPreferences.OnSharedPreferenceChangeListener {
 	private static final Logger log = LoggerFactory.getLogger(ObstaclesOverlayFragment.class);
 
-	public static final int POINT_UPDATE_INTERVAL = 60 * 3600;
-	public static final int POINT_UPDATE_DISTANCE = 1000;
-	public static final String PREF_LAST_UPDATE = "pref_last_update";
 
 	private RoutingServiceConnection routingServiceConnection;
 	private PointsServiceConnection pointsServiceConnection;
@@ -135,10 +132,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		if (item.getItemId() == R.id.action_refresh) {
 			Toast.makeText(getActivity(), R.string.str_refreshing_obstacles, Toast.LENGTH_SHORT).show();
 			if (routingService != null && pointsService != null) {
-				Location lastLocation = routingService.getLastLocation();
-				if (lastLocation != null) {
-					pointsService.refresh(new GeoPoint(lastLocation));
-				}
+				pointsService.refresh();
 			}
 		}
 
@@ -160,9 +154,6 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		routingService = service;
 		routingService.addListener(this);
 
-		if (pointsService != null) {
-			autoUpdatePoints();
-		}
 	}
 
 	private void onRoutingServiceDisconnected() {
@@ -173,9 +164,6 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		pointsService = service;
 		pointsService.addListener(this);
 
-		if (routingService != null) {
-			autoUpdatePoints();
-		}
 	}
 
 	private void onPointsServiceDisconnected() {
@@ -211,10 +199,8 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	@Override
 	public void onDataUpdated(boolean isRemoteUpdate) {
 		if (isRemoteUpdate) {
-			long currentTime = System.currentTimeMillis();
-			appPreferences.setLastPointsUpdateTimestamp(currentTime);
-			appPreferences.setGeoPoint(PREF_LAST_UPDATE, new GeoPoint(routingService.getLastLocation()));
-			Toast.makeText(getActivity(), R.string.str_data_refresh_complete, Toast.LENGTH_SHORT).show();
+			Toast.makeText(getActivity(), R.string.str_data_refresh_complete,
+					Toast.LENGTH_SHORT).show();
 		}
 
 		if (routingState == RoutingService.State.IDLE) {
@@ -277,28 +263,6 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 		pathObstaclesOverlay.addItems(obstacles);
 		mapView.invalidate();
-	}
-
-	private boolean autoUpdatePoints() {
-		long lastUpdateTime = appPreferences.getLastPointsUpdateTimestamp();
-		long currentTime = System.currentTimeMillis();
-
-		Location lastLocation1 = routingService.getLastLocation();
-		if (lastLocation1 == null) {
-			return false;
-		}
-
-		GeoPoint currentLocation = new GeoPoint(lastLocation1);
-		GeoPoint lastLocation = appPreferences.getGeoPoint(PREF_LAST_UPDATE);
-
-
-		if (lastUpdateTime < 0 || currentTime - lastUpdateTime > POINT_UPDATE_INTERVAL
-				|| lastLocation == null || currentLocation.distanceTo(lastLocation) > POINT_UPDATE_DISTANCE) {
-			pointsService.refresh(currentLocation);
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	@Override

@@ -2,12 +2,17 @@ package org.fruct.oss.socialnavigator.points;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.preference.PreferenceManager;
+import android.widget.Toast;
 
+import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.Function;
@@ -22,20 +27,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class PointsService extends Service {
-	public static final int UPDATE_LOCAL = 1;
-	public static final int UPDATE_REMOTE = 2;
-	public static final int UPDATE_DISABILITIES = 4;
-
+public class PointsService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener {
 	private static final Logger log = LoggerFactory.getLogger(PointsService.class);
+
+	public static final int POINT_UPDATE_INTERVAL = 60 * 3600;
+	public static final int POINT_UPDATE_DISTANCE = 1000;
+
+	public static final String PREF_LAST_UPDATE = "pref_last_update";
 
 	private final Binder binder = new Binder();
 
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-	private final List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
+	private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
 	private Handler handler;
+	private SharedPreferences pref;
 
 	private PointsDatabase database;
 
@@ -43,7 +50,7 @@ public class PointsService extends Service {
 	private Future<?> refreshProvidersTask;
 	private Future<?> synchronizationTask;
 
-	private boolean isTestMode;
+	private Location lastLocation;
 
 	public PointsService() {
     }
@@ -60,15 +67,14 @@ public class PointsService extends Service {
 		database = new PointsDatabase(this);
 		handler = new Handler(Looper.getMainLooper());
 
+		pref = PreferenceManager.getDefaultSharedPreferences(this);
+		pref.registerOnSharedPreferenceChangeListener(this);
+
 		log.info("created");
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (intent != null) {
-			isTestMode = intent.getBooleanExtra("test", false);
-		}
-
 		handler.removeCallbacks(stopRunnable);
 		return START_NOT_STICKY;
 	}
@@ -80,6 +86,8 @@ public class PointsService extends Service {
 
 		if (synchronizationTask != null && !synchronizationTask.isDone())
 			synchronizationTask.cancel(true);
+
+		pref.unregisterOnSharedPreferenceChangeListener(this);
 
 		executor.execute(new Runnable() {
 			@Override
@@ -112,9 +120,49 @@ public class PointsService extends Service {
 		}
 	};
 
-	public void refresh(final GeoPoint geoPoint) {
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		if (key.equals(Preferences.PREF_GETS_TOKEN)) {
+			String token = sharedPreferences.getString(key, null);
+			if (token != null) {
+				synchronize();
+				refresh();
+			}
+		}
+	}
+
+	public void commitRefreshTimeAndLocation(long timestamp, GeoPoint location) {
+		Preferences appPref = new Preferences(this);
+
+		long currentTime = System.currentTimeMillis();
+		appPref.setLastPointsUpdateTimestamp(currentTime);
+		appPref.setGeoPoint(PREF_LAST_UPDATE, location);
+	}
+
+	public void refreshIfNeed() {
+		Preferences appPref = new Preferences(this);
+
+		long lastUpdateTime = appPref.getLastPointsUpdateTimestamp();
+		long currentTime = System.currentTimeMillis();
+
+		GeoPoint currentLocation = new GeoPoint(lastLocation);
+		GeoPoint lastLocation = appPref.getGeoPoint(PREF_LAST_UPDATE);
+
+		if (lastUpdateTime < 0 || currentTime - lastUpdateTime > POINT_UPDATE_INTERVAL
+				|| lastLocation == null || currentLocation.distanceTo(lastLocation) > POINT_UPDATE_DISTANCE) {
+			refresh();
+		}
+	}
+
+	public void refresh() {
 		if (refreshProvidersTask != null && !refreshProvidersTask.isDone())
 			refreshProvidersTask.cancel(true);
+
+		if (lastLocation == null) {
+			return;
+		}
+
+		final GeoPoint geoPoint = new GeoPoint(lastLocation);
 
 		refreshProvidersTask = executor.submit(new Runnable() {
 			@Override
@@ -127,6 +175,8 @@ public class PointsService extends Service {
 					log.info("Points refresh time: {}", (refreshEndTime - refreshStartTime) * 1e-9f);
 
 					notifyDataUpdated(true);
+
+					commitRefreshTimeAndLocation(System.currentTimeMillis(), geoPoint);
 				} catch (Exception ex) {
 					// TODO: refreshRemote should throw specific checked exception
 					log.error("Cannot refresh provider", ex);
@@ -152,6 +202,12 @@ public class PointsService extends Service {
 				}
 			}
 		});
+	}
+
+	public void setLocation(Location location) {
+		this.lastLocation = location;
+
+		refreshIfNeed();
 	}
 
 	@Blocking
@@ -213,7 +269,7 @@ public class PointsService extends Service {
 	public <T> List<T> queryList(Request<T> request) {
 		Cursor cursor = queryCursor(request);
 
-		List<T> ret = new ArrayList<T>();
+		List<T> ret = new ArrayList<>();
 		while (cursor.moveToNext()) {
 			ret.add(request.cursorToObject(cursor));
 		}

@@ -74,6 +74,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private Future<?> routeFuture;
 	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 	private Routing routing;
+
 	private PointsServiceConnection pointsServiceConnection = new PointsServiceConnection(this);
 	private PointsService pointsService;
 
@@ -325,6 +326,10 @@ public class RoutingService extends Service implements PointsService.Listener,
 			contentService.setLocation(location);
 		}
 
+		if (pointsService != null) {
+			pointsService.setLocation(location);
+		}
+
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -545,6 +550,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		synchronized (serviceMutex) {
 			this.pointsService = pointsService;
 		}
+		pointsService.setLocation(getLastLocation());
 		pointsService.addListener(this);
 	}
 
