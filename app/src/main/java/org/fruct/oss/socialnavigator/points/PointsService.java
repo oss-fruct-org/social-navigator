@@ -70,6 +70,8 @@ public class PointsService extends Service implements SharedPreferences.OnShared
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
 		pref.registerOnSharedPreferenceChangeListener(this);
 
+		synchronize();
+
 		log.info("created");
 	}
 
@@ -134,8 +136,7 @@ public class PointsService extends Service implements SharedPreferences.OnShared
 	public void commitRefreshTimeAndLocation(long timestamp, GeoPoint location) {
 		Preferences appPref = new Preferences(this);
 
-		long currentTime = System.currentTimeMillis();
-		appPref.setLastPointsUpdateTimestamp(currentTime);
+		appPref.setLastPointsUpdateTimestamp(timestamp);
 		appPref.setGeoPoint(PREF_LAST_UPDATE, location);
 	}
 
@@ -168,7 +169,7 @@ public class PointsService extends Service implements SharedPreferences.OnShared
 			@Override
 			public void run() {
 				try {
-					log.info("Starting points refresh");
+					log.info("Starting points refresh for geoPoint {}", geoPoint);
 					long refreshStartTime = System.nanoTime();
 					refreshRemote(geoPoint);
 					long refreshEndTime = System.nanoTime();
