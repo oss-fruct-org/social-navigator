@@ -2,4 +2,49 @@
 <resources>
     <string name="help_1_test_title">Hello world</string>
     <string name="help_1_test">Hello world test help</string>
+
+    <string name="help_1_place_title">Find me</string>
+    <string name="help_1_place">Click to center map on your location</string>
+    <string name="help_1_refresh_title">Refresh</string>
+    <string name="help_1_refresh">Download obstacles data from server</string>
+    <string name="help_1_click_title">Map interaction</string>
+    <string name="help_1_click">Touch map to access map interaction menu</string>
+
+    <string name="help_1_menu_place_here_title">@string/action_place_here</string>
+    <string name="help_1_menu_place_here">Set current location in previously touched point</string>
+    <string name="help_1_route_title">@string/action_route</string>
+    <string name="help_1_route">Find path to point</string>
+    <string name="help_1_create_point_title">@string/action_create</string>
+    <string name="help_1_create_point">Select to add new obstacle. If you choose this menu item while moving, point will be snapped to current route</string>
+
+    <string name="help_1_choose_routing_type_title">Route type</string>
+    <string name="help_1_choose_routing_type">Click to choose routing difficulty</string>
+
+    <string name="help_1_accept_route_title">Accept route</string>
+    <string name="help_1_accept_route">Click to start selected route.\n
+Panel with obstacles information will open.\n
+Panel shows next obstacle and distance to next turn.
+    </string>
+
+    <string name="help_2_refresh_title">@string/help_1_refresh_title</string>
+    <string name="help_2_refresh">@string/help_1_refresh</string>
+
+    <string name="help_2_disabilities_title">Categories</string>
+    <string name="help_2_disabilities">Select the category that best describe you</string>
+
+    <string name="help_3_content_title">Content</string>
+    <string name="help_3_content">App can download and update navigation maps from server. Choose your region to download content. Suitable map will be chosen from loaded maps automatically based on your location.</string>
+
+    <string name="help_4_gets_title">GeTS Server</string>
+    <string name="help_4_gets">GeTS Server is used for uploading and sharing your obstacles. GeTS Server uses Google authentication with to options.</string>
+
+    <string name="help_4_web_title">Web browser authentication.</string>
+    <string name="help_4_web">Click to sign in using web browser window.</string>
+
+    <string name="help_4_google_title">Android account</string>
+    <string name="help_4_google">Use your current android account to sign in to GeTS.</string>
+
+    <string name="help_4_share_title">Share your categories</string>
+    <string name="help_4_share">Points your create can be shared with other users if you have privileges. Click cloud icon to share corresponding category.</string>
+
 </resources>

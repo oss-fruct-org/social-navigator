@@ -138,15 +138,43 @@ public class HelpFragment extends Fragment implements ActionBar.TabListener {
 		@Override
 		public Fragment getItem(int position) {
 			HelpEntry[] helpEntries1 = {
-					newHelpEntry(R.string.help_1_test_title,R.string.help_1_test, 0, true)
+					newHelpEntry(R.string.help_1_place_title, R.string.help_1_place,
+							R.drawable.ic_action_location_found, false),
+					newHelpEntry(R.string.help_1_refresh_title, R.string.help_1_refresh,
+							R.drawable.ic_action_refresh, false),
+					newHelpEntry(R.string.help_1_click_title, R.string.help_1_click,
+							0, false),
+
+					newHelpEntry(R.string.help_1_route_title, R.string.help_1_route,
+							0, false),
+					newHelpEntry(R.string.help_1_create_point_title, R.string.help_1_create_point,
+							0, false),
+					newHelpEntry(R.string.help_1_menu_place_here_title, R.string.help_1_menu_place_here,
+							0, false),
+
+					newHelpEntry(R.string.help_1_choose_routing_type_title, R.string.help_1_choose_routing_type,
+							R.drawable.ic_action_edit, false),
+					newHelpEntry(R.string.help_1_accept_route_title, R.string.help_1_accept_route,
+							R.drawable.ic_action_accept, false),
+
 			};
 
 			HelpEntry[] helpEntries2 = {
-					newHelpEntry(R.string.help_1_test_title,R.string.help_1_test, 0, true)
+					newHelpEntry(R.string.help_2_refresh_title,R.string.help_2_refresh,
+							R.drawable.ic_action_refresh, false),
+					newHelpEntry(R.string.help_2_disabilities_title,R.string.help_2_disabilities,
+							R.drawable.ic_action_accept, false)
 			};
 
 			HelpEntry[] helpEntries3 = {
-					newHelpEntry(R.string.help_1_test_title,R.string.help_1_test, 0, true)
+					newHelpEntry(R.string.help_3_content_title, R.string.help_3_content, R.drawable.ic_open_map, false)
+			};
+
+			HelpEntry[] helpEntries4 = {
+					newHelpEntry(R.string.help_4_gets_title, R.string.help_4_gets, 0, false),
+					newHelpEntry(R.string.help_4_web_title, R.string.help_4_web, 0, false),
+					newHelpEntry(R.string.help_4_google_title, R.string.help_4_google, 0, false),
+					newHelpEntry(R.string.help_4_share_title, R.string.help_4_share, R.drawable.ic_action_share, false),
 			};
 
 
@@ -157,6 +185,9 @@ public class HelpFragment extends Fragment implements ActionBar.TabListener {
 				return PlaceholderFragment.newLayoutInstance(helpEntries2);
 			case 2:
 				return PlaceholderFragment.newLayoutInstance(helpEntries3);
+			case 3:
+				return PlaceholderFragment.newLayoutInstance(helpEntries4);
+
 			default:
 				return PlaceholderFragment.newLayoutInstance(helpEntries1);
 			}
@@ -164,8 +195,7 @@ public class HelpFragment extends Fragment implements ActionBar.TabListener {
 
 		@Override
 		public int getCount() {
-			// Show 3 total pages.
-			return 3;
+			return 4;
 		}
 
 		@Override
@@ -178,6 +208,9 @@ public class HelpFragment extends Fragment implements ActionBar.TabListener {
 				return getString(R.string.title_section2).toUpperCase(l);
 			case 2:
 				return getString(R.string.title_section3).toUpperCase(l);
+			case 3:
+				return getString(R.string.title_section4).toUpperCase(l);
+
 			}
 			return null;
 		}

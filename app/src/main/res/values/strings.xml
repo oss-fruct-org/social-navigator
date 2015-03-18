@@ -80,4 +80,5 @@
     <string name="str_logout">Logout</string>
     <string name="about_text">This application is a part of grant KA432 of Karelia ENPI CBC programme, which is co-funded by the European Union, the Russian Federation and the Republic of Finland.</string>
     <string name="str_version">Version:</string>
+
 </resources>
