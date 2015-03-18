@@ -11,7 +11,7 @@
     <string name="title_section7">About</string>
 
     <string name="title_activity_help">Help</string>
-    <string name="title_activity_gets_login">Login</string>
+    <string name="title_activity_gets_login">Sign in</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

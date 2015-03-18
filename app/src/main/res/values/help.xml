@@ -36,7 +36,7 @@ Panel shows next obstacle and distance to next turn.
     <string name="help_3_content">App can download and update navigation maps from server. Choose your region to download content. Suitable map will be chosen from loaded maps automatically based on your location.</string>
 
     <string name="help_4_gets_title">GeTS Server</string>
-    <string name="help_4_gets">GeTS Server is used for uploading and sharing your obstacles. GeTS Server uses Google authentication with to options.</string>
+    <string name="help_4_gets">GeTS Server is used for uploading and sharing your obstacles. GeTS Server uses Google authentication with two options.</string>
 
     <string name="help_4_web_title">Web browser authentication.</string>
     <string name="help_4_web">Click to sign in using web browser window.</string>

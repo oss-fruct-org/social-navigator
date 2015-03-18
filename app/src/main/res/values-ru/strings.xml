@@ -72,6 +72,46 @@
     <string name="action_open_categories">Показать категории</string>
     <string name="action_open_map">Показать карту</string>
     <string name="str_refreshing_obstacles">Обновление препятствий</string>
+    <string name="help_1_accept_route">Нажмите, чтобы активировать выбранный маршрут. После нажатия отобразится панель с информацией о препятствиях, отображающая следующее препятствие и расстояние до следующего изменения направления движения.</string>
+    <string name="help_1_accept_route_title">Активировать маршрут</string>
+    <string name="help_1_choose_routing_type">Нажмите, чтобы выбрать маршрут из нескольких.</string>
+    <string name="help_1_choose_routing_type_title">Сложность маршрута</string>
+    <string name="help_1_click">Нажмите, на карту в нужной точке чтобы открыть меню</string>
+    <string name="help_1_click_title">Взаимодействие с картой</string>
+    <string name="help_1_create_point">Выберите чтобы создать новое препятствие. Если в данный момент активирован маршрут, точка будет привязана к этому маршруту.</string>
+    <string name="help_1_menu_place_here">Установить текущее местоположение</string>
+    <string name="help_1_place">Нажмите, чтобы центрировать карту по вашему текущему местоположению.</string>
+    <string name="help_1_place_title">Найти меня</string>
+    <string name="help_1_refresh">Загрузить обновленные данные с сервера</string>
+    <string name="help_1_refresh_title">Обновить</string>
+    <string name="help_1_route">Найти маршрут до точки</string>
+    <string name="help_1_test">Привет мир тест помощь</string>
+    <string name="help_1_test_title">Привет мир</string>
+    <string name="help_2_disabilities">Выберите подходящие вам категории</string>
+    <string name="help_2_disabilities_title">Категории</string>
+    <string name="help_3_content">Приложение может загрузить карты навигации с сервера. Для загрузки выберите нужный вам регион.</string>
+    <string name="help_3_content_title">Содержимое</string>
+    <string name="help_4_gets">Вы можете загружать созданные вами препятствия на сервер. Для использования сервера необходим аккаунт Google.</string>
+    <string name="help_4_gets_title">Сервер</string>
+    <string name="help_4_google">Использовать аккаунт Google, зарегистрированный на устройстве Android.</string>
+    <string name="help_4_google_title">Аккаунт Android</string>
+    <string name="help_4_web">Использовать веб-браузер для авторизации Google.</string>
+    <string name="help_4_share">Вы можете предоставить другим пользователям доступ к добавленным вами препятствиям при условии что администратор сервера предоставил вам доступ. Для открытия доступа к категории препятствий, выберите иконку справа от названия категории.</string>
+    <string name="help_4_share_title">Открытие доступа к своим данным</string>
+    <string name="help_4_web_title">Веб-браузер</string>
+    <string name="str_google_login_error">Ошибка авторизации. Попробуйте использовать авторизацию через браузер.</string>
+    <string name="str_google_login_success"></string>
+    <string name="str_login_google">Google</string>
+    <string name="str_login_how">Выберите метод</string>
+    <string name="str_login_web_browser">Веб-браузер</string>
+    <string name="str_logout">Выйти</string>
+    <string name="str_version">Версия:</string>
+    <string name="title_activity_gets_login">Логин</string>
+    <string name="title_activity_help">Помощь</string>
+    <string name="title_section4">Сервер</string>
+    <string name="title_section6">Помощь</string>
+    <string name="title_section7">О программе</string>
+    <string name="about_text">Приложение является частью гранта KA432 программы Karelia ENPI CBC, которая финансируется совместно Европейским Союзом, Российской Федерацией и Финляндской Республикой.</string>
 
 
 </resources>
