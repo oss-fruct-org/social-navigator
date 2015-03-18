@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.fruct.oss.mapcontent.content.ContentService;
+import org.fruct.oss.socialnavigator.fragments.root.AboutFragment;
 import org.fruct.oss.socialnavigator.fragments.root.GetsFragment;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
 import org.fruct.oss.socialnavigator.fragments.root.DisabilitiesFragment;
@@ -113,6 +114,9 @@ public class MainActivity extends ActionBarActivity
 			startActivity(new Intent(this, SettingsActivity.class));
 			return;
 
+		case 5:
+			fragment = AboutFragment.newInstance();
+			break;
 
 		default:
 			fragment = PlaceholderFragment.newInstance(position + 1);

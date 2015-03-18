@@ -74,4 +74,6 @@
     <string name="str_google_login_error">Can\'t login using android account. Try web browser method.</string>
     <string name="str_google_login_success">Login successful</string>
     <string name="str_logout">Logout</string>
+    <string name="about_text">This application is a part of grant KA432 of Karelia ENPI CBC programme, which is co-funded by the European Union, the Russian Federation and the Republic of Finland.</string>
+    <string name="str_version">Version:</string>
 </resources>
