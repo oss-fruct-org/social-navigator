@@ -100,7 +100,6 @@
     <string name="help_4_share_title">Открытие доступа к своим данным</string>
     <string name="help_4_web_title">Веб-браузер</string>
     <string name="str_google_login_error">Ошибка авторизации. Попробуйте использовать авторизацию через браузер.</string>
-    <string name="str_google_login_success"></string>
     <string name="str_login_google">Google</string>
     <string name="str_login_how">Выберите метод</string>
     <string name="str_login_web_browser">Веб-браузер</string>

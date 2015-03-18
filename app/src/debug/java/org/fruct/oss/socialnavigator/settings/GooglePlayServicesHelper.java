@@ -16,6 +16,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 
+import org.fruct.oss.mapcontent.BuildConfig;
 import org.fruct.oss.socialnavigator.parsers.AuthParameters;
 import org.fruct.oss.socialnavigator.parsers.GetsException;
 import org.fruct.oss.socialnavigator.parsers.GetsResponse;
@@ -95,7 +96,7 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 		if (requestCode == RC_SIGN_IN) {
 			intentInProgress = false;
 
-			if (!client.isConnecting()) {
+			if (!client.isConnecting() && responseCode == Activity.RESULT_OK) {
 				client.connect();
 			}
 		} else if (requestCode == RC_GET_CODE) {
