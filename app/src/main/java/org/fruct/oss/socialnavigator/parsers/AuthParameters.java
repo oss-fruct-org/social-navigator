@@ -28,14 +28,18 @@ public class AuthParameters implements IContent {
 
 			String tagName = parser.getName();
 
-			if (tagName.equals("client_id")) {
+			switch (tagName) {
+			case "client_id":
 				content.clientId = GetsResponse.readText(parser);
 				parser.require(XmlPullParser.END_TAG, null, "client_id");
-			} else if (tagName.equals("scope")) {
+				break;
+			case "scope":
 				content.scope = GetsResponse.readText(parser);
 				parser.require(XmlPullParser.END_TAG, null, "scope");
-			} else {
+				break;
+			default:
 				XmlUtil.skip(parser);
+				break;
 			}
 		}
 

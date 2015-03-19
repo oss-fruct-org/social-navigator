@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 
 import com.graphhopper.util.PMap;
 
+import org.fruct.oss.socialnavigator.parsers.UserInfo;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.osmdroid.util.GeoPoint;
 
@@ -83,7 +84,7 @@ public class Preferences {
 		}
 	}
 
-	public <T extends Enum<T> > void setEnum(String suffix, T enumValue) {
+	public <T extends Enum<T>> void setEnum(String suffix, T enumValue) {
 		String key = "pref_enum_" + suffix;
 
 		if (enumValue != null) {
@@ -107,6 +108,18 @@ public class Preferences {
 			}
 
 			return null;
+		}
+	}
+
+	public UserInfo getUserInfo() {
+		return UserInfo.load(pref, "pref_user_info");
+	}
+
+	public void setUserInfo(@Nullable UserInfo userInfo) {
+		if (userInfo != null) {
+			userInfo.save(pref, "pref_user_info");
+		} else {
+			pref.edit().remove("pref_user_infoui").apply();
 		}
 	}
 }

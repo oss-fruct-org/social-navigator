@@ -169,7 +169,7 @@ public class MainActivity extends ActionBarActivity
 		super.onActivityResult(requestCode, resultCode, data);
 
 		if (mResultListener != null) {
-			mResultListener.onActivityResult(requestCode, resultCode, data);
+			mResultListener.onActivityResultRedirect(requestCode, resultCode, data);
 		}
 	}
 
@@ -242,6 +242,6 @@ public class MainActivity extends ActionBarActivity
     }
 
 	public static interface ActivityResultListener {
-		void onActivityResult(int requestCode, int resultCode, Intent data);
+		void onActivityResultRedirect(int requestCode, int resultCode, Intent data);
 	}
 }

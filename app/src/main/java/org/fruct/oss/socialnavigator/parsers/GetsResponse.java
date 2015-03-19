@@ -70,6 +70,14 @@ public class GetsResponse {
 				return AuthParameters.parse(parser);
 			}
 		});
+
+		contentParsers.put(UserInfo.class, new ContentParser() {
+			@Override
+			public IContent parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+				return UserInfo.parse(parser);
+			}
+		});
+
 	}
 
 	public static GetsResponse parse(String responseXml, Class<? extends IContent> contentClass) throws GetsException {

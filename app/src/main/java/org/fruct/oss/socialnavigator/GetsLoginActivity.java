@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.PersistableBundle;
@@ -26,6 +27,8 @@ import java.io.IOException;
 
 
 public class GetsLoginActivity extends ActionBarActivity {
+	public static final int RESULT_FAILED = RESULT_FIRST_USER;
+
 	private WebView webView;
 
 	private AsyncTask<Void, Void, AuthRedirectResponse> stage1Task;
@@ -129,9 +132,7 @@ public class GetsLoginActivity extends ActionBarActivity {
 				super.onPostExecute(authRedirectResponse);
 
 				if (authRedirectResponse == null) {
-					Toast.makeText(GetsLoginActivity.this,
-							R.string.str_data_refresh_failed,
-							Toast.LENGTH_LONG).show();
+					setResult(RESULT_FAILED);
 					finish();
 					return;
 				}
@@ -172,15 +173,10 @@ public class GetsLoginActivity extends ActionBarActivity {
 				super.onPostExecute(token);
 
 				if (token == null) {
-					Toast.makeText(GetsLoginActivity.this,
-							R.string.str_google_login_error,
-							Toast.LENGTH_LONG).show();
+					setResult(RESULT_FAILED);
+					finish();
 				} else {
-					Preferences appPref = new Preferences(GetsLoginActivity.this);
-					appPref.setGetsToken(token);
-					Toast.makeText(GetsLoginActivity.this,
-							R.string.str_google_login_success,
-							Toast.LENGTH_LONG).show();
+					setResult(RESULT_OK, new Intent().putExtra("auth_token", token));
 					finish();
 				}
 			}

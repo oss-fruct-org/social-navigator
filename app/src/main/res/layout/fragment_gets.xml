@@ -4,6 +4,28 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
+    <LinearLayout
+        android:id="@+id/layout_user_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone">
+        <ImageView
+            android:id="@android:id/icon"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:padding="8dp"
+            />
+
+        <TextView
+            android:id="@+id/text_user_name"
+            android:textSize="18sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            />
+    </LinearLayout>
+
     <Button
         android:id="@+id/button_login_web_browser"
         android:layout_width="match_parent"
@@ -36,10 +58,23 @@
         android:visibility="gone"
         />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@android:id/list"
-        android:scrollbars="vertical"
+    <FrameLayout
+        android:id="@+id/publish_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@android:id/list"
+            android:scrollbars="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/publish_text"
+            android:text="@string/str_publish_permission"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"/>
+    </FrameLayout>
 
 </LinearLayout>
