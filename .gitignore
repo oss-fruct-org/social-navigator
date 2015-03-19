@@ -8,3 +8,5 @@
 *.ghz
 *.jar
 /dev
+/.idea
+*.iml
