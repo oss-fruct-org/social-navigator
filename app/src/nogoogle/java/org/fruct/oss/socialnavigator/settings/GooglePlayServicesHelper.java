@@ -26,6 +26,10 @@ public class GooglePlayServicesHelper {
 		return false;
 	}
 
+	public boolean check() {
+		return false;
+	}
+
 	public void login() {
 
 	}

@@ -1,6 +1,7 @@
 package org.fruct.oss.socialnavigator.settings;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -35,6 +36,7 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 
 	public static final int RC_SIGN_IN = 1;
 	public static final int RC_GET_CODE = 2;
+	public static final int RC_CHECK = 3;
 
 	private final Activity activity;
 	private Listener listener;
@@ -59,7 +61,21 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 	}
 
 	public static boolean isAvailable(Context context) {
-		return GooglePlayServicesUtil.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS;
+		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
+		return status == ConnectionResult.SUCCESS || GooglePlayServicesUtil.isUserRecoverableError(status);
+	}
+
+	public boolean check() {
+		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
+		if (status == ConnectionResult.SUCCESS) {
+			return true;
+		} else if (GooglePlayServicesUtil.isUserRecoverableError(status)) {
+			Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(status, activity, RC_CHECK);
+			errorDialog.show();
+			return false;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
@@ -103,6 +119,10 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 			if (responseCode == Activity.RESULT_OK) {
 				startStage2();
 			}
+		} else if (requestCode == RC_CHECK) {
+			if (responseCode == Activity.RESULT_OK) {
+				//
+			}
 		}
 	}
 
@@ -125,7 +145,7 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 			stage2Task.cancel(true);
 		}
 
-		if (client.isConnected()) {
+		if (client != null && client.isConnected()) {
 			client.disconnect();
 		}
 	}
