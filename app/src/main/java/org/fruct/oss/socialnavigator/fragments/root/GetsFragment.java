@@ -267,9 +267,12 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 
 		UserInfo userInfo = appPref.getUserInfo();
 		if (userInfo != null) {
-			ImageLoader imageLoader = App.getImageLoader();
-			imageLoader.displayImage(sizedImageUrl(userInfo.getImageUrl(),
-					Utils.getDP(64)), userInfoImageView);
+			if (userInfo.getImageUrl() != null) {
+				ImageLoader imageLoader = App.getImageLoader();
+				imageLoader.displayImage(sizedImageUrl(userInfo.getImageUrl(),
+						Utils.getDP(64)), userInfoImageView);
+			}
+
 			userInfoTextView.setText(userInfo.getName());
 			userInfoLayout.setVisibility(View.VISIBLE);
 		} else {
