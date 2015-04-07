@@ -3,6 +3,7 @@
     package="org.fruct.oss.socialnavigator"
     android:installLocation="auto" >
 
+
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -16,6 +17,9 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+
+        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -49,14 +53,6 @@
         <activity
             android:name=".GetsLoginActivity"
             android:label="@string/title_activity_gets_login"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.fruct.oss.socialnavigator.MainActivity" />
-        </activity>
-        <activity
-            android:name=".HelpActivity"
-            android:label="@string/title_activity_help"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
