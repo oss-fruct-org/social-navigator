@@ -28,11 +28,11 @@ public class GetsProvider implements PointsProvider {
 			GETS_SERVER = "http://gets.cs.petrsu.ru/obstacle/service";
 			DISABILITIES_LIST = "http://gets.cs.petrsu.ru/obstacle/config/disabilities.xml";
 		} else {
-			//GETS_SERVER = "http://gets.cs.petrsu.ru/obstacle/service";
-			//DISABILITIES_LIST = "http://gets.cs.petrsu.ru/obstacle/config/disabilities.xml";
+			GETS_SERVER = "http://gets.cs.petrsu.ru/obstacle/service";
+			DISABILITIES_LIST = "http://gets.cs.petrsu.ru/obstacle/config/disabilities.xml";
 
-			GETS_SERVER = "http://getsi.ddns.net/getslocal";
-			DISABILITIES_LIST = "http://getsi.ddns.net/static/disabilities.xml";
+			//GETS_SERVER = "http://getsi.ddns.net/getslocal";
+			//DISABILITIES_LIST = "http://getsi.ddns.net/static/disabilities.xml";
 		}
 	}
 
