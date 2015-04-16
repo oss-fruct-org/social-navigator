@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 
+import org.fruct.oss.mapcontent.content.connections.GHContentServiceConnection;
 import org.fruct.oss.mapcontent.content.fragments.ContentFragment;
 import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
@@ -13,9 +14,7 @@ public class RootContentFragment extends ContentFragment {
 		return new RootContentFragment();
 	}
 
-	public static final String[] REMOTE_CONTENT_URLS = {
-			"http://kappa.cs.petrsu.ru/~ivashov/mordor.xml",
-			"http://oss.fruct.org/projects/roadsigns/root.xml"};
+	public static final String[] REMOTE_CONTENT_URLS = { "http://gets.cs.petrsu.ru/maps/root/root.xml" };
 
 	public RootContentFragment() {
 		super();
@@ -31,5 +30,6 @@ public class RootContentFragment extends ContentFragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setRootUrls(REMOTE_CONTENT_URLS);
+		remoteContentServiceConnection = new GHContentServiceConnection(this);
 	}
 }

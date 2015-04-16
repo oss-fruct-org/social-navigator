@@ -13,13 +13,14 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.graphhopper.util.PointList;
 
-import org.fruct.oss.mapcontent.BuildConfig;
 import org.fruct.oss.mapcontent.content.ContentItem;
 import org.fruct.oss.mapcontent.content.ContentListenerAdapter;
 import org.fruct.oss.mapcontent.content.ContentManagerImpl;
 import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnection;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionListener;
+import org.fruct.oss.mapcontent.content.connections.GHContentServiceConnection;
+import org.fruct.oss.socialnavigator.BuildConfig;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.fruct.oss.socialnavigator.points.PointsService;
@@ -64,21 +65,16 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private final ExecutorService executor
 			= Executors.newSingleThreadExecutor(new NamedThreadFactory("RoutingServiceThread"));
 
-	// Locks current target point at current paths
-	private final Object mutex = new Object();
-
 	// Locks services assignment
 	private final Object serviceMutex = new Object();
 
-	// Tasks
-	private Future<?> routeFuture;
-	private List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
+	private List<Listener> listeners = new CopyOnWriteArrayList<>();
 	private Routing routing;
 
 	private PointsServiceConnection pointsServiceConnection = new PointsServiceConnection(this);
 	private PointsService pointsService;
 
-	private ContentServiceConnection contentServiceConnection = new ContentServiceConnection(this);
+	private ContentServiceConnection contentServiceConnection = new GHContentServiceConnection(this);
 	private ContentService contentService;
 
 	private LocationReceiver locationReceiver;
@@ -160,9 +156,8 @@ public class RoutingService extends Service implements PointsService.Listener,
 		}
 
 		if (contentService != null) {
-			contentService.removeListener(contentListener);
+			contentService.removeItemListener(contentListener);
 		}
-
 
 		locationReceiver.stop();
 		locationReceiver.setListener(null);
@@ -199,8 +194,8 @@ public class RoutingService extends Service implements PointsService.Listener,
 	public void onContentServiceReady(ContentService contentService) {
 		synchronized (serviceMutex) {
 			this.contentService = contentService;
-			contentService.addListener(contentListener);
-			contentService.setLocation(getLastLocation());
+			contentService.addItemListener(contentListener);
+			contentService.requestRecommendedItem();
 		}
 	}
 
@@ -321,10 +316,6 @@ public class RoutingService extends Service implements PointsService.Listener,
 		Intent intent = new Intent(BC_LOCATION);
 		intent.putExtra(ARG_LOCATION, location);
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
-		if (contentService != null) {
-			contentService.setLocation(location);
-		}
 
 		if (pointsService != null) {
 			pointsService.setLocation(location);
@@ -610,7 +601,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		});
 	}
 
-	private final ContentService.Listener contentListener = new ContentListenerAdapter() {
+	private final ContentService.ItemListener contentListener = new ContentListenerAdapter() {
 		@Override
 		public void recommendedRegionItemReady(final ContentItem contentItem) {
 			log.debug("Recommended content item received");
@@ -654,7 +645,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		}
 	};
 
-	public static enum State {
+	public enum State {
 		IDLE, CHOICE, TRACKING;
 
 		private Set<State> allowedNextStates;
@@ -674,7 +665,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		}
 	}
 
-	public static interface Listener {
+	public interface Listener {
 		void routingStateChanged(State state);
 		void progressStateChanged(boolean isActive);
 

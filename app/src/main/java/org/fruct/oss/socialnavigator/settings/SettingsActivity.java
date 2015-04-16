@@ -15,6 +15,7 @@ import android.widget.Toast;
 import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnection;
 import org.fruct.oss.mapcontent.content.connections.ContentServiceConnectionListener;
+import org.fruct.oss.mapcontent.content.connections.GHContentServiceConnection;
 import org.fruct.oss.socialnavigator.GetsLoginActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.utils.Utils;
@@ -25,7 +26,7 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 	private ListPreference storagePathPref;
 	private SharedPreferences pref;
 
-	private ContentServiceConnection contentServiceConnection = new ContentServiceConnection(this);
+	private ContentServiceConnection contentServiceConnection = new GHContentServiceConnection(this);
 	private ContentService contentService;
 	private Preference getsPref;
 	private GooglePlayServicesHelper googlePlayServicesHelper;

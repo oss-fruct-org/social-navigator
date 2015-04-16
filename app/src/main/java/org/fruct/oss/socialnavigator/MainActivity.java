@@ -15,6 +15,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.fruct.oss.mapcontent.content.ContentManagerImpl;
 import org.fruct.oss.mapcontent.content.ContentService;
 import org.fruct.oss.socialnavigator.fragments.root.AboutFragment;
 import org.fruct.oss.socialnavigator.fragments.root.GetsFragment;
@@ -63,9 +64,9 @@ public class MainActivity extends ActionBarActivity
 				R.id.navigation_drawer,
 				(DrawerLayout) findViewById(R.id.drawer_layout));
 
+		startService(new Intent(this, ContentService.class));
 		startService(new Intent(this, PointsService.class));
 		startService(new Intent(this, RoutingService.class));
-		startService(new Intent(this, ContentService.class));
 	}
 
 	@Override
