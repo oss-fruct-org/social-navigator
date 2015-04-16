@@ -123,34 +123,6 @@ public class MapFragment extends Fragment {
 		return view;
 	}
 
-	@Override
-	public void onStart() {
-		super.onStart();
-
-		checkLocationProviderEnabled();
-	}
-
-	private void checkLocationProviderEnabled() {
-		LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-		boolean isProvidersEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-				|| locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-		if (!isProvidersEnabled) {
-			AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
-			dialogBuilder.setTitle(R.string.alert_location_not_available_title)
-					.setMessage(R.string.alert_location_not_available)
-					.setNegativeButton(android.R.string.cancel, null)
-					.setPositiveButton(R.string.str_configure, new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-           					Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            				startActivity(intent);
-						}
-					});
-			dialogBuilder.show();
-		}
-	}
-
 	private void setupOverlays(Bundle savedInstanceState) {
 		if (savedInstanceState == null) {
 			FragmentTransaction trans = getFragmentManager().beginTransaction();

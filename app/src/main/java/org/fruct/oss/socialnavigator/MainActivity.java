@@ -1,8 +1,8 @@
 package org.fruct.oss.socialnavigator;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -15,8 +15,10 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.fruct.oss.mapcontent.content.ContentManagerImpl;
 import org.fruct.oss.mapcontent.content.ContentService;
+import org.fruct.oss.mapcontent.content.connections.GHContentServiceConnection;
+import org.fruct.oss.mapcontent.content.fragments.ContentFragment;
+import org.fruct.oss.mapcontent.content.helper.ContentHelper;
 import org.fruct.oss.socialnavigator.fragments.root.AboutFragment;
 import org.fruct.oss.socialnavigator.fragments.root.GetsFragment;
 import org.fruct.oss.socialnavigator.fragments.root.HelpFragment;
@@ -34,9 +36,7 @@ public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 	private static final Logger log = LoggerFactory.getLogger(MainActivity.class);
 
-	public static final String ACTION_SWITCH = "org.fruct.oss.socialnavigator.MainActivity.ACTION_SWITCH";
-	public static final String ARG_INDEX = "org.fruct.oss.socialnavigator.INDEX";
-	public static final String ARG_ARGUMENTS = "org.fruct.oss.socialnavigator.ARGUMENTS";
+	private static final String TAG_PANEL_FRAGMENT = "root";
 
 	/**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -49,6 +49,10 @@ public class MainActivity extends ActionBarActivity
     private CharSequence mTitle;
 	private int mNavigationMode;
 	private ActivityResultListener mResultListener;
+
+	private ContentHelper contentHelper;
+
+	private boolean isFromSavedState;
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,32 +71,51 @@ public class MainActivity extends ActionBarActivity
 		startService(new Intent(this, ContentService.class));
 		startService(new Intent(this, PointsService.class));
 		startService(new Intent(this, RoutingService.class));
+
+		isFromSavedState = savedInstanceState != null;
+
+		contentHelper = new ContentHelper(this, new GHContentServiceConnection(null));
+		contentHelper.enableNetworkNotifications();
+		contentHelper.enableLocationProviderNotifications();
+		contentHelper.enableUpdateNotifications(PendingIntent.getActivity(this, 0,
+				new Intent(ContentFragment.ACTION_UPDATE_READY, null, this, MainActivity.class),
+				PendingIntent.FLAG_ONE_SHOT));
+
+		contentHelper.enableContentNotifications(PendingIntent.getActivity(this, 1,
+				new Intent(ContentFragment.ACTION_SHOW_ONLINE_CONTENT, null, this, MainActivity.class),
+				PendingIntent.FLAG_ONE_SHOT));
 	}
 
 	@Override
-	protected void onDestroy() {
-		super.onDestroy();
+	protected void onStart() {
+		super.onStart();
+		contentHelper.onStart(isFromSavedState);
+	}
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			/*HttpResponseCache.getInstalled().flush();
-			log.info("HttpResponseCache network: {}", HttpResponseCache.getInstalled().getNetworkCount());
-			log.info("HttpResponseCache hits: {}", HttpResponseCache.getInstalled().getHitCount());*/
-		}
+	@Override
+	protected void onStop() {
+		contentHelper.onStop();
+		super.onStop();
 	}
 
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
 
-		if (intent.getAction().equals(ACTION_SWITCH)) {
-			int index = intent.getIntExtra(ARG_INDEX, 0);
-			Bundle arguments = intent.getBundleExtra(ARG_ARGUMENTS);
-			mNavigationDrawerFragment.selectItem(index, arguments);
+		String action = intent.getAction();
+		switch (action) {
+		case ContentFragment.ACTION_SHOW_ONLINE_CONTENT:
+			setRootFragment(RootContentFragment.newInstance(true, false));
+			break;
+
+		case ContentFragment.ACTION_UPDATE_READY:
+			setRootFragment(RootContentFragment.newInstance(false, true));
+			break;
 		}
 	}
 
 	@Override
-    public void onNavigationDrawerItemSelected(int position, Bundle arguments) {
+    public void onNavigationDrawerItemSelected(int position) {
 		Fragment fragment;
 
 		switch (position) {
@@ -129,17 +152,7 @@ public class MainActivity extends ActionBarActivity
 			break;
 		}
 
-		if (arguments != null) {
-			fragment.setArguments(arguments);
-		}
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-		fragmentManager.popBackStack("root", FragmentManager.POP_BACK_STACK_INCLUSIVE);
-
-		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.addToBackStack("root");
-		fragmentTransaction.replace(R.id.container, fragment, "content_fragment");
-		fragmentTransaction.commit();
+		setRootFragment(fragment);
 	}
 
 	@Override
@@ -154,7 +167,7 @@ public class MainActivity extends ActionBarActivity
 			name = entry.getName();
 		} while (name == null);
 
-		if (name.equals("root")) {
+		if (name.equals(TAG_PANEL_FRAGMENT)) {
 			finish();
 		}
 	}
@@ -164,6 +177,18 @@ public class MainActivity extends ActionBarActivity
 		mNavigationMode = navigationMode;
 		mResultListener = resultListener;
     }
+
+	public void setRootFragment(Fragment fragment) {
+		mNavigationMode = ActionBar.NAVIGATION_MODE_STANDARD;
+		FragmentManager fragmentManager = getSupportFragmentManager();
+
+		fragmentManager.popBackStack(TAG_PANEL_FRAGMENT, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+		fragmentTransaction.addToBackStack(TAG_PANEL_FRAGMENT);
+		fragmentTransaction.replace(R.id.container, fragment, "content_fragment");
+		fragmentTransaction.commit();
+	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -196,11 +221,11 @@ public class MainActivity extends ActionBarActivity
     }
 
 	public void openCategoriesFragment() {
-		mNavigationDrawerFragment.selectItem(1, null);
+		mNavigationDrawerFragment.selectItem(1);
 	}
 
 	public void openMapFragment() {
-		mNavigationDrawerFragment.selectItem(0, null);
+		mNavigationDrawerFragment.selectItem(0);
 	}
 
 	/**

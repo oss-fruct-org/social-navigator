@@ -20,6 +20,7 @@ import org.fruct.oss.socialnavigator.GetsLoginActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.utils.Utils;
 
+@SuppressWarnings("deprecation")
 public class SettingsActivity extends PreferenceActivity implements ContentServiceConnectionListener {
 	private static final int REQUEST_CODE = 2;
 
@@ -36,6 +37,7 @@ public class SettingsActivity extends PreferenceActivity implements ContentServi
 		super.onCreate(savedInstanceState);
 
 		addPreferencesFromResource(R.xml.preferenecs);
+		addPreferencesFromResource(org.fruct.oss.mapcontent.R.xml.preferences);
 
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
 

@@ -10,9 +10,21 @@ import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 
 public class RootContentFragment extends ContentFragment {
-	public static ContentFragment newInstance() {
-		return new RootContentFragment();
+	public static RootContentFragment newInstance() {
+		return newInstance(false, false);
 	}
+
+	public static RootContentFragment newInstance(boolean suggestItem, boolean switchToUpdate) {
+		RootContentFragment fragment = new RootContentFragment();
+
+		Bundle args = new Bundle();
+		args.putBoolean("suggest", suggestItem);
+		args.putBoolean("update", switchToUpdate);
+		fragment.setArguments(args);
+
+		return fragment;
+	}
+
 
 	public static final String[] REMOTE_CONTENT_URLS = { "http://gets.cs.petrsu.ru/maps/root/root.xml" };
 
@@ -29,7 +41,6 @@ public class RootContentFragment extends ContentFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setRootUrls(REMOTE_CONTENT_URLS);
 		remoteContentServiceConnection = new GHContentServiceConnection(this);
 	}
 }
