@@ -13,8 +13,8 @@ android {
         applicationId "org.fruct.oss.socialnavigator"
         minSdkVersion 10
         targetSdkVersion 22
-        versionCode 8
-        versionName "0.6.2"
+        versionCode 9
+        versionName "0.6.3"
     }
 
     buildTypes {
@@ -63,9 +63,6 @@ dependencies {
     compile 'org.jetbrains:annotations:13.0'
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
 
-    debugCompile 'com.google.android.gms:play-services-identity:6.5.87'
-    debugCompile "com.google.android.gms:play-services-plus:6.5.87"
-
-    releaseCompile 'com.google.android.gms:play-services-identity:6.5.87'
-    releaseCompile "com.google.android.gms:play-services-plus:6.5.87"
+    compile 'com.google.android.gms:play-services-identity:7.0.0'
+    compile "com.google.android.gms:play-services-plus:7.0.0"
 }

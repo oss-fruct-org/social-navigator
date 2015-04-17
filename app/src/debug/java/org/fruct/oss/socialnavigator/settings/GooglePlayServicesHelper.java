@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Xml;
 
 import com.google.android.gms.auth.GoogleAuthException;
@@ -15,6 +17,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.plus.Plus;
 
 import org.fruct.oss.mapcontent.BuildConfig;
@@ -30,8 +33,11 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
 
-public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ServerAuthCodeCallbacks {
 	private static final Logger log = LoggerFactory.getLogger(GooglePlayServicesHelper.class);
 
 	public static final int RC_SIGN_IN = 1;
@@ -45,12 +51,11 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 
 	private boolean intentInProgress;
 
-	private AsyncTask<Void, Void, AuthParameters> stage1Task;
-	private AsyncTask<Void, Void, String> stage2Task;
-
 	private String scope;
 	private String clientId;
 
+	private AsyncTask<Void, Void, AuthParameters> stage1Task;
+	private Handler handler = new Handler(Looper.getMainLooper());
 
 	public GooglePlayServicesHelper(Activity activity) {
 		this.activity = activity;
@@ -80,7 +85,6 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 
 	@Override
 	public void onConnected(Bundle bundle) {
-		startStage1();
 	}
 
 	@Override
@@ -115,40 +119,23 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 			if (!client.isConnecting() && responseCode == Activity.RESULT_OK) {
 				client.connect();
 			}
-		} else if (requestCode == RC_GET_CODE) {
-			if (responseCode == Activity.RESULT_OK) {
-				startStage2();
-			}
-		} else if (requestCode == RC_CHECK) {
-			if (responseCode == Activity.RESULT_OK) {
-				//
-			}
 		}
 	}
 
 	public void login() {
-		client = new GoogleApiClient.Builder(activity)
-				.addConnectionCallbacks(this)
-				.addOnConnectionFailedListener(this)
-				.addApi(Plus.API)
-				.addScope(Plus.SCOPE_PLUS_LOGIN)
-				.build();
-		client.connect();
+		startStage1();
 	}
 
 	public void interrupt() {
-		if (stage1Task != null) {
-			stage1Task.cancel(true);
-		}
-
-		if (stage2Task != null) {
-			stage2Task.cancel(true);
-		}
-
 		if (client != null && client.isConnected()) {
 			client.disconnect();
 		}
+
+		if (stage1Task != null) {
+			stage1Task.cancel(true);
+		}
 	}
+
 
 	private void startStage1() {
 		stage1Task = new AsyncTask<Void, Void, AuthParameters>() {
@@ -159,7 +146,11 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 					String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/getAuthParameters.php", request);
 					GetsResponse getsResponse = GetsResponse.parse(response, AuthParameters.class);
 
-					return ((AuthParameters) getsResponse.getContent());
+					if (getsResponse.getCode() != 0) {
+						return null;
+					}
+
+					return (AuthParameters) getsResponse.getContent();
 				} catch (IOException e) {
 					return null;
 				} catch (GetsException e) {
@@ -172,9 +163,7 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 				super.onPostExecute(authParameters);
 
 				if (authParameters == null) {
-					if (listener != null) {
-						listener.onGoogleAuthFailed();
-					}
+					notifyAuthFailed();
 					return;
 				}
 
@@ -188,64 +177,14 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 	}
 
 	private void startStage2() {
-		stage2Task = new AsyncTask<Void, Void, String>() {
-			private boolean isInRecoveryMode;
-
-			@Override
-			protected String doInBackground(Void... params) {
-				Bundle bundle = new Bundle();
-				bundle.putString(GoogleAuthUtil.KEY_REQUEST_VISIBLE_ACTIVITIES,
-						"http://schemas.google.com/AddActivity");
-
-				String scopeFull = "oauth2:server:client_id:" + clientId + ":api_scope:" + scope;
-				try {
-					String exchangeToken = GoogleAuthUtil.getToken(
-							activity,
-							Plus.AccountApi.getAccountName(client),
-							scopeFull
-					);
-
-					log.info("Exchange token received {}", exchangeToken);
-
-					// Login in GeTS using exchange token
-					String request = createExchangeRequest(exchangeToken);
-					String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
-					GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
-
-					return ((TokenContent) getsResponse.getContent()).getAccessToken();
-				} catch (IOException ex) {
-					log.error("Google client io exception:", ex);
-				} catch (UserRecoverableAuthException ex) {
-					isInRecoveryMode = true;
-					activity.startActivityForResult(ex.getIntent(), RC_GET_CODE);
-				} catch (GoogleAuthException ex) {
-					log.error("Google client auth exception:", ex);
-				} catch (Exception ex) {
-					log.error("Google client unknown exception:", ex);
-				}
-
-				return null;
-			}
-
-			@Override
-			protected void onPostExecute(String getsToken) {
-				if (getsToken == null) {
-					if (!isInRecoveryMode) {
-						if (listener != null) {
-							listener.onGoogleAuthFailed();
-						}
-					}
-
-					return;
-				}
-
-				log.info("Gets token received {}", getsToken);
-				if (listener != null)
-					listener.onGoogleAuthCompleted(getsToken);
-			}
-		};
-
-		stage2Task.execute();
+		client = new GoogleApiClient.Builder(activity)
+				.addConnectionCallbacks(this)
+				.addOnConnectionFailedListener(this)
+				.addApi(Plus.API)
+				.addScope(new Scope("profile"))
+				.requestServerAuthCode(clientId, this)
+				.build();
+		client.connect();
 	}
 
 	private String createExchangeRequest(String exchangeToken) {
@@ -266,7 +205,67 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 		}
 	}
 
-	public static interface Listener {
+	@Override
+	public CheckResult onCheckServerAuthorization(String idToken, Set<Scope> set) {
+		Set<Scope> scopes = new HashSet<>();
+
+		StringTokenizer tokenizer = new StringTokenizer(scope, " ");
+
+		while (tokenizer.hasMoreElements()) {
+			scopes.add(new Scope(tokenizer.nextToken()));
+		}
+
+		return CheckResult.newAuthRequiredResult(scopes);
+	}
+
+	@Override
+	public boolean onUploadServerAuthCode(String idToken, String serverAuthCode) {
+		String request = createExchangeRequest(serverAuthCode);
+
+		try {
+			String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
+			GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
+
+			if (getsResponse.getCode() != 0) {
+				notifyAuthFailed();
+				return false;
+			}
+
+			notifyAuthCompleted(((TokenContent) getsResponse.getContent()).getAccessToken());
+
+			return true;
+		} catch (IOException e) {
+			notifyAuthFailed();
+			return false;
+		} catch (GetsException e) {
+			notifyAuthFailed();
+			return false;
+		}
+	}
+
+	private void notifyAuthFailed() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (listener != null) {
+					listener.onGoogleAuthFailed();
+				}
+			}
+		});
+	}
+
+	private void notifyAuthCompleted(final String getsToken) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (listener != null) {
+					listener.onGoogleAuthCompleted(getsToken);
+				}
+			}
+		});
+	}
+
+	public interface Listener {
 		void onGoogleAuthFailed();
 		void onGoogleAuthCompleted(String getsToken);
 	}
