@@ -25,8 +25,6 @@ public class RootContentFragment extends ContentFragment {
 		return fragment;
 	}
 
-
-
 	public RootContentFragment() {
 		super();
 	}
