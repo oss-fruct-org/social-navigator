@@ -26,7 +26,6 @@ public class RootContentFragment extends ContentFragment {
 	}
 
 
-	public static final String[] REMOTE_CONTENT_URLS = { "http://gets.cs.petrsu.ru/maps/root/root.xml" };
 
 	public RootContentFragment() {
 		super();

@@ -36,7 +36,7 @@ public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 	private static final Logger log = LoggerFactory.getLogger(MainActivity.class);
 
-	private static final String TAG_PANEL_FRAGMENT = "root";
+	private static final String TAG_PANEL_FRAGMENT = "root_transaction";
 
 	/**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
