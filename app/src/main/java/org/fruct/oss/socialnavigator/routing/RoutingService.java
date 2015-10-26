@@ -651,9 +651,9 @@ public class RoutingService extends Service implements PointsService.Listener,
 		private Set<State> allowedNextStates;
 
 		static {
-			IDLE.setAllowedNextStates( CHOICE);
-			CHOICE.setAllowedNextStates(IDLE, TRACKING);
-			TRACKING.setAllowedNextStates(IDLE, CHOICE);
+			IDLE.setAllowedNextStates( IDLE, CHOICE);
+			CHOICE.setAllowedNextStates(IDLE, CHOICE, TRACKING);
+			TRACKING.setAllowedNextStates(IDLE, CHOICE, TRACKING);
 		}
 
 		private void setAllowedNextStates(State... nextStates) {
