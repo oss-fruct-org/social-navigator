@@ -246,6 +246,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	}
 
 	private void updateOverlay() {
+		
 		mapView.getOverlayManager().remove(pathOverlay);
 
 		if (initialPath == null || pointList == null) {

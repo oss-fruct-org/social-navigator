@@ -6,6 +6,7 @@ import com.graphhopper.routing.util.Weighting;
 import com.graphhopper.util.EdgeIteratorState;
 
 import org.fruct.oss.ghpriority.FootPriorityWeighting;
+import org.fruct.oss.socialnavigator.points.Point;
 import org.jetbrains.annotations.NotNull;
 
 import gnu.trove.impl.hash.TIntIntHash;

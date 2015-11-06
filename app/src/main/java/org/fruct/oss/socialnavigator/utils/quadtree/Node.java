@@ -13,6 +13,57 @@ public class Node {
     private Node ne;
     private Node sw;
     private Node se;
+/*
+    private double aLat;
+    private double aLon;
+    private double bLat;
+    private double bLon;*/
+    private boolean used = false;
+    private boolean used2 = false;
+
+  /*  public void setMaster(double aLat, double aLon, double bLat, double bLon)
+    {
+        this.aLat = aLat;
+        this.aLon = aLon;
+        this.bLat = bLat;
+        this.bLon = bLon;
+    }*/
+  /*  public boolean compareMaster(double aLat, double aLon, double bLat, double bLon)
+    {
+        if(this.aLat != aLat)
+        {
+            return false;
+        }
+        if(this.aLon != aLon)
+        {
+            return false;
+        }
+        if(this.bLat != bLat)
+        {
+            return false;
+        }
+        if(this.bLon != bLon)
+        {
+            return false;
+        }
+        return true;
+    }*/
+   /* public double getaLat()
+    {
+        return this.aLat;
+    }
+    public double getaLon()
+    {
+        return this.aLon;
+    }
+    public double getbLat()
+    {
+        return this.bLat;
+    }
+    public double getbLon()
+    {
+        return this.bLon;
+    }*/
 
     /**
      * Constructs a new quad tree node.
@@ -30,6 +81,20 @@ public class Node {
         this.w = w;
         this.h = h;
         this.opt_parent = opt_parent;
+    }
+
+    public boolean getUsed(){
+        return used;
+    }
+    public void setUsed(boolean used){
+        this.used = used;
+    }
+
+    public boolean getUsed2(){
+        return used2;
+    }
+    public void setUsed2(boolean used){
+        this.used2 = used;
     }
 
     public double getX() {

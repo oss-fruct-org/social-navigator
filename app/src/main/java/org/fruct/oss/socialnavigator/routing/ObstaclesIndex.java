@@ -119,7 +119,9 @@ public class ObstaclesIndex {
 				double dist = Utils.calcDist(nodeLat, nodeLon,
 						aLat, aLon, bLat, bLon, outInt, outDouble);
 
-				if (dist < radius) {
+				if (dist < radius && !node.getUsed()) {
+					node.setUsed(true);
+					//node.setMaster(aLat,aLon,bLat,bLon);
 					func.call((Point) node.getPoint().getValue());
 				}
 			}
@@ -131,7 +133,91 @@ public class ObstaclesIndex {
 		final double aLon = nodeAccess.getLon(edge.getBaseNode());
 		final double bLat = nodeAccess.getLat(edge.getAdjNode());
 		final double bLon = nodeAccess.getLon(edge.getAdjNode());
-		queryByEdge(aLat, aLon, bLat, bLon, radius, func);
+		//queryByEdge(aLat, aLon, bLat, bLon, radius, func);
+		if (!isInitialized)
+			throw new IllegalArgumentException("ObstaclesIndex not initialized");
+
+		final double rectALat;
+		final double rectALon;
+		final double rectBLat;
+		final double rectBLon;
+
+		if (aLat < bLat) {
+			rectALat = aLat;
+			rectBLat = bLat;
+		} else {
+			rectALat = bLat;
+			rectBLat = aLat;
+		}
+
+		if (aLon < bLon) {
+			rectALon = aLon;
+			rectBLon = bLon;
+		} else {
+			rectALon = bLon;
+			rectBLon = aLon;
+		}
+
+		double latCenter = (rectALat + rectBLat) / 2;
+		double degreesRadius = Math.toDegrees((radius / GeoPoint.RADIUS_EARTH_METERS)
+				* Math.cos(Math.toRadians(latCenter)));
+
+		quadtree.navigate(quadtree.getRootNode(), new Func() {
+			@Override
+			public void call(QuadTree quadTree, Node node) {
+				org.fruct.oss.socialnavigator.utils.quadtree.Point quadtreePoint = node.getPoint();
+				double nodeLat = quadtreePoint.getX();
+				double nodeLon = quadtreePoint.getY();
+
+				double dist = Utils.calcDist(nodeLat, nodeLon,
+						aLat, aLon, bLat, bLon, outInt, outDouble);
+
+				if (dist < radius && !node.getUsed2()) {
+					node.setUsed2(true);
+					//node.setMaster(aLat,aLon,bLat,bLon);
+					func.call((Point) node.getPoint().getValue());
+				}
+			}
+		}, rectALat - degreesRadius, rectALon + degreesRadius, rectBLat - degreesRadius, rectBLon + degreesRadius);
+	}
+
+	public void clearchosenObstacles(final double aLat, final double aLon, final double bLat, final double bLon, final double radius)
+	{
+		if (!isInitialized)
+			throw new IllegalArgumentException("ObstaclesIndex not initialized");
+
+		final double rectALat;
+		final double rectALon;
+		final double rectBLat;
+		final double rectBLon;
+
+		if (aLat < bLat) {
+			rectALat = aLat;
+			rectBLat = bLat;
+		} else {
+			rectALat = bLat;
+			rectBLat = aLat;
+		}
+
+		if (aLon < bLon) {
+			rectALon = aLon;
+			rectBLon = bLon;
+		} else {
+			rectALon = bLon;
+			rectBLon = aLon;
+		}
+		double latCenter = (rectALat + rectBLat) / 2;
+		double degreesRadius = Math.toDegrees((radius / GeoPoint.RADIUS_EARTH_METERS)
+				* Math.cos(Math.toRadians(latCenter)));
+		quadtree.navigate(quadtree.getRootNode(), new Func() {
+			@Override
+			public void call(QuadTree quadTree, Node node) {
+				org.fruct.oss.socialnavigator.utils.quadtree.Point quadtreePoint = node.getPoint();
+				node.setUsed(false);
+				node.setUsed2(false);
+			}
+		}, rectALat - degreesRadius, rectALon + degreesRadius, rectBLat - degreesRadius, rectBLon + degreesRadius);
+		return;
 	}
 
 	public List<Point> queryByEdge(final double aLat, final double aLon, final double bLat, final double bLon,
@@ -158,14 +244,17 @@ public class ObstaclesIndex {
 		}
 
 		final boolean[] result = new boolean[1];
-		queryByEdge(edge, radius, new Function<Point>() {
-			@Override
-			public void call(Point point) {
-				if (!half || point.getDifficulty() >= 5) {
-					result[0] = true;
+		//for(double BlockRadius = 1.0 ; BlockRadius <= radius; BlockRadius = BlockRadius+1.0) {
+			queryByEdge(edge, radius, new Function<Point>() {
+				@Override
+				public void call(Point point) {
+					if (!half || point.getDifficulty() >= 5) {
+						result[0] = true;
+					}
 				}
-			}
-		});
+			});
+		//}
+
 
 		cacheProcessed.add(edgeId);
 

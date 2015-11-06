@@ -109,13 +109,20 @@ public class Routing {
 				return null;
 			}
 
+			for (int i = 0; i < pointList.getSize() - 1; i++) {
+				obstaclesIndex.clearchosenObstacles(pointList.getLat(i), pointList.getLon(i),
+						pointList.getLat(i + 1), pointList.getLon(i + 1),
+						BlockingWeighting.BLOCK_RADIUS);
+			}
 			Set<Point> pointsOnPath = new HashSet<Point>();
 			log.info("Searching obstacles on path");
-			for (int i = 0; i < pointList.getSize() - 1; i++) {
-				pointsOnPath.addAll(obstaclesIndex.queryByEdge(
-						pointList.getLat(i), pointList.getLon(i),
-						pointList.getLat(i + 1), pointList.getLon(i + 1),
-						BlockingWeighting.BLOCK_RADIUS));
+			for(double BlockRadius = 1.0 ; BlockRadius <= BlockingWeighting.BLOCK_RADIUS; BlockRadius = BlockRadius+1.0) {
+				for (int i = 0; i < pointList.getSize() - 1; i++) {
+					pointsOnPath.addAll(obstaclesIndex.queryByEdge(
+							pointList.getLat(i), pointList.getLon(i),
+							pointList.getLat(i + 1), pointList.getLon(i + 1),
+							BlockRadius));
+				}
 			}
 
 			log.info("{} obstacles on path found", pointsOnPath.size());

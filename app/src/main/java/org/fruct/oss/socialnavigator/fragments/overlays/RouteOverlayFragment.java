@@ -279,6 +279,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	}
 
 	private void createOverlay(ChoicePath path) {
+
 		PathOverlay pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), path),
 				8, resourceProxy);
 		pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
