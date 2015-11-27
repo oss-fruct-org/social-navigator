@@ -226,6 +226,7 @@ public class ObstaclesIndex {
 
 		queryByEdge(aLat, aLon, bLat, bLon, radius, new Function<Point>() {
 			@Override
+
 			public void call(Point point) {
 				ret.add(point);
 			}
@@ -254,7 +255,6 @@ public class ObstaclesIndex {
 				}
 			});
 		//}
-
 
 		cacheProcessed.add(edgeId);
 

@@ -260,6 +260,8 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	public boolean onMenuItemClick(MenuItem menuItem) {
 		switch (menuItem.getItemId()) {
 		case R.id.action_route:
+			routingService.clearTargetPoint();
+			pointsService.refresh(); /// maybe need additional if
 			route();
 			break;
 

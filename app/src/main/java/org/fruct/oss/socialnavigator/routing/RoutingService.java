@@ -94,6 +94,8 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private RoutingType currentRoutingType;
 	private State state;
 
+
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
