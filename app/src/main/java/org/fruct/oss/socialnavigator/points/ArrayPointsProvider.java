@@ -46,7 +46,7 @@ public class ArrayPointsProvider implements PointsProvider {
 	@Override
 	public List<Disability> loadDisabilities() throws PointsException {
 		ArrayList<Disability> disabilities = new ArrayList<Disability>();
-		disabilities.add(new Disability("test disablility", new int[] {1}));
+		disabilities.add(new Disability("test disablility", new int[] {1}, new int[] {1}));
 		return disabilities;
 	}
 

@@ -20,7 +20,8 @@ public class PointsDatabase implements Closeable {
 	private final Context context;
 	private final Helper helper;
 	private final SQLiteDatabase db;
-
+	private  double[] factors;
+	private Disability dis;
 	private static final String[] COLUMNS_DISABILITY = { "_id", "name", "active" };
 	private static final String[] COLUMNS_ID = { "_id" };
 	private static final String[] COLUMNS_CATEGORY = { "_id", "name", "description", "url", "iconUrl", "published"};
@@ -49,6 +50,8 @@ public class PointsDatabase implements Closeable {
 	public void close() {
 		helper.close();
 	}
+
+
 
 	public void insertCategory(Category category) {
 		if (category == null) {
@@ -104,7 +107,8 @@ public class PointsDatabase implements Closeable {
 		cv.put("lon", point.getLonE6());
 		cv.put("categoryId", point.getCategory().getId());
 		cv.put("provider", point.getProvider());
-		cv.put("difficulty", point.getDifficulty());
+	//	int tmp = dis.getFactor(point.getCategory().getId(), point.getDifficulty());
+		cv.put("difficulty", dis.getFactor(point.getCategory().getId(), point.getDifficulty()));
 		cv.put("private", point.isPrivate());
 
 		int affected = db.update("point", cv, "uuid=?", toArray(point.getUuid()));
@@ -145,13 +149,19 @@ public class PointsDatabase implements Closeable {
 		ContentValues cv = new ContentValues(2);
 		cv.put("name", disability.getName());
 		cv.put("active", disability.isActive());
+		//cv.put("active", disability.isActive());
 		long insertedId = db.insert("disability", null, cv);
-
+		int tmp = 0;
 		for (int categoryId : disability.getCategories()) {
 			ContentValues catCv = new ContentValues(2);
 			catCv.put("categoryId", categoryId);
 			catCv.put("disabilityId", (int) insertedId);
+			tmp++;
 			db.insert("disability_category", null, catCv);
+		}
+		if(disability != null && disability.isActive())
+		{
+			dis = disability;
 		}
 	}
 
@@ -274,7 +284,6 @@ public class PointsDatabase implements Closeable {
 		public void onCreate(SQLiteDatabase db) {
 			onUpgrade(db, 0, VERSION);
 		}
-
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			switch (oldVersion) {
