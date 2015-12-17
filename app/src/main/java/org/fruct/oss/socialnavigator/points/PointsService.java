@@ -16,7 +16,11 @@ import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.adapters.CategoriesAdapter;
+import org.fruct.oss.socialnavigator.adapters.ObstacleAdapter;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
+import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
+import org.fruct.oss.socialnavigator.fragments.root.DisabilitiesFragment;
 import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.Function;
 import org.osmdroid.util.GeoPoint;
@@ -178,7 +182,6 @@ public class PointsService extends Service implements SharedPreferences.OnShared
 		if (lastLocation == null) {
 			return;
 		}
-
 		final GeoPoint geoPoint = new GeoPoint(lastLocation);
 
 		refreshProvidersTask = executor.submit(new Runnable() {

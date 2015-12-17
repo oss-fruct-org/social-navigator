@@ -61,6 +61,7 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 		super.onAttach(activity);
 
 		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section2), ActionBar.NAVIGATION_MODE_STANDARD, null);
+
 	}
 
 	@Override
@@ -146,6 +147,7 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 		return routingService != null && pointsService != null;
 	}
 
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -153,11 +155,21 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 			onRefresh();
 			return true;
 		case R.id.action_open_map:
-			((MainActivity) getActivity()).openMapFragment();
+			if(!refreshLayout.isRefreshing())
+			{
+				((MainActivity) getActivity()).openMapFragment();
+
+			}
+
 			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+
+
+	public boolean isDisabilitiesFragmentUpdated(){
+		return refreshLayout.isRefreshing();
 	}
 
 	public void onPointsServiceReady(PointsService service) {
@@ -173,8 +185,8 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 			return;
 		}
 
-		refreshLayout.setRefreshing(false);
 		refreshList();
+		refreshLayout.setRefreshing(false);
 		Toast.makeText(getActivity(), R.string.str_data_refresh_complete, Toast.LENGTH_SHORT).show();
 	}
 
