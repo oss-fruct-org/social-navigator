@@ -139,7 +139,7 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
 		boolean isEnabled = checkServices();
-		menu.findItem(R.id.action_refresh).setEnabled(isEnabled);
+		//menu.findItem(R.id.action_refresh).setEnabled(isEnabled);
 		menu.findItem(R.id.action_open_map).setEnabled(isEnabled);
 	}
 
@@ -151,16 +151,14 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.action_refresh:
-			onRefresh();
-			return true;
+		/*case R.id.action_refresh:
+			//onRefresh();
+			return true;*/
 		case R.id.action_open_map:
 			if(!refreshLayout.isRefreshing())
 			{
 				((MainActivity) getActivity()).openMapFragment();
-
 			}
-
 			return true;
 		}
 
