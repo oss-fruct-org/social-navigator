@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
@@ -28,6 +27,7 @@ import org.fruct.oss.socialnavigator.fragments.root.DisabilitiesFragment;
 import org.fruct.oss.socialnavigator.fragments.root.RootContentFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
+import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.settings.SettingsActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +76,7 @@ public class MainActivity extends ActionBarActivity
 		isFromSavedState = savedInstanceState != null;
 
 		contentHelper = new ContentHelper(this, new GHContentServiceConnection(null));
+        contentHelper.setRootURLs(Preferences.ROOT_URLS);
 		contentHelper.enableNetworkNotifications();
 		contentHelper.enableLocationProviderNotifications();
 		contentHelper.enableUpdateNotifications(PendingIntent.getActivity(this, 0,

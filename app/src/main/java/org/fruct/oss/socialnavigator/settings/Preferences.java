@@ -15,6 +15,7 @@ public class Preferences {
 	public static final String PREF_ACTIVE_ROUTING_TYPE = "pref-active-routing-type";
 	public static final String PREF_LAST_POINTS_UPDATE_TIMESTAMP = "pref-last-points-update-timestamp";
 	public static final String PREF_GETS_TOKEN = "pref-gets-token";
+	public static final String[] ROOT_URLS = {"http://gets.cs.petrsu.ru/obstacle/maps/root/root.xml"};
 
 	private SharedPreferences pref;
 

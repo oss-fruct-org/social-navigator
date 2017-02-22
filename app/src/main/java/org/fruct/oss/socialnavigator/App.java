@@ -25,6 +25,7 @@ public class App extends Application {
 	private static App app;
 	private static ImageLoader imageLoader;
 
+
 	@Override
 	public void onCreate() {
 		super.onCreate();

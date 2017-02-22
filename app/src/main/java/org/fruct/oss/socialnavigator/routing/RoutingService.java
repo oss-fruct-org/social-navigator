@@ -48,7 +48,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class RoutingService extends Service implements PointsService.Listener,
@@ -100,8 +99,8 @@ public class RoutingService extends Service implements PointsService.Listener,
 	@Override
 	public void onCreate() {
 		super.onCreate();
-        String[] urls = {"http://gets.cs.petrsu.ru/obstacle/maps/root/root.xml"};
-		contentServiceConnection.setRootURLs(urls);
+
+		contentServiceConnection.setRootURLs(Preferences.ROOT_URLS);
 
 		restoreCurrentState();
 
