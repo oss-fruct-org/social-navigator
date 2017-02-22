@@ -39,13 +39,11 @@ public class Routing {
 
 		gh = (CustomGraphHopper) new CustomGraphHopper().forMobile();
 		gh.setEncodingManager(new EncodingManager(new ArrayList<FlagEncoder>(4) {{
-			add(new CarFlagEncoder());
-			add(new BikeFlagEncoder());
 			add(new FootFlagEncoder());
 			add(new FootPriorityFlagEncoder());
 		}}, 8));
 
-		gh.setCHEnable(false);
+		gh.setCHEnabled(false);
 
 		if (path != null) {
 			if (!gh.load(path)) {
@@ -102,7 +100,7 @@ public class Routing {
 				return null;
 			}
 
-			PointList pointList = response.getPoints();
+			PointList pointList = response.getBest().getPoints();
 
 			if (pointList.size() < 2) {
 				log.warn("Path found but is empty");
@@ -139,7 +137,7 @@ public class Routing {
 	public synchronized void setObstacles(List<Point> points) {
 		long startTime = System.currentTimeMillis();
 
-		obstaclesIndex = new ObstaclesIndex(gh.getGraph());
+		obstaclesIndex = new ObstaclesIndex(gh.getGraphHopperStorage());
 		for (Point point : points) {
 			obstaclesIndex.insertPoint(point);
 		}

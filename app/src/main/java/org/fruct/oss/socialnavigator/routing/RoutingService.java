@@ -75,6 +75,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 	private PointsService pointsService;
 
 	private ContentServiceConnection contentServiceConnection = new GHContentServiceConnection(this);
+
 	private ContentService contentService;
 
 	private LocationReceiver locationReceiver;
@@ -99,6 +100,8 @@ public class RoutingService extends Service implements PointsService.Listener,
 	@Override
 	public void onCreate() {
 		super.onCreate();
+        String[] urls = {"http://gets.cs.petrsu.ru/obstacle/maps/root/root.xml"};
+		contentServiceConnection.setRootURLs(urls);
 
 		restoreCurrentState();
 
@@ -423,7 +426,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 		List<Space.Point> points = new ArrayList<Space.Point>();
 
-		PointList ghPointList = activePath.getResponse().getPoints();
+		PointList ghPointList = activePath.getResponse().getBest().getPoints();
 		for (int i = 0; i < ghPointList.size(); i++) {
 			points.add(new Space.Point(ghPointList.getLat(i), ghPointList.getLon(i)));
 		}

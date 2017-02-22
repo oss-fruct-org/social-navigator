@@ -284,7 +284,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 				8, resourceProxy);
 		pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
 
-		PointList points = path.getResponse().getPoints();
+		PointList points = path.getResponse().getBest().getPoints();
 		for (int i = 0; i < points.size(); i++) {
 			GeoPoint geoPoint = new GeoPoint(points.getLatitude(i),
 					points.getLongitude(i));

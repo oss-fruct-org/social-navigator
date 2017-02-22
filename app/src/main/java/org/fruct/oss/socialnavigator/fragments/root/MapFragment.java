@@ -47,6 +47,7 @@ import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -241,7 +242,8 @@ public class MapFragment extends Fragment {
 		ViewGroup layout = (ViewGroup) view.findViewById(R.id.map_view);
 
 		IRegisterReceiver registerReceiver = new SimpleRegisterReceiver(getActivity().getApplicationContext());
-		ITileSource tileSource = TileSourceFactory.MAPQUESTOSM;
+		//ITileSource tileSource = TileSourceFactory.MAPQUESTOSM;
+		ITileSource tileSource = TileSourceFactory.MAPNIK;
 		TileWriter tileWriter = new TileWriter();
 		NetworkAvailabliltyCheck networkAvailabliltyCheck = new NetworkAvailabliltyCheck(getActivity());
 
@@ -256,6 +258,7 @@ public class MapFragment extends Fragment {
 		mapView = new MapView(getActivity(), 256, new DefaultResourceProxyImpl(getActivity()), tileProviderArray);
 		mapView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		mapView.setMultiTouchControls(true);
+		mapView.getController().setZoom(15);
 
 
 		layout.addView(mapView);

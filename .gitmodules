@@ -1,6 +1,6 @@
 [submodule "mapcontent"]
 	path = mapcontent
-	url = https://github.com/ivashov/mapcontent.git
+	url = https://github.com/oss-fruct-org/mapcontent.git
 [submodule "graphhopper-priority"]
 	path = graphhopper-priority
-	url = https://github.com/ivashov/graphhopper-priority.git
+	url = https://github.com/oss-fruct-org/graphhopper-priority.git

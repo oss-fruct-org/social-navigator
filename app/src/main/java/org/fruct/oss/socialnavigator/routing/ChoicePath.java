@@ -28,7 +28,7 @@ public class ChoicePath {
 	}
 
 	public double getDistance() {
-		return response.getDistance();
+		return response.getBest().getDistance();
 	}
 
 	public RoutingType getRoutingType() {
