@@ -290,14 +290,14 @@ public class Utils {
 				writer.close();
 			}
 
-			log.trace("Request url {} data {}", urlString, postQuery);
+			log.trace("Request url {}", urlString);
 			conn.connect();
 
 			int responseCode = conn.getResponseCode();
 			responseStream = conn.getInputStream();
 			String response = Utils.inputStreamToString(responseStream);
 
-			log.trace("Response code {}, response {}", responseCode, response);
+			log.trace("Response code {}, size {}", responseCode, response.length());
 
 			return response;
 		} finally {

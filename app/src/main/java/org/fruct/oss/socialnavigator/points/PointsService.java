@@ -395,7 +395,7 @@ public class PointsService extends Service implements SharedPreferences.OnShared
 			try {
 				log.debug("Loading points for category {}", category.getName());
 				points = pointsProvider.loadPoints(category, geoPoint);
-				log.debug("Points loaded");
+				log.debug("Points loaded, size={}", points);
 			} catch (PointsException ex) {
 				continue;
 			}

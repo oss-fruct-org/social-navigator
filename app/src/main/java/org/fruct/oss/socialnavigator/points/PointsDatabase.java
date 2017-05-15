@@ -7,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import org.fruct.oss.socialnavigator.utils.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.File;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class PointsDatabase implements Closeable {
+    private static final Logger log = LoggerFactory.getLogger(PointsService.class);
 	public static final int VERSION = 9; // Published 8
 	private final Context context;
 	private final Helper helper;
@@ -81,7 +84,9 @@ public class PointsDatabase implements Closeable {
 			}
 
 			db.setTransactionSuccessful();
-		} finally {
+		} catch (Exception ex) {
+            log.trace("Inser point error: {}", ex.getMessage());
+        } finally {
 			db.endTransaction();
 		}
 	}

@@ -114,7 +114,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		handler = new Handler(Looper.getMainLooper());
 
 		locationReceiver = new LocationReceiver(this);
-		locationReceiver.setListener(this);
+		locationReceiver.addListener(this);
 		locationReceiver.start();
 
 		routing = new Routing();
@@ -164,7 +164,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 		}
 
 		locationReceiver.stop();
-		locationReceiver.setListener(null);
+		locationReceiver.removeListener(this);
 
 		contentServiceConnection.unbindService(this);
 		pointsServiceConnection.unbindService(this);

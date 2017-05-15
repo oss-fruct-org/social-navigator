@@ -230,9 +230,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 	}
 
 	private void route() {
-		if (routingService != null) {
-			routingService.setTargetPoint(touchedPoint);
-		}
+		routingService.setTargetPoint(touchedPoint);
 	}
 
 	private void place() {
@@ -262,12 +260,8 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		switch (menuItem.getItemId()) {
 		case R.id.action_route:
 			routingService.clearTargetPoint();
-			pointsService.refresh(); /// maybe need additional if
+			//pointsService.refresh(); /// maybe need additional if
 			route();
-			break;
-
-		case R.id.action_create:
-			createPoint();
 			break;
 
 		case R.id.action_place_here:

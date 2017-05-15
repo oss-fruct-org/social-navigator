@@ -12,6 +12,8 @@ import android.os.PowerManager;
 import org.fruct.oss.socialnavigator.BuildConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.ArrayList;
 
 public class LocationReceiver implements LocationListener {
 	private static Logger log = LoggerFactory.getLogger(LocationReceiver.class);
@@ -21,7 +23,7 @@ public class LocationReceiver implements LocationListener {
 	private String vehicle = "CAR";
 	private LocationManager locationManager;
 	private Location oldLocation;
-	private Listener listener;
+	private List<Listener> listeners = new ArrayList<Listener>();
 
 	private boolean isDisableRealLocation = false;
 	private boolean isStarted = false;
@@ -32,8 +34,12 @@ public class LocationReceiver implements LocationListener {
 		this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 	}
 
-	public void setListener(Listener listener) {
-		this.listener = listener;
+	public void addListener(Listener listener) {
+		this.listeners.add(listener);
+	}
+
+	public void removeListener(Listener listener) {
+		this.listeners.remove(listener);
 	}
 
 	public void mockLocation(Location location) {
@@ -112,14 +118,16 @@ public class LocationReceiver implements LocationListener {
 	 * Retrieves last location from LocationManager and sends it to listener
 	 */
 	public void sendLastLocation() {
-		if (listener == null)
+		if (listeners.size() == 0)
 			return;
 
 		Location locationToSend = getLastKnownLocation();
 
 		if (locationToSend != null) {
 			oldLocation = locationToSend;
-			listener.newLocation(locationToSend);
+			for(Listener ls: listeners){
+				ls.newLocation(locationToSend);
+			}
 			log.debug("LocationReceiver send last location");
 		}
 	}
@@ -139,8 +147,11 @@ public class LocationReceiver implements LocationListener {
 		if (isBetterLocation(location, oldLocation)) {
 			oldLocation = location;
 
-			if (listener != null && isStarted())
-				listener.newLocation(location);
+			if (listeners.size() > 0 && isStarted()) {
+				for (Listener ls: listeners) {
+					ls.newLocation(location);
+				}
+			}
 
 			log.info(dbg + " accepted. Reason = " + lastReason);
 		} else {
