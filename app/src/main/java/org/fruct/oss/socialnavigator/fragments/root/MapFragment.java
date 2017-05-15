@@ -36,6 +36,7 @@ import org.fruct.oss.socialnavigator.fragments.overlays.RouteOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.TrackingOverlayFragment;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.osmdroid.DefaultResourceProxyImpl;
+import org.osmdroid.ResourceProxy;
 import org.osmdroid.tileprovider.IRegisterReceiver;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.modules.MapTileDownloader;
@@ -44,7 +45,9 @@ import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase;
 import org.osmdroid.tileprovider.modules.NetworkAvailabliltyCheck;
 import org.osmdroid.tileprovider.modules.TileWriter;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
+import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapController;
@@ -71,6 +74,11 @@ public class MapFragment extends Fragment {
 	private State state = new State();
 
 	private Point initialScrollPoint;
+
+	// наш сервер с картами
+	private static final OnlineTileSourceBase OWN_TILES = new XYTileSource(
+			"OSMWithoutSidewalks", ResourceProxy.string.mapnik, 0, 17, 256, ".png",
+			new String[] { "http://etourism.cs.petrsu.ru:20209/osm_tiles/" });
 
 	public MapFragment() {
 	}
@@ -243,7 +251,8 @@ public class MapFragment extends Fragment {
 
 		IRegisterReceiver registerReceiver = new SimpleRegisterReceiver(getActivity().getApplicationContext());
 		//ITileSource tileSource = TileSourceFactory.MAPQUESTOSM;
-		ITileSource tileSource = TileSourceFactory.MAPNIK;
+		//ITileSource tileSource = TileSourceFactory.MAPNIK;
+		ITileSource tileSource = OWN_TILES;
 		TileWriter tileWriter = new TileWriter();
 		NetworkAvailabliltyCheck networkAvailabliltyCheck = new NetworkAvailabliltyCheck(getActivity());
 
