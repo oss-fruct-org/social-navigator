@@ -2,18 +2,18 @@ package org.fruct.oss.socialnavigator.fragments.root;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.location.LocationManager;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -28,6 +28,7 @@ import android.view.ViewTreeObserver;
 
 import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.audiblealert.AudioManager;
 import org.fruct.oss.socialnavigator.fragments.overlays.CreatePointOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
@@ -35,6 +36,13 @@ import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.RouteOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.TrackingOverlayFragment;
 import org.fruct.oss.socialnavigator.points.Point;
+import org.fruct.oss.socialnavigator.routing.ChoicePath;
+import org.fruct.oss.socialnavigator.routing.RoutingService;
+import org.fruct.oss.socialnavigator.routing.RoutingType;
+import org.fruct.oss.socialnavigator.utils.EarthSpace;
+import org.fruct.oss.socialnavigator.utils.Space;
+import org.fruct.oss.socialnavigator.utils.TrackPath;
+import org.fruct.oss.socialnavigator.utils.Turn;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.tileprovider.IRegisterReceiver;
@@ -46,30 +54,41 @@ import org.osmdroid.tileprovider.modules.NetworkAvailabliltyCheck;
 import org.osmdroid.tileprovider.modules.TileWriter;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
-import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static android.widget.FrameLayout.LayoutParams;
 
-public class MapFragment extends Fragment {
+public class MapFragment extends Fragment implements RoutingService.Listener {
 	private static final Logger log = LoggerFactory.getLogger(MapFragment.class);
 
 	private static final String STATE = "state";
+	private static final String STATE_FOLLOW = "is-following-active";
 	public static final String STORED_LAT = "pref-map-fragment-center-lat";
 	public static final String STORED_LON = "pref-map-fragment-center-lon";
 	public static final String STORED_ZOOM = "pref-map-fragment-zoom";
 
 	private MapView mapView;
 	private List<OverlayFragment> overlayFragments = new ArrayList<OverlayFragment>();
+
+	// звуковое сопровождение
+	private AudioManager audioManager;
+	private boolean isFollowingActive;
+
+	// отслеживание изменений маршрута для выдачи звуковых уведомлений
+	private RoutingService routingService;
+	private RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
+	private Space space = new EarthSpace();
+	private Turn lastTurn = null;
+	private Space.Point previousLocation;
 
 	private State state = new State();
 
@@ -103,6 +122,7 @@ public class MapFragment extends Fragment {
 
 		if (savedInstanceState != null) {
 			state = savedInstanceState.getParcelable(STATE);
+			isFollowingActive = savedInstanceState.getBoolean(STATE_FOLLOW);
 		} else {
 			state.lat = pref.getInt(STORED_LAT, 0) / 1e6;
 			state.lon = pref.getInt(STORED_LON, 0) / 1e6;
@@ -206,11 +226,27 @@ public class MapFragment extends Fragment {
 
 		setHasOptionsMenu(true);
 
+		getActivity().bindService(new Intent(getActivity(), RoutingService.class),
+				routingServiceConnection, Context.BIND_AUTO_CREATE);
+
+		audioManager = new AudioManager(this.getActivity().getApplicationContext());
+		if (isFollowingActive) {
+			audioManager.startPlaying();
+		}
+
 		log.debug("onCreate");
 	}
 
 	@Override
 	public void onDestroy() {
+		audioManager.onDestroy();
+
+		getActivity().unbindService(routingServiceConnection);
+
+		if (routingService != null) {
+			routingService.removeListener(this);
+		}
+
 		log.debug("onDestroy");
 		super.onDestroy();
 	}
@@ -227,6 +263,16 @@ public class MapFragment extends Fragment {
 		if (item.getItemId() == R.id.action_open_categories) {
 			((MainActivity) getActivity()).openCategoriesFragment();
 			return true;
+		}
+		if (item.getItemId() == R.id.action_position) {
+			log.debug("Cache following button pressed " + isFollowingActive);
+			isFollowingActive = !isFollowingActive;
+			if (isFollowingActive) {
+				audioManager.startPlaying();
+			} else {
+				audioManager.stopPlaying();
+			}
+			return false;
 		}
 
 		return super.onOptionsItemSelected(item);
@@ -280,6 +326,67 @@ public class MapFragment extends Fragment {
 			mapView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 	}
 
+	@Override
+	public void routingStateChanged(RoutingService.State state) {
+	}
+
+	@Override
+	public void progressStateChanged(boolean isActive) {
+	}
+
+	@Override
+	public void pathsUpdated(GeoPoint targetPoint, Map<RoutingType, ChoicePath> paths) {
+	}
+
+	@Override
+	public void activePathUpdated(RoutingService.TrackingState trackingState) {
+		TrackPath.Result<Point> lastQueryResult = trackingState.lastQueryResult;
+		// препятствие в маршруте
+		if (lastQueryResult.nextPointData != null) {
+			float[] dist = new float[1];
+			Location.distanceBetween(
+					lastQueryResult.nextPointData.getLat(),
+					lastQueryResult.nextPointData.getLon(),
+					lastQueryResult.currentPosition.x,
+					lastQueryResult.currentPosition.y, dist);
+			if (dist[0] < TrackingOverlayFragment.OBJECT_PROXIMITY_NOTIFICATION) {
+//				double direction = Turn.create(space, this.previousLocation, lastQueryResult.currentPosition, Space.Point.fromGeoPoint(lastQueryResult.nextPointData.toGeoPoint())).getTurnDirection();
+//				log.debug ("point direction (>0 left): " + direction
+//				+ " a=" + this.previousLocation + " b=" + lastQueryResult.currentPosition + " c=" + Space.Point.fromGeoPoint(lastQueryResult.nextPointData.toGeoPoint()));
+//				if (direction > 0) {
+//					audioManager.queueToPlay(lastQueryResult.nextPointData, AudioManager.LEFT);
+//				}else {
+//					audioManager.queueToPlay(lastQueryResult.nextPointData, AudioManager.RIGHT);
+//				}
+				audioManager.queueToPlay(lastQueryResult.nextPointData, AudioManager.FORWARD);
+				audioManager.playNext();
+			}
+		}
+
+		// направление движения
+		if (lastQueryResult.nextTurn != null
+				&& lastQueryResult.nextTurn.getTurnSharpness() > 1) {
+			double dist = space.dist(lastQueryResult.nextTurn.getPoint(),
+					lastQueryResult.currentPosition);
+
+			if (dist < TrackingOverlayFragment.TURN_PROXIMITY_NOTIFICATION) {
+				if (this.lastTurn == null || !this.lastTurn.equals(lastQueryResult.nextTurn)) {
+					this.lastTurn = lastQueryResult.nextTurn;
+
+					if (lastQueryResult.nextTurn.getTurnDirection() > 0) {
+						audioManager.queueTurnToPlay(AudioManager.LEFT);
+					} else {
+						audioManager.queueTurnToPlay(AudioManager.RIGHT);
+					}
+					audioManager.playNext();
+				}
+			} else {
+				//log.debug("distance = " + dist);
+			}
+		}
+		this.previousLocation = lastQueryResult.currentPosition;
+	}
+
 	private static class State implements Parcelable {
 		double lat;
 		double lon;
@@ -314,5 +421,19 @@ public class MapFragment extends Fragment {
 				return new State[size];
 			}
 		};
+	}
+
+	private class RoutingServiceConnection implements ServiceConnection {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			routingService = ((RoutingService.Binder) service).getService();
+			routingService.addListener(MapFragment.this);
+			routingService.sendLastResult();
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			routingService = null;
+		}
 	}
 }

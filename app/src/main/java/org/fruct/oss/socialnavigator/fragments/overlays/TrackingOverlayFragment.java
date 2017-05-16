@@ -43,6 +43,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	private static final Logger log = LoggerFactory.getLogger(TrackingOverlayFragment.class);
 
 	public static final int TURN_PROXIMITY_NOTIFICATION = 30;
+	public static final int OBJECT_PROXIMITY_NOTIFICATION = 30;
 	private MapView mapView;
 	private DefaultResourceProxyImpl resourceProxy;
 

@@ -3,6 +3,8 @@ package org.fruct.oss.socialnavigator.utils;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.osmdroid.util.GeoPoint;
+
 public interface Space {
 	Point newPoint(double x, double y);
 	double dist(Point a, Point b);
@@ -15,6 +17,14 @@ public interface Space {
 		public Point(double x, double y) {
 			this.x = x;
 			this.y = y;
+		}
+
+		public static Point fromGeoPoint(GeoPoint pt) {
+			return new Point(pt.getLatitude() / 100000, pt.getLongitude() / 100000);
+		}
+
+		public String toString() {
+			return this.x + ", " + this.y;
 		}
 
 		@Override
