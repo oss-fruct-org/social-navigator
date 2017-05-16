@@ -97,7 +97,6 @@ public class Point implements Parcelable {
 
 		// если не распарсено, то парсим и в хеш
 		localNames = new HashMap();
-		JsonParser parser = new JsonParser();
 		try {
 			JSONObject json = new JSONObject(name);
 			Iterator<String> temp = json.keys();
