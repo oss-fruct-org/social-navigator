@@ -6,20 +6,28 @@ import android.os.Parcelable;
 
 import org.fruct.oss.mapcontent.content.utils.XmlUtil;
 import org.fruct.oss.socialnavigator.parsers.GetsResponse;
-import org.fruct.oss.socialnavigator.utils.Utils;
+import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 public class Point implements Parcelable {
+	private static final Logger log = LoggerFactory.getLogger(Point.class);
+
 	public static final String LOCAL_PROVIDER = "local_provider";
 	public static final String TEST_PROVIDER = "test_provider";
 	public static final String GETS_PROVIDER = "gets_provider";
 
-	private String name;
+	private String name; // json с именами точки в разных локалях
+	private HashMap<String, String> localNames = null; // разобранная структура json
 	private String description;
 	private String url;
 	private int latE6;
@@ -79,6 +87,28 @@ public class Point implements Parcelable {
 	}
 
 	public String getName() {
+		if (localNames != null) {
+			//log.debug("Point key = " + "name_" + Locale.getDefault().getLanguage());
+			if (localNames.containsKey("name_" + Locale.getDefault().getLanguage()))
+				return localNames.get("name_" + Locale.getDefault().getLanguage());
+			else
+				return localNames.get("name");
+		}
+
+		// если не распарсено, то парсим и в хеш
+		localNames = new HashMap();
+		JsonParser parser = new JsonParser();
+		try {
+			JSONObject json = new JSONObject(name);
+			Iterator<String> temp = json.keys();
+			while (temp.hasNext()) {
+				String key = temp.next();
+				localNames.put(key, json.get(key).toString());
+			}
+		} catch (Exception e) {
+			//log.debug("Catch exception: " + e.getMessage());
+			localNames.put("name", name);
+		}
 		return name;
 	}
 
