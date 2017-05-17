@@ -88,7 +88,7 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 	private RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
 	private Space space = new EarthSpace();
 	private Turn lastTurn = null;
-	private Space.Point previousLocation;
+	private Point lastPoint = null;
 
 	private State state = new State();
 
@@ -350,16 +350,11 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 					lastQueryResult.currentPosition.x,
 					lastQueryResult.currentPosition.y, dist);
 			if (dist[0] < TrackingOverlayFragment.OBJECT_PROXIMITY_NOTIFICATION) {
-//				double direction = Turn.create(space, this.previousLocation, lastQueryResult.currentPosition, Space.Point.fromGeoPoint(lastQueryResult.nextPointData.toGeoPoint())).getTurnDirection();
-//				log.debug ("point direction (>0 left): " + direction
-//				+ " a=" + this.previousLocation + " b=" + lastQueryResult.currentPosition + " c=" + Space.Point.fromGeoPoint(lastQueryResult.nextPointData.toGeoPoint()));
-//				if (direction > 0) {
-//					audioManager.queueToPlay(lastQueryResult.nextPointData, AudioManager.LEFT);
-//				}else {
-//					audioManager.queueToPlay(lastQueryResult.nextPointData, AudioManager.RIGHT);
-//				}
-				audioManager.queueToPlay(lastQueryResult.nextPointData, AudioManager.FORWARD);
-				audioManager.playNext();
+				if (this.lastPoint == null || !this.lastPoint.equals(lastQueryResult.nextPointData)) {
+					this.lastPoint = lastQueryResult.nextPointData;
+					audioManager.queueToPlay(lastQueryResult.nextPointData, AudioManager.FORWARD);
+					audioManager.playNext();
+				}
 			}
 		}
 
@@ -374,9 +369,9 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 					this.lastTurn = lastQueryResult.nextTurn;
 
 					if (lastQueryResult.nextTurn.getTurnDirection() > 0) {
-						audioManager.queueTurnToPlay(AudioManager.LEFT);
+						audioManager.queueTurnToPlay(AudioManager.TO_LEFT);
 					} else {
-						audioManager.queueTurnToPlay(AudioManager.RIGHT);
+						audioManager.queueTurnToPlay(AudioManager.TO_RIGHT);
 					}
 					audioManager.playNext();
 				}
@@ -384,7 +379,6 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 				//log.debug("distance = " + dist);
 			}
 		}
-		this.previousLocation = lastQueryResult.currentPosition;
 	}
 
 	private static class State implements Parcelable {

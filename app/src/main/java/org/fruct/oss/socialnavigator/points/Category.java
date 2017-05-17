@@ -4,8 +4,33 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+
 public class Category implements Parcelable {
+	// препятствия
+	public static final String CURB = "curb"; // бордюр
+	public static final String CROSSWALK = "crosswalk"; // пешеходный переход
+	public static final String ROUGH_ROAD = "rough_road"; // неровная дорога
+	public static final String RAMP = "ramp"; // Пандус
+	public static final String SLOPE = "slope"; // уклон дороги
+	public static final String STAIRS = "stairs"; // лестница
+	public static final String OBJECT_ON_THE_ROAD = "object_on_the_road"; // объект на дороге
+	public static final String BUS_STOP = "bus_stop"; // остановка транспорта
+	public static final String GATE = "gate"; // ворота
+	public static final String NARROW_ROAD = "narrow_road"; // узкая дорога
+	public static final String TRAFFIC_LIGHT = "traffic_light"; // светофор
+
+
+	public static final String UNKNOWN_OBJECT = "unknown_obj";
+
+
 	private final String name;
+	private Map<String, String> localNames;
 	private final String description;
 	private final String url;
 	private final String iconUrl;
@@ -40,7 +65,44 @@ public class Category implements Parcelable {
 	}
 
 	public String getName() {
+
+		if (localNames != null) {
+			//log.debug("Point key = " + "name_" + Locale.getDefault().getLanguage());
+			if (localNames.containsKey("name_" + Locale.getDefault().getLanguage()))
+				return localNames.get("name_" + Locale.getDefault().getLanguage());
+			else
+				return localNames.get("name");
+		}
+
+		// если не распарсено, то парсим и в хеш
+		localNames = new HashMap();
+		try {
+			JSONObject json = new JSONObject(name);
+			Iterator<String> temp = json.keys();
+			while (temp.hasNext()) {
+				String key = temp.next();
+				localNames.put(key, json.get(key).toString());
+			}
+		} catch (Exception e) {
+			//log.debug("Catch exception: " + e.getMessage());
+			localNames.put("name", name);
+		}
 		return name;
+	}
+
+	public String getIdentifiedName() {
+		if (this.localNames == null) {
+			getName();
+		}
+		switch (this.localNames.get("name")) {
+			case "Stairs": return STAIRS;
+			case "Object on the road": return OBJECT_ON_THE_ROAD;
+			case "Bus stop": return BUS_STOP;
+			case "Gate": return GATE;
+			case "Traffic light": return TRAFFIC_LIGHT;
+			case "Kerb": return CURB;
+		}
+		return UNKNOWN_OBJECT;
 	}
 
 	public String getDescription() {

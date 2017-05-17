@@ -4,11 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.support.v4.content.LocalBroadcastManager;
 
-import org.fruct.oss.socialnavigator.App;
-import org.fruct.oss.socialnavigator.R;
+import org.fruct.oss.socialnavigator.points.Category;
 import org.fruct.oss.socialnavigator.points.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,24 +27,20 @@ public class AudioManager {
 
     private final static Logger log = LoggerFactory.getLogger(AudioPlayer.class);
 
+    // направление
     public static final String LEFT = "left";
     public static final String RIGHT = "right";
     public static final String FORWARD = "forward";
     public static final String BACK= "back";
-    public static final String HIGH_CURB = "high_curb";
-    public static final String WELCOME = "welcome";
-    public static final String GOODBYE = "goodbye";
-    public static final String UNKNOWN_OBJECT = "unknown_obj";
-    public static final String UNKNOWN_DIRECTION = "unknown_dir";
-    public static final String MUSEUMS = "museums";
-    public static final String HOTELS = "hotels";
-    public static final String SIGHTS = "sights";
-    public static final String CROSSWALK = "crosswalk";
-    public static final String ROUGH_ROADS = "rough roads";
-    public static final String RAMP = "ramp";
-    public static final String SLOPE= "slope";
-    public static final String TURN = "turn";
 
+    // движение
+    public static final String TURN = "turn";
+    public static final String TO_LEFT = "turn_left";
+    public static final String TO_RIGHT = "turn_right";
+
+    // сервисные сообщения
+    public static final String WELCOME = "welcome";
+    public static final String UNKNOWN_DIRECTION = "unknown_dir";
 
     // TODO: in case of need to check whether you already left the zone of queued point, add list of points
     private ArrayList<String> uris;
@@ -107,7 +101,7 @@ public class AudioManager {
 
     public void queueToPlay(Point point, String dir){
         String category, direction;
-        category = getUriByCategory(point.getCategory().getName());
+        category = getUriByCategory(point.getCategory().getIdentifiedName());
         direction = getUriByDirection(dir);
         if(category!= "" && direction != "") {
             uris.add(category);
@@ -123,7 +117,7 @@ public class AudioManager {
      */
     public void queueTurnToPlay(String dir) {
         uris.add(getUriByCategory(TURN));
-        uris.add(getUriByDirection(dir));
+        uris.add(getUriByTurnDirection(dir));
     }
 
     public void playNext(){
@@ -141,22 +135,11 @@ public class AudioManager {
         String folder = "sounds/"; //file:///android_asset/sounds/";
         if (Locale.getDefault().getLanguage().equals("ru")) {
             folder += "ru/";
+        } else {
+            folder += "en/";
         }
 
-        String ret = folder + cat + ".mp3";
-        switch (cat) {
-            case WELCOME:
-            case TURN:
-            case CROSSWALK:
-            case RAMP:
-            case ROUGH_ROADS:
-            case SLOPE:
-                return ret;
-            default: {
-                log.debug("Undefined category: " + cat);
-                return folder + UNKNOWN_OBJECT + ".mp3";
-            }
-        }
+        return folder + cat + ".mp3";
     }
 
     private String getUriByDirection(String dir){
@@ -171,6 +154,22 @@ public class AudioManager {
             case RIGHT:
             case FORWARD:
             case BACK:
+                return ret;
+            default:
+                return folder + UNKNOWN_DIRECTION + ".mp3";
+        }
+    }
+
+    private String getUriByTurnDirection(String dir){
+        String folder = "sounds/"; //"android.resource://" + App.getInstance().getPackageName() + "/";
+        if (Locale.getDefault().getLanguage().equals("ru")) {
+            folder += "ru/";
+        }
+
+        String ret = folder + dir + ".mp3";
+        switch (dir) {
+            case TO_LEFT:
+            case TO_RIGHT:
                 return ret;
             default:
                 return folder + UNKNOWN_DIRECTION + ".mp3";
