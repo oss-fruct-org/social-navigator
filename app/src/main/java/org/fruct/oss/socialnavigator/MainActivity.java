@@ -2,7 +2,10 @@ package org.fruct.oss.socialnavigator;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -20,10 +23,10 @@ import org.fruct.oss.mapcontent.content.connections.GHContentServiceConnection;
 import org.fruct.oss.mapcontent.content.fragments.ContentFragment;
 import org.fruct.oss.mapcontent.content.helper.ContentHelper;
 import org.fruct.oss.socialnavigator.fragments.root.AboutFragment;
+import org.fruct.oss.socialnavigator.fragments.root.DisabilitiesFragment;
 import org.fruct.oss.socialnavigator.fragments.root.GetsFragment;
 import org.fruct.oss.socialnavigator.fragments.root.HelpFragment;
 import org.fruct.oss.socialnavigator.fragments.root.MapFragment;
-import org.fruct.oss.socialnavigator.fragments.root.DisabilitiesFragment;
 import org.fruct.oss.socialnavigator.fragments.root.RootContentFragment;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
@@ -145,7 +148,11 @@ public class MainActivity extends ActionBarActivity
 			fragment = HelpFragment.newInstance();
 			break;
 
-		case 6:
+			case 6:
+			runCardiaCare();
+				return;
+
+		case 7:
 			fragment = AboutFragment.newInstance();
 			break;
 
@@ -228,6 +235,24 @@ public class MainActivity extends ActionBarActivity
 
 	public void openMapFragment() {
 		mNavigationDrawerFragment.selectItem(0);
+	}
+
+	public void runCardiaCare() {
+		Context context = this.getApplicationContext();
+		PackageManager manager = context.getPackageManager();
+		Intent i = manager.getLaunchIntentForPackage("ru.cardiacare.cardiacare");
+		if (i == null) {
+			log.debug("Cardiacare not found");
+			Intent goToMarket = new Intent(Intent.ACTION_VIEW)
+					.setData(Uri.parse("market://details?id=ru.cardiacare.cardiacare"));
+			if (goToMarket != null) {
+				goToMarket.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				context.startActivity(goToMarket);
+			}
+			return;
+		}
+		i.addCategory(Intent.CATEGORY_LAUNCHER);
+		context.startActivity(i);
 	}
 
 	/**

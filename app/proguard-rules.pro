@@ -42,6 +42,9 @@
 -dontwarn org.xmlpull.v1.XmlSerializer
 -dontwarn com.caverock.androidsvg.**
 
+-dontwarn android.util.FloatMath
+-dontwarn android.app.Notification
+
 # Google Play Services
 -keep class * extends java.util.ListResourceBundle {
     protected Object[][] getContents();

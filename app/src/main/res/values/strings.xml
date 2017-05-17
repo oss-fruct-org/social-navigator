@@ -7,7 +7,7 @@
     <string name="title_section3">Content</string>
     <string name="title_section4">Server</string>
     <string name="title_section5">Preferences</string>
-    <string name="title_section6">Help</string>
+    <string name="title_section6" translatable="false">Help</string>
     <string name="title_section7">About</string>
 
     <string name="title_activity_help">Help</string>
@@ -82,5 +82,6 @@
     <string name="str_version">Version:</string>
     <string name="str_publish_permission">You don\'t have permission to publish your points</string>
     <string name="str_logout_error">Logout error</string>
+    <string name="title_cardiacare">CardiaCare</string>
 
 </resources>

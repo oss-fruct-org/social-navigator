@@ -7,6 +7,7 @@
         <item>@string/title_section4</item>
         <item>@string/title_section5</item>
         <item>@string/title_section6</item>
+        <item>@string/title_cardiacare</item>
         <item>@string/title_section7</item>
     </string-array>
 
