@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_map"
+            android:title="@string/title_section1" />
+        <item
+            android:id="@+id/nav_disabilities"
+            android:title="@string/title_section2" />
+        <item
+            android:id="@+id/nav_content"
+            android:title="@string/title_section3" />
+        <item
+            android:id="@+id/nav_gets"
+            android:title="@string/title_section4" />
+        <item
+            android:id="@+id/nav_config"
+            android:title="@string/title_section5" />
+        <item
+            android:id="@+id/nav_help"
+            android:title="@string/title_section6" />
+        <item
+            android:id="@+id/nav_cardiacare"
+            android:title="@string/title_cardiacare" />
+        <item
+            android:id="@+id/nav_about"
+            android:title="@string/title_section7" />
+    </group>
+
+</menu>

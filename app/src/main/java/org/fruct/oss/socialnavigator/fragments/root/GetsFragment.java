@@ -51,7 +51,8 @@ import java.io.StringWriter;
 import java.util.List;
 
 public class GetsFragment extends Fragment implements View.OnClickListener, GooglePlayServicesHelper.Listener,
-		MainActivity.ActivityResultListener, PointsServiceConnectionListener {
+		//MainActivity.ActivityResultListener,
+		PointsServiceConnectionListener {
 	private static final Logger log = LoggerFactory.getLogger(GetsFragment.class);
 
 	private GooglePlayServicesHelper googlePlayServicesHelper;
@@ -87,8 +88,8 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section4),
-				ActionBar.NAVIGATION_MODE_STANDARD, this);
+//		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section4),
+//				ActionBar.NAVIGATION_MODE_STANDARD, this);
 
 	}
 
@@ -196,19 +197,21 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		}
 	}
 
-	@Override
-	public void onActivityResultRedirect(int requestCode, int resultCode, Intent data) {
-		if ((requestCode == GooglePlayServicesHelper.RC_SIGN_IN
-				|| requestCode == GooglePlayServicesHelper.RC_GET_CODE)
-				&& googlePlayServicesHelper != null) {
-			googlePlayServicesHelper.onActivityResult(requestCode, resultCode, data);
-		} else if (requestCode == GooglePlayServicesHelper.RC_CHECK && resultCode == Activity.RESULT_OK) {
-			startGoogleLogin();
-		}
-	}
+//	@Override
+//	public void onActivityResultRedirect(int requestCode, int resultCode, Intent data) {
+//		if ((requestCode == GooglePlayServicesHelper.RC_SIGN_IN
+//				|| requestCode == GooglePlayServicesHelper.RC_GET_CODE)
+//				&& googlePlayServicesHelper != null) {
+//			googlePlayServicesHelper.onActivityResult(requestCode, resultCode, data);
+//		} else if (requestCode == GooglePlayServicesHelper.RC_CHECK && resultCode == Activity.RESULT_OK) {
+//			startGoogleLogin();
+//		}
+//	}
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		menu.clear();
 		inflater.inflate(R.menu.refresh, menu);
 	}
 

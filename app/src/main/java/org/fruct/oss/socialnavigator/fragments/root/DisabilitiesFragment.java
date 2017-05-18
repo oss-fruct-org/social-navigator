@@ -60,7 +60,7 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 
-		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section2), ActionBar.NAVIGATION_MODE_STANDARD, null);
+//		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section2), ActionBar.NAVIGATION_MODE_STANDARD, null);
 
 	}
 
@@ -133,6 +133,7 @@ public class DisabilitiesFragment extends ListFragment implements PointsService.
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		menu.clear();
 		inflater.inflate(R.menu.categories_fragment_menu, menu);
 	}
 

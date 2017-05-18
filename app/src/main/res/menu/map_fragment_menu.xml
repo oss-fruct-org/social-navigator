@@ -5,5 +5,9 @@
           android:title="@string/action_open_categories"
           android:icon="@drawable/ic_open_categories"
           app:showAsAction="always" />
+    <item android:id="@+id/action_screenshot"
+        android:title="@string/make_screenshot"
+        android:icon="@android:drawable/ic_menu_camera"
+        app:showAsAction="always" />
 
 </menu>

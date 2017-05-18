@@ -10,4 +10,9 @@
     <dimen name="tracking_panel_height">112dp</dimen>
     <dimen name="route_panel_width">64dp</dimen>
 
+    <!-- Navigation menu -->
+    <dimen name="nav_header_vertical_spacing">16dp</dimen>
+    <dimen name="nav_header_height">160dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+
 </resources>

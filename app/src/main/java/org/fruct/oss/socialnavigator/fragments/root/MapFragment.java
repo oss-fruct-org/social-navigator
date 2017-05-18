@@ -7,9 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -17,7 +20,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,11 +27,30 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.Toast;
+
+import com.facebook.CallbackManager;
+import com.facebook.login.widget.LoginButton;
+import com.jraska.falcon.Falcon;
+import com.vk.sdk.VKAccessToken;
+import com.vk.sdk.VKScope;
+import com.vk.sdk.VKSdk;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKError;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
+import com.vk.sdk.api.model.VKApiPhoto;
+import com.vk.sdk.api.model.VKAttachments;
+import com.vk.sdk.api.model.VKPhotoArray;
+import com.vk.sdk.api.model.VKWallPostResult;
+import com.vk.sdk.api.photo.VKImageParameters;
+import com.vk.sdk.api.photo.VKUploadImage;
 
 import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.audiblealert.AudioManager;
-import org.fruct.oss.socialnavigator.fragments.overlays.CreatePointOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
@@ -61,8 +82,13 @@ import org.osmdroid.views.MapView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static android.widget.FrameLayout.LayoutParams;
@@ -110,7 +136,7 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 
-		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section1), ActionBar.NAVIGATION_MODE_STANDARD, null);
+//		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section1), ActionBar.NAVIGATION_MODE_STANDARD, null);
 	}
 
 	@Override
@@ -154,7 +180,7 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 
 	private void setupOverlays(Bundle savedInstanceState) {
 		if (savedInstanceState == null) {
-			FragmentTransaction trans = getFragmentManager().beginTransaction();
+			FragmentTransaction trans = getChildFragmentManager().beginTransaction();
 
 			PositionOverlayFragment positionOverlayFragment = new PositionOverlayFragment();
 			trans.add(positionOverlayFragment, "position-overlay-fragment");
@@ -164,9 +190,9 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 			trans.add(obstaclesOverlayFragment, "obstacle-overlay-fragment");
 			overlayFragments.add(obstaclesOverlayFragment);
 
-			CreatePointOverlayFragment createPointOverlayFragment = new CreatePointOverlayFragment();
-			trans.add(R.id.overlay_create_point, createPointOverlayFragment, "create-point-overlay-fragment");
-			overlayFragments.add(createPointOverlayFragment);
+//			CreatePointOverlayFragment createPointOverlayFragment = new CreatePointOverlayFragment();
+//			trans.add(R.id.overlay_create_point, createPointOverlayFragment, "create-point-overlay-fragment");
+//			overlayFragments.add(createPointOverlayFragment);
 
 			RouteOverlayFragment routeOverlayFragment = new RouteOverlayFragment();
 			trans.add(R.id.overlay_route, routeOverlayFragment, "route-overlay-fragment");
@@ -181,7 +207,7 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 		} else {
 			int overlayCount = savedInstanceState.getInt("overlay-holder-count");
 			for (int i = 0; i < overlayCount; i++) {
-				OverlayFragment overlay = (OverlayFragment) getFragmentManager().getFragment(savedInstanceState, "overlay-holder-" + i);
+				OverlayFragment overlay = (OverlayFragment) getChildFragmentManager().getFragment(savedInstanceState, "overlay-holder-" + i);
 				overlayFragments.add(overlay);
 			}
 		}
@@ -254,7 +280,7 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-
+		menu.clear();
 		inflater.inflate(R.menu.map_fragment_menu, menu);
 	}
 
@@ -273,6 +299,9 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 				audioManager.stopPlaying();
 			}
 			return false;
+		}
+		if (item.getItemId() == R.id.action_screenshot) {
+			((MainActivity)this.getActivity()).sendImage();
 		}
 
 		return super.onOptionsItemSelected(item);
@@ -430,4 +459,5 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 			routingService = null;
 		}
 	}
+
 }

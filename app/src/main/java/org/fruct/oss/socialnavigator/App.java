@@ -2,29 +2,41 @@ package org.fruct.oss.socialnavigator;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.widget.Toast;
 
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
-import com.nostra13.universalimageloader.cache.disc.impl.ext.LruDiscCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.download.BaseImageDownloader;
+import com.vk.sdk.VKAccessToken;
+import com.vk.sdk.VKAccessTokenTracker;
+import com.vk.sdk.VKSdk;
 
 import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.slf4j.impl.StaticLoggerBinder;
-import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class App extends Application {
 	private static Context context;
 	private static App app;
 	private static ImageLoader imageLoader;
 
+    VKAccessTokenTracker vkAccessTokenTracker = new VKAccessTokenTracker() {
+        @Override
+        public void onVKAccessTokenChanged(VKAccessToken oldToken, VKAccessToken newToken) {
+            if (newToken == null) {
+                Toast.makeText(app, "AccessToken invalidated", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(app, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        }
+    };
 
 	@Override
 	public void onCreate() {
@@ -58,6 +70,8 @@ public class App extends Application {
 					.invoke(null, httpCacheDir, httpCacheSize);
 		} catch (Exception ignore) {
 		}*/
+		vkAccessTokenTracker.startTracking();
+		VKSdk.initialize(this);
 	}
 
 	private ImageLoader setupImageLoader(File imageCacheDir) {

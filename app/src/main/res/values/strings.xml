@@ -83,5 +83,7 @@
     <string name="str_publish_permission">You don\'t have permission to publish your points</string>
     <string name="str_logout_error">Logout error</string>
     <string name="title_cardiacare">CardiaCare</string>
+    <integer name="com_vk_sdk_AppId">6035443</integer>
+    <string name="make_screenshot">Send screenshot</string>
 
 </resources>

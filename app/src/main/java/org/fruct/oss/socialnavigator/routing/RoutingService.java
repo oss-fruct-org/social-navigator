@@ -524,6 +524,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 			obstaclesPoints = pointsService.queryList(pointsService.requestPoints());
 			routing.setObstacles(obstaclesPoints);
 		}
+		log.debug("setObstaclesPoints() found obstacles: " + obstaclesPoints.size());
 
 		isTrackingNeedsUpdate = true;
 		isChoiceNeedsUpdate = true;

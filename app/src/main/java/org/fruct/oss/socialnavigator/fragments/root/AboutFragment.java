@@ -5,16 +5,19 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AboutFragment extends Fragment {
+	private static final Logger log = LoggerFactory.getLogger(AboutFragment.class);
 	public AboutFragment() {
 	}
 
@@ -26,8 +29,8 @@ public class AboutFragment extends Fragment {
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 
-		((MainActivity) activity).onSectionAttached(getString(R.string.title_section7),
-				ActionBar.NAVIGATION_MODE_STANDARD, null);
+//		((MainActivity) activity).onSectionAttached(getString(R.string.title_section7),
+//				ActionBar.NAVIGATION_MODE_STANDARD, null);
 	}
 
 	@Override
@@ -43,5 +46,18 @@ public class AboutFragment extends Fragment {
 		}
 
 		return view;
+	}
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		setHasOptionsMenu(false);
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		log.debug("BINGO");
+		menu.clear();
 	}
 }

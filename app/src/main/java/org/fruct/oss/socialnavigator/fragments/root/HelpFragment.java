@@ -56,9 +56,6 @@ public class HelpFragment extends Fragment implements ActionBar.TabListener {
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-
-		((MainActivity) activity).onSectionAttached(getString(R.string.title_section6),
-				ActionBar.NAVIGATION_MODE_TABS, null);
 	}
 
 	@Override

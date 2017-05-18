@@ -67,7 +67,8 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		inflater.inflate(R.menu.map_position, menu);
+		if (menu.findItem(R.id.action_position) == null)
+			inflater.inflate(R.menu.map_position, menu);
 
 		positionMenuItem = menu.findItem(R.id.action_position);
 
