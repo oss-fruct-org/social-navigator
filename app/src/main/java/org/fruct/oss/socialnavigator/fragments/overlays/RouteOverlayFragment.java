@@ -160,12 +160,21 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 				pointsServiceConnection, Context.BIND_AUTO_CREATE);
 
 		resourceProxy = new DefaultResourceProxyImpl(getActivity());
-	}
+        this.getView().setVisibility(View.INVISIBLE);
+    }
 
 	public void onDestroy() {
-		getActivity().unbindService(routingServiceConnection);
-		getActivity().unbindService(pointsServiceConnection);
-		routingService.removeListener(this);
+        try {
+            getActivity().unbindService(routingServiceConnection);
+            getActivity().unbindService(pointsServiceConnection);
+        } catch (IllegalArgumentException ex) {
+            log.debug ("Can't unbind service: " + ex.getMessage());
+        }
+        try {
+            routingService.removeListener(this);
+        } catch (NullPointerException ex) {
+            log.debug("Can't remove listener: " + ex.getMessage());
+        }
 
 		super.onDestroy();
 	}

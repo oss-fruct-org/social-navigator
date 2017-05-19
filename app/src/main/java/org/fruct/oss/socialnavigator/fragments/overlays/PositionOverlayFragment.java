@@ -60,7 +60,8 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 			routingService.removeListener(this);
 		}
 
-		overlay.disableMyLocation();
+		if (overlay != null)
+			overlay.disableMyLocation();
 		getActivity().unbindService(routingServiceConnection);
 		super.onDestroy();
 	}

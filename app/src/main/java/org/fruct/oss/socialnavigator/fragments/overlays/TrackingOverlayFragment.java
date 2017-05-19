@@ -105,6 +105,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		turnImageView = (ImageView) view.findViewById(R.id.turn_image_view);
 		obstacleImageView = (ImageView) view.findViewById(R.id.obstacle_image_view);
 
+
 		return view;
 	}
 
@@ -164,6 +165,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	public void onMapViewReady(MapView mapView) {
 		this.mapView = mapView;
 		resourceProxy = new DefaultResourceProxyImpl(getActivity());
+        this.getView().setVisibility(View.INVISIBLE);
 	}
 
 	@Override
