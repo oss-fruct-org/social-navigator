@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/action_open_categories"
-          android:title="@string/action_open_categories"
-          android:icon="@drawable/ic_open_categories"
-          app:showAsAction="always" />
     <item android:id="@+id/action_screenshot"
         android:title="@string/make_screenshot"
         android:icon="@android:drawable/ic_menu_camera"
         app:showAsAction="always" />
+    <item android:id="@+id/action_open_categories"
+          android:title="@string/action_open_categories"
+          android:icon="@drawable/ic_open_categories"
+          app:showAsAction="always" />
 
 </menu>

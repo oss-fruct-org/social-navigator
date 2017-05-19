@@ -371,6 +371,7 @@ public class Utils {
 	public static void expand(final View v) {
 		v.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		final int targetHeight = v.getMeasuredHeight();
+		log.debug("Expand height = {}", targetHeight);
 
 		v.getLayoutParams().height = 0;
 		v.setVisibility(View.VISIBLE);

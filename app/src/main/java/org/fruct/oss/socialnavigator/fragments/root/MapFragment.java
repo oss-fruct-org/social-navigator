@@ -7,12 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -27,30 +24,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.Toast;
-
-import com.facebook.CallbackManager;
-import com.facebook.login.widget.LoginButton;
-import com.jraska.falcon.Falcon;
-import com.vk.sdk.VKAccessToken;
-import com.vk.sdk.VKScope;
-import com.vk.sdk.VKSdk;
-import com.vk.sdk.api.VKApi;
-import com.vk.sdk.api.VKApiConst;
-import com.vk.sdk.api.VKError;
-import com.vk.sdk.api.VKParameters;
-import com.vk.sdk.api.VKRequest;
-import com.vk.sdk.api.VKResponse;
-import com.vk.sdk.api.model.VKApiPhoto;
-import com.vk.sdk.api.model.VKAttachments;
-import com.vk.sdk.api.model.VKPhotoArray;
-import com.vk.sdk.api.model.VKWallPostResult;
-import com.vk.sdk.api.photo.VKImageParameters;
-import com.vk.sdk.api.photo.VKUploadImage;
 
 import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.audiblealert.AudioManager;
+import org.fruct.oss.socialnavigator.fragments.overlays.CreatePointOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
 import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
@@ -82,13 +60,8 @@ import org.osmdroid.views.MapView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import static android.widget.FrameLayout.LayoutParams;
@@ -190,9 +163,9 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 			trans.add(obstaclesOverlayFragment, "obstacle-overlay-fragment");
 			overlayFragments.add(obstaclesOverlayFragment);
 
-//			CreatePointOverlayFragment createPointOverlayFragment = new CreatePointOverlayFragment();
-//			trans.add(R.id.overlay_create_point, createPointOverlayFragment, "create-point-overlay-fragment");
-//			overlayFragments.add(createPointOverlayFragment);
+			CreatePointOverlayFragment createPointOverlayFragment = new CreatePointOverlayFragment();
+			trans.add(R.id.overlay_create_point, createPointOverlayFragment, "create-point-overlay-fragment");
+			overlayFragments.add(createPointOverlayFragment);
 
 			RouteOverlayFragment routeOverlayFragment = new RouteOverlayFragment();
 			trans.add(R.id.overlay_route, routeOverlayFragment, "route-overlay-fragment");

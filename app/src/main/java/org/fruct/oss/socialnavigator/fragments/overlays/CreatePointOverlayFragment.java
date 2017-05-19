@@ -158,6 +158,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 
 		getActivity().bindService(new Intent(getActivity(), RoutingService.class),
 				routingServiceConnection = new RoutingConnection(), Context.BIND_AUTO_CREATE);
+        this.getView().setVisibility(View.INVISIBLE);
 	}
 
 	// Routing callbacks
