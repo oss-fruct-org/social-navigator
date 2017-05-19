@@ -5,8 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -30,7 +32,12 @@ import org.osmdroid.views.overlay.OverlayItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,8 +51,9 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	private RoutingServiceConnection routingServiceConnection;
 	private PointsServiceConnection pointsServiceConnection;
 
-	private Drawable obstacleDrawable;
-	private Drawable obstacleDrawablePrivate;
+	//private Drawable obstacleDrawable;
+	//private Drawable obstacleDrawablePrivate;
+	private HashMap<String, Drawable> obstacleIcons;
 
 	private RoutingService routingService;
 	private PointsService pointsService;
@@ -63,8 +71,9 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	@Override
 	public void onCreate(Bundle in) {
 		super.onCreate(in);
-		obstacleDrawable = getActivity().getResources().getDrawable(R.drawable.blast);
-		obstacleDrawablePrivate = getActivity().getResources().getDrawable(R.drawable.blast2);
+		//obstacleDrawable = getActivity().getResources().getDrawable(R.drawable.blast);
+		//obstacleDrawablePrivate = getActivity().getResources().getDrawable(R.drawable.blast2);
+        obstacleIcons = new HashMap<>();
 
 		appPreferences = new Preferences(getActivity());
 		appPreferences.getPref().registerOnSharedPreferenceChangeListener(this);
@@ -220,8 +229,18 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 				List<Obstacle> obstacles = new ArrayList<>(points.size());
 
 				for (Point point : points) {
+                    if (!obstacleIcons.containsKey(point.getCategory().getIdentifiedName())) {
+                        Bitmap icon = point.getCategory().getIcon();
+                        if (icon == null) {
+                            obstacleIcons.put(point.getCategory().getIdentifiedName(),
+                                    getActivity().getResources().getDrawable(R.drawable.blast));
+                        }else{
+                            obstacleIcons.put(point.getCategory().getIdentifiedName(),
+                                    new BitmapDrawable(Bitmap.createScaledBitmap(icon, 200, 200, false)));
+                        }
+                    }
 					obstacles.add(new Obstacle(point.getName(), point.getDescription(),
-							new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleDrawablePrivate));
+							new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleIcons.get(point.getCategory().getIdentifiedName())));
 				}
 
 				return obstacles;
@@ -239,7 +258,7 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 		privateObstaclesTask.execute();
 	}
 
-	private void clearPrivateObstaclesOverlay() {
+    private void clearPrivateObstaclesOverlay() {
 		if (privateObstaclesTask != null) {
 			privateObstaclesTask.cancel(false);
 		}
@@ -257,8 +276,18 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 
 		List<Obstacle> obstacles = new ArrayList<>(activePath.getPoints().length);
 		for (Point point : activePath.getPoints()) {
-			obstacles.add(new Obstacle(point.getName(), point.getDescription(),
-					new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleDrawable));
+            if (!obstacleIcons.containsKey(point.getCategory().getIdentifiedName())) {
+                Bitmap icon = point.getCategory().getIcon();
+                if (icon == null) {
+                    obstacleIcons.put(point.getCategory().getIdentifiedName(),
+                            getActivity().getResources().getDrawable(R.drawable.blast));
+                }else{
+                    obstacleIcons.put(point.getCategory().getIdentifiedName(),
+                            new BitmapDrawable(Bitmap.createScaledBitmap(icon, 200, 200, false)));
+                }
+            }
+            obstacles.add(new Obstacle(point.getName(), point.getDescription(),
+					new GeoPoint(point.getLatE6(), point.getLonE6()), obstacleIcons.get(point.getCategory().getIdentifiedName())));
 		}
 
 		pathObstaclesOverlay.addItems(obstacles);

@@ -1,17 +1,29 @@
 package org.fruct.oss.socialnavigator.points;
 
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
 public class Category implements Parcelable {
+    private static final Logger log = LoggerFactory.getLogger(Category.class);
+
+    private static HashMap<String, Bitmap> icons;
 	// препятствия
 	public static final String CURB = "curb"; // бордюр
 	public static final String CROSSWALK = "crosswalk"; // пешеходный переход
@@ -43,17 +55,29 @@ public class Category implements Parcelable {
 		this.url = url;
 		this.id = id;
 		this.iconUrl = iconUrl;
+        if (icons == null) {
+            icons = new HashMap<>();
+        }
+        if (!icons.containsKey(this.iconUrl)) {
+            new RetrieveIconTask().execute(this.iconUrl);
+        }
 		this.published = published;
 	}
 
-	public Category(Cursor cursor, int offset) {
+    public Category(Cursor cursor, int offset) {
 		this.id = cursor.getInt(offset);
 		this.name = cursor.getString(offset + 1);
 		this.description = cursor.getString(offset + 2);
 		this.url = cursor.getString(offset + 3);
 		this.iconUrl = cursor.getString(offset + 4);
 		this.published = cursor.getInt(offset + 5) != 0;
-	}
+        if (icons == null) {
+            icons = new HashMap<>();
+        }
+        if (!icons.containsKey(this.iconUrl)) {
+            new RetrieveIconTask().execute(this.iconUrl);
+        }
+    }
 
 	public Category(Parcel source) {
 		this.name = source.readString();
@@ -62,6 +86,12 @@ public class Category implements Parcelable {
 		this.iconUrl = source.readString();
 		this.id = source.readInt();
 		this.published = source.readInt() != 0;
+        if (icons == null) {
+            icons = new HashMap<>();
+        }
+        if (!icons.containsKey(this.iconUrl)) {
+            new RetrieveIconTask().execute(this.iconUrl);
+        }
 	}
 
 	public String getName() {
@@ -116,6 +146,8 @@ public class Category implements Parcelable {
 	public String getIconUrl() {
 		return iconUrl;
 	}
+
+	public Bitmap getIcon() {return icons.get(iconUrl); }
 
 	public int getId() {
 		return id;
@@ -172,4 +204,30 @@ public class Category implements Parcelable {
 			return new Category[size];
 		}
 	};
+
+	class RetrieveIconTask extends AsyncTask<String, Void, Bitmap> {
+        @Override
+        protected Bitmap doInBackground(String... src) {
+            try {
+                URL url = new URL(src[0]);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                Bitmap myBitmap = BitmapFactory.decodeStream(input);
+                return myBitmap;
+            } catch (IOException e) {
+                // Log exception
+                log.debug("Error download icon: " + e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap s) {
+            super.onPostExecute(s);
+            log.debug("Icon downloaded at url = " + iconUrl + " icons.size=" + icons.size());
+            icons.put(iconUrl, s);
+        }
+    }
 }
