@@ -6,13 +6,13 @@ import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +21,6 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 
 import java.io.Serializable;
@@ -30,7 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class HelpFragment extends Fragment implements ActionBar.TabListener {
+public class HelpFragment extends Fragment implements TabLayout.OnTabSelectedListener {
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
 	 * fragments for each of the sections. We use a
@@ -45,6 +44,7 @@ public class HelpFragment extends Fragment implements ActionBar.TabListener {
 	 * The {@link android.support.v4.view.ViewPager} that will host the section contents.
 	 */
 	ViewPager mViewPager;
+    TabLayout tabLayout;
 
 	public HelpFragment() {
 	}
@@ -62,59 +62,71 @@ public class HelpFragment extends Fragment implements ActionBar.TabListener {
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.activity_help, container, false);
 
-		// Set up the action bar.
-		final android.support.v7.app.ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+//		// Set up the action bar.
+//		final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
+//
+//		// Create the adapter that will return a fragment for each of the three
+//		// primary sections of the activity.
+//		mSectionsPagerAdapter = new SectionsPagerAdapter(getChildFragmentManager());
+//
+//		// Set up the ViewPager with the sections adapter.
+//		mViewPager = (ViewPager) view.findViewById(R.id.pager);
+//		mViewPager.setAdapter(mSectionsPagerAdapter);
+//
+//		// When swiping between different sections, select the corresponding
+//		// tab. We can also use ActionBar.Tab#select() to do this if we have
+//		// a reference to the Tab.
+//		mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+//			@Override
+//			public void onPageSelected(int position) {
+//				actionBar.setSelectedNavigationItem(position);
+//			}
+//		});
+//
+//		//actionBar.removeAllTabs();
+//
+//		// For each of the sections in the app, add a tab to the action bar.
+//		for (int i = 0; i < mSectionsPagerAdapter.getCount(); i++) {
+//			// Create a tab with text corresponding to the page title defined by
+//			// the adapter. Also specify this Activity object, which implements
+//			// the TabListener interface, as the callback (listener) for when
+//			// this tab is selected.
+//			actionBar.addTab(
+//					actionBar.newTab()
+//							.setText(mSectionsPagerAdapter.getPageTitle(i))
+//							.setTabListener(this));
+//		}
+//
+//		actionBar.setDisplayHomeAsUpEnabled(true);
+//
+        tabLayout = (TabLayout) view.findViewById(R.id.tabLayout);
+        tabLayout.addOnTabSelectedListener(this);
+        tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
 
-		// Create the adapter that will return a fragment for each of the three
-		// primary sections of the activity.
-		mSectionsPagerAdapter = new SectionsPagerAdapter(getChildFragmentManager());
-
-		// Set up the ViewPager with the sections adapter.
-		mViewPager = (ViewPager) view.findViewById(R.id.pager);
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getChildFragmentManager());
+        mViewPager = (ViewPager) view.findViewById(R.id.pager);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
-
-		// When swiping between different sections, select the corresponding
-		// tab. We can also use ActionBar.Tab#select() to do this if we have
-		// a reference to the Tab.
-		mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-			@Override
-			public void onPageSelected(int position) {
-				actionBar.setSelectedNavigationItem(position);
-			}
-		});
-
-		actionBar.removeAllTabs();
-
-		// For each of the sections in the app, add a tab to the action bar.
-		for (int i = 0; i < mSectionsPagerAdapter.getCount(); i++) {
-			// Create a tab with text corresponding to the page title defined by
-			// the adapter. Also specify this Activity object, which implements
-			// the TabListener interface, as the callback (listener) for when
-			// this tab is selected.
-			actionBar.addTab(
-					actionBar.newTab()
-							.setText(mSectionsPagerAdapter.getPageTitle(i))
-							.setTabListener(this));
-		}
-
-		actionBar.setDisplayHomeAsUpEnabled(true);
+        for (int i = 0; i < mSectionsPagerAdapter.getCount(); i++) {
+            tabLayout.addTab(tabLayout.newTab().setText(mSectionsPagerAdapter.getPageTitle(i)));
+        }
 
 		return view;
 	}
 
 	@Override
-	public void onTabSelected(android.support.v7.app.ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+	public void onTabSelected(TabLayout.Tab tab) {
 		// When the given tab is selected, switch to the corresponding page in
 		// the ViewPager.
 		mViewPager.setCurrentItem(tab.getPosition());
+        //tabLayout.
 	}
 
 	@Override
-	public void onTabUnselected(android.support.v7.app.ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+	public void onTabUnselected(TabLayout.Tab tab) {
 	}
 
 	@Override
-	public void onTabReselected(android.support.v7.app.ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+	public void onTabReselected(TabLayout.Tab tab) {
 	}
 
 	private HelpEntry newHelpEntry(@StringRes int titleString, @StringRes int contentString,
