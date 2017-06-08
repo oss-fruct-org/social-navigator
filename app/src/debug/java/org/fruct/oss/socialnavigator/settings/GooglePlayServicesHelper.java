@@ -11,20 +11,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Xml;
 
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.plus.Plus;
 
-import org.fruct.oss.mapcontent.BuildConfig;
 import org.fruct.oss.socialnavigator.parsers.AuthParameters;
 import org.fruct.oss.socialnavigator.parsers.GetsException;
 import org.fruct.oss.socialnavigator.parsers.GetsResponse;
-import org.fruct.oss.socialnavigator.parsers.TokenContent;
 import org.fruct.oss.socialnavigator.points.GetsProvider;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.slf4j.Logger;
@@ -33,11 +26,8 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringTokenizer;
 
-public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ServerAuthCodeCallbacks {
+public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 	private static final Logger log = LoggerFactory.getLogger(GooglePlayServicesHelper.class);
 
 	public static final int RC_SIGN_IN = 1;
@@ -180,9 +170,9 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 		client = new GoogleApiClient.Builder(activity)
 				.addConnectionCallbacks(this)
 				.addOnConnectionFailedListener(this)
-				.addApi(Plus.API)
-				.addScope(new Scope("profile"))
-				.requestServerAuthCode(clientId, this)
+//				.addApi(Plus.API)
+//				.addScope(new Scope("profile"))
+//				.requestServerAuthCode(clientId, this)
 				.build();
 		client.connect();
 	}
@@ -205,43 +195,43 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 		}
 	}
 
-	@Override
-	public CheckResult onCheckServerAuthorization(String idToken, Set<Scope> set) {
-		Set<Scope> scopes = new HashSet<>();
+//	@Override
+//	public CheckResult onCheckServerAuthorization(String idToken, Set<Scope> set) {
+//		Set<Scope> scopes = new HashSet<>();
+//
+//		StringTokenizer tokenizer = new StringTokenizer(scope, " ");
+//
+//		while (tokenizer.hasMoreElements()) {
+//			scopes.add(new Scope(tokenizer.nextToken()));
+//		}
+//
+//		return CheckResult.newAuthRequiredResult(scopes);
+//	}
 
-		StringTokenizer tokenizer = new StringTokenizer(scope, " ");
-
-		while (tokenizer.hasMoreElements()) {
-			scopes.add(new Scope(tokenizer.nextToken()));
-		}
-
-		return CheckResult.newAuthRequiredResult(scopes);
-	}
-
-	@Override
-	public boolean onUploadServerAuthCode(String idToken, String serverAuthCode) {
-		String request = createExchangeRequest(serverAuthCode);
-
-		try {
-			String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
-			GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
-
-			if (getsResponse.getCode() != 0) {
-				notifyAuthFailed();
-				return false;
-			}
-
-			notifyAuthCompleted(((TokenContent) getsResponse.getContent()).getAccessToken());
-
-			return true;
-		} catch (IOException e) {
-			notifyAuthFailed();
-			return false;
-		} catch (GetsException e) {
-			notifyAuthFailed();
-			return false;
-		}
-	}
+//	@Override
+//	public boolean onUploadServerAuthCode(String idToken, String serverAuthCode) {
+//		String request = createExchangeRequest(serverAuthCode);
+//
+//		try {
+//			String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
+//			GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
+//
+//			if (getsResponse.getCode() != 0) {
+//				notifyAuthFailed();
+//				return false;
+//			}
+//
+//			notifyAuthCompleted(((TokenContent) getsResponse.getContent()).getAccessToken());
+//
+//			return true;
+//		} catch (IOException e) {
+//			notifyAuthFailed();
+//			return false;
+//		} catch (GetsException e) {
+//			notifyAuthFailed();
+//			return false;
+//		}
+//	}
 
 	private void notifyAuthFailed() {
 		handler.post(new Runnable() {

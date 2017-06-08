@@ -1,14 +1,9 @@
 package org.fruct.oss.socialnavigator.fragments.root;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Xml;
@@ -26,8 +21,6 @@ import android.widget.Toast;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import org.fruct.oss.socialnavigator.App;
-import org.fruct.oss.socialnavigator.GetsLoginActivity;
-import org.fruct.oss.socialnavigator.MainActivity;
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.adapters.CategoriesAdapter;
 import org.fruct.oss.socialnavigator.annotations.Blocking;
@@ -56,7 +49,7 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 	private static final Logger log = LoggerFactory.getLogger(GetsFragment.class);
 
 	private GooglePlayServicesHelper googlePlayServicesHelper;
-	private static final int RC_GETS_FRAGMENT = 3;
+	//private static final int RC_GETS_FRAGMENT = 3;
 
 	private View publishLayout;
 	private TextView publishTextView;
@@ -66,7 +59,6 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 	private ImageView userInfoImageView;
 	private TextView userInfoTextView;
 
-	private Button webLoginButton;
 	private Button googleLoginButton;
 	private Button logoutButton;
 
@@ -86,14 +78,6 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 	}
 
 	@Override
-	public void onAttach(Activity activity) {
-		super.onAttach(activity);
-//		((MainActivity) activity).onSectionAttached(activity.getString(R.string.title_section4),
-//				ActionBar.NAVIGATION_MODE_STANDARD, this);
-
-	}
-
-	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_gets, container, false);
 
@@ -101,7 +85,6 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		publishLayout = view.findViewById(R.id.publish_layout);
 		publishTextView = (TextView) view.findViewById(R.id.publish_text);
 
-		webLoginButton = (Button) view.findViewById(R.id.button_login_web_browser);
 		googleLoginButton = (Button) view.findViewById(R.id.button_login_google);
 		logoutButton = (Button) view.findViewById(R.id.button_logout);
 
@@ -109,7 +92,6 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		userInfoTextView = (TextView) view.findViewById(R.id.text_user_name);
 		userInfoImageView = (ImageView) view.findViewById(android.R.id.icon);
 
-		webLoginButton.setOnClickListener(this);
 		googleLoginButton.setOnClickListener(this);
 		logoutButton.setOnClickListener(this);
 
@@ -164,11 +146,6 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-		case R.id.button_login_web_browser:
-			Intent intent = new Intent(getActivity(), GetsLoginActivity.class);
-			startActivityForResult(intent, RC_GETS_FRAGMENT);
-			break;
-
 		case R.id.button_login_google:
 			startGoogleLogin();
 			break;
@@ -186,16 +163,16 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		}
 	}
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == RC_GETS_FRAGMENT) {
-			if (resultCode != Activity.RESULT_OK) {
-				Toast.makeText(getActivity(), R.string.str_google_login_web_error, Toast.LENGTH_LONG).show();
-			} else {
-				onGoogleAuthCompleted(data.getStringExtra("auth_token"));
-			}
-		}
-	}
+//	@Override
+//	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//		if (requestCode == RC_GETS_FRAGMENT) {
+//			if (resultCode != Activity.RESULT_OK) {
+//				Toast.makeText(getActivity(), R.string.str_google_login_web_error, Toast.LENGTH_LONG).show();
+//			} else {
+//				onGoogleAuthCompleted(data.getStringExtra("auth_token"));
+//			}
+//		}
+//	}
 
 //	@Override
 //	public void onActivityResultRedirect(int requestCode, int resultCode, Intent data) {
@@ -256,12 +233,10 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		boolean isLogged = appPref.getGetsToken() != null;
 
 		if (isLogged) {
-			webLoginButton.setVisibility(View.GONE);
 			googleLoginButton.setVisibility(View.GONE);
 			logoutButton.setVisibility(View.VISIBLE);
 			publishLayout.setVisibility(View.VISIBLE);
 		} else {
-			webLoginButton.setVisibility(View.VISIBLE);
 			googleLoginButton.setVisibility(GooglePlayServicesHelper.isAvailable(getActivity())
 					? View.VISIBLE : View.GONE);
 			logoutButton.setVisibility(View.GONE);

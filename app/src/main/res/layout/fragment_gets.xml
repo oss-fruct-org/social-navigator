@@ -27,16 +27,6 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/button_login_web_browser"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/rounded_button"
-
-        android:text="@string/str_login_web_browser"
-        android:layout_margin="8dp"
-        />
-
-    <Button
         android:id="@+id/button_login_google"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
