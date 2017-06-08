@@ -4,8 +4,6 @@ import android.content.Context;
 
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
-import com.graphhopper.routing.util.BikeFlagEncoder;
-import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.FootFlagEncoder;
@@ -106,6 +104,7 @@ public class Routing {
 				log.warn("Path found but is empty");
 				return null;
 			}
+			log.debug("Found " + pointList.size() + " points");
 
 			for (int i = 0; i < pointList.getSize() - 1; i++) {
 				obstaclesIndex.clearchosenObstacles(pointList.getLat(i), pointList.getLon(i),
@@ -114,14 +113,14 @@ public class Routing {
 			}
 			Set<Point> pointsOnPath = new HashSet<Point>();
 			log.info("Searching obstacles on path");
-			for(double BlockRadius = 1.0 ; BlockRadius <= BlockingWeighting.BLOCK_RADIUS; BlockRadius = BlockRadius+1.0) {
+			//for(double BlockRadius = 1.0 ; BlockRadius <= BlockingWeighting.BLOCK_RADIUS; BlockRadius = BlockRadius+1.0) {
 				for (int i = 0; i < pointList.getSize() - 1; i++) {
 					pointsOnPath.addAll(obstaclesIndex.queryByEdge(
 							pointList.getLat(i), pointList.getLon(i),
 							pointList.getLat(i + 1), pointList.getLon(i + 1),
-							BlockRadius));
+                            BlockingWeighting.BLOCK_RADIUS));
 				}
-			}
+			//}
 
 			log.info("{} obstacles on path found", pointsOnPath.size());
 

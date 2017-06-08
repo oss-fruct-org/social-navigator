@@ -1,7 +1,5 @@
 package org.fruct.oss.socialnavigator.routing;
 
-import android.util.SparseBooleanArray;
-
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.NodeAccess;
 import com.graphhopper.util.EdgeIteratorState;
@@ -217,7 +215,6 @@ public class ObstaclesIndex {
 				node.setUsed2(false);
 			}
 		}, rectALat - degreesRadius, rectALon + degreesRadius, rectBLat - degreesRadius, rectBLon + degreesRadius);
-		return;
 	}
 
 	public List<Point> queryByEdge(final double aLat, final double aLon, final double bLat, final double bLon,
