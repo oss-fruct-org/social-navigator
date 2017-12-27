@@ -1,7 +1,9 @@
 package org.fruct.oss.socialnavigator.routing;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -9,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.graphhopper.util.PointList;
@@ -115,7 +118,9 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 		locationReceiver = new LocationReceiver(this);
 		locationReceiver.addListener(this);
-		locationReceiver.start();
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+				PackageManager.PERMISSION_GRANTED)
+			locationReceiver.start();
 
 		routing = new Routing();
 

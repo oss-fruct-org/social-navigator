@@ -7,7 +7,7 @@ ext {
 
 android {
     compileSdkVersion 25
-    buildToolsVersion '25.0.2'
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         applicationId "org.fruct.oss.socialnavigator"
@@ -60,11 +60,11 @@ dependencies {
 //        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
 //    }
     compile project(':mapcontent')
-    compile project(':graphhopper-priority')
-    compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:recyclerview-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
-    compile 'com.android.support:support-v4:25.3.1'
+    implementation project(':graphhopper-priority')
+    compile 'com.android.support:appcompat-v7:25.4.0'
+    compile 'com.android.support:recyclerview-v7:25.4.0'
+    compile 'com.android.support:design:25.4.0'
+    compile 'com.android.support:support-v4:25.4.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha7'
     //compile 'org.slf4j:slf4j-api:1.7.7'
     compile 'org.osmdroid:osmdroid-android:4.2'
@@ -78,4 +78,6 @@ dependencies {
     compile 'com.jraska:falcon:1.0.4'
     compile 'com.facebook.android:facebook-android-sdk:4.23.0'
     compile 'com.vk:androidsdk:1.6.8'
+
+    compile 'com.graphhopper:graphhopper:0.7.0'
 }
