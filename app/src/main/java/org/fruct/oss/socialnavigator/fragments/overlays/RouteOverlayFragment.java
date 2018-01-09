@@ -36,8 +36,6 @@ import org.fruct.oss.socialnavigator.settings.Preferences;
 import org.fruct.oss.socialnavigator.utils.RecyclerItemClickListener;
 import org.fruct.oss.socialnavigator.utils.StaticTranslations;
 import org.fruct.oss.socialnavigator.utils.Utils;
-import org.osmdroid.DefaultResourceProxyImpl;
-import org.osmdroid.ResourceProxy;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
@@ -73,7 +71,6 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private RoutingType activeRoutingType = RoutingType.SAFE;
 
 	private MapView mapView;
-	private ResourceProxy resourceProxy;
 
 	private View view;
 	private boolean expanded = false;
@@ -159,7 +156,6 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		getActivity().bindService(new Intent(getActivity(), PointsService.class),
 				pointsServiceConnection, Context.BIND_AUTO_CREATE);
 
-		resourceProxy = new DefaultResourceProxyImpl(getActivity());
         this.getView().setVisibility(View.INVISIBLE);
     }
 
@@ -291,7 +287,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 	private void createOverlay(ChoicePath path) {
 
 		PathOverlay pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), path),
-				8, resourceProxy);
+				8);
 		pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
 
 		PointList points = path.getResponse().getBest().getPoints();
@@ -325,7 +321,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 		// Create target point overlay
 		targetPointOverlay = new ItemizedIconOverlay<TargetPointItem>(new ArrayList<TargetPointItem>(),
-				null, new DefaultResourceProxyImpl(getActivity()));
+				null, getContext());
 		targetPointOverlay.addItem(new TargetPointItem(targetPoint, targetPointDrawable));
 		mapView.getOverlayManager().add(targetPointOverlay);
 

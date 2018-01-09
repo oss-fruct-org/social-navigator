@@ -1,13 +1,16 @@
 package org.fruct.oss.socialnavigator;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -49,98 +52,28 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.graphics.Bitmap;
+
 import android.graphics.BitmapFactory;
-import android.location.Location;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Environment;
-import android.os.IBinder;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.Toast;
 
-import com.facebook.CallbackManager;
-import com.facebook.login.widget.LoginButton;
 import com.jraska.falcon.Falcon;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKScope;
-import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.VKApi;
 import com.vk.sdk.api.VKApiConst;
-import com.vk.sdk.api.VKError;
 import com.vk.sdk.api.VKParameters;
 import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
 import com.vk.sdk.api.model.VKApiPhoto;
-import com.vk.sdk.api.model.VKAttachments;
 import com.vk.sdk.api.model.VKPhotoArray;
 import com.vk.sdk.api.model.VKWallPostResult;
 import com.vk.sdk.api.photo.VKImageParameters;
 import com.vk.sdk.api.photo.VKUploadImage;
 
-import org.fruct.oss.socialnavigator.MainActivity;
-import org.fruct.oss.socialnavigator.R;
-import org.fruct.oss.socialnavigator.audiblealert.AudioManager;
-import org.fruct.oss.socialnavigator.fragments.overlays.ObstaclesOverlayFragment;
-import org.fruct.oss.socialnavigator.fragments.overlays.OverlayFragment;
-import org.fruct.oss.socialnavigator.fragments.overlays.PositionOverlayFragment;
-import org.fruct.oss.socialnavigator.fragments.overlays.RouteOverlayFragment;
-import org.fruct.oss.socialnavigator.fragments.overlays.TrackingOverlayFragment;
-import org.fruct.oss.socialnavigator.points.Point;
-import org.fruct.oss.socialnavigator.routing.ChoicePath;
-import org.fruct.oss.socialnavigator.routing.RoutingService;
-import org.fruct.oss.socialnavigator.routing.RoutingType;
-import org.fruct.oss.socialnavigator.utils.EarthSpace;
-import org.fruct.oss.socialnavigator.utils.Space;
-import org.fruct.oss.socialnavigator.utils.TrackPath;
-import org.fruct.oss.socialnavigator.utils.Turn;
-import org.osmdroid.DefaultResourceProxyImpl;
-import org.osmdroid.ResourceProxy;
-import org.osmdroid.tileprovider.IRegisterReceiver;
-import org.osmdroid.tileprovider.MapTileProviderArray;
-import org.osmdroid.tileprovider.modules.MapTileDownloader;
-import org.osmdroid.tileprovider.modules.MapTileFilesystemProvider;
-import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase;
-import org.osmdroid.tileprovider.modules.NetworkAvailabliltyCheck;
-import org.osmdroid.tileprovider.modules.TileWriter;
-import org.osmdroid.tileprovider.tilesource.ITileSource;
-import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
-import org.osmdroid.tileprovider.tilesource.XYTileSource;
-import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
-import org.osmdroid.util.GeoPoint;
-import org.osmdroid.views.MapView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-
-import static android.widget.FrameLayout.LayoutParams;
 
 
 public class MainActivity extends AppCompatActivity
@@ -156,18 +89,18 @@ public class MainActivity extends AppCompatActivity
 			VKScope.DOCS
 	};
 
-	private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1001;
+	public static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1001;
 	private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1002;
 	private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1003;
 
-	/**
-     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-     */
+//	/**
+//     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
+//     */
     //??? private NavigationDrawerFragment mNavigationDrawerFragment;
 
-    /**
-     * Used to store the last screen title. For use in {@link #restoreActionBar()}.
-     */
+//    /**
+//     * Used to store the last screen title. For use in {@link #restoreActionBar()}.
+//     */
     //??? private CharSequence mTitle;
 	//??? private int mNavigationMode;
 	//??? private ActivityResultListener mResultListener;
@@ -203,9 +136,20 @@ public class MainActivity extends AppCompatActivity
             if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 if (this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
 
-                    // Show an explanation to the user *asynchronously* -- don't block
-                    // this thread waiting for the user's response! After the user
-                    // sees the explanation, try again to request the permission.
+                    final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
+                    dlgAlert.setMessage(R.string.permission_location_message);
+                    dlgAlert.setTitle(R.string.app_name);
+                    dlgAlert.setCancelable(true);
+                    dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @RequiresApi(api = Build.VERSION_CODES.M)
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                                    MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+                        }
+                    });
+                    dlgAlert.create().show();
+
 
                 } else {
 
@@ -219,10 +163,19 @@ public class MainActivity extends AppCompatActivity
             } else {
                 if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     if (this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                        // Show an explanation to the user *asynchronously* -- don't block
-                        // this thread waiting for the user's response! After the user
-                        // sees the explanation, try again to request the permission.
+                        final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
+                        dlgAlert.setMessage(R.string.permission_location_message);
+                        dlgAlert.setTitle(R.string.app_name);
+                        dlgAlert.setCancelable(true);
+                        dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @RequiresApi(api = Build.VERSION_CODES.M)
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                MainActivity.this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+                            }
+                        });
+                        dlgAlert.create().show();
 
                     } else {
 
@@ -239,12 +192,23 @@ public class MainActivity extends AppCompatActivity
             }
             if (this.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 if (this.shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-
-                    // Show an explanation to the user *asynchronously* -- don't block
-                    // this thread waiting for the user's response! After the user
-                    // sees the explanation, try again to request the permission.
+					log.debug("Explain why we need to write to external storage");
+                    final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
+                    dlgAlert.setMessage(R.string.permission_write_external_storage_message);
+                    dlgAlert.setTitle(R.string.app_name);
+                    dlgAlert.setCancelable(true);
+                    dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @RequiresApi(api = Build.VERSION_CODES.M)
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+                        }
+                    });
+                    dlgAlert.create().show();
 
                 } else {
+					log.debug("Request permissions to write to external storage");
 
                     this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                             MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
@@ -254,6 +218,7 @@ public class MainActivity extends AppCompatActivity
                     // result of the request.
                 }
             } else {
+            	log.debug("WE CAN WRITE TO STORAGE");
                 startService(new Intent(this, ContentService.class));
                 startService(new Intent(this, PointsService.class));
             }

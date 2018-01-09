@@ -24,7 +24,6 @@ import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
 import org.fruct.oss.socialnavigator.routing.RoutingType;
 import org.fruct.oss.socialnavigator.settings.Preferences;
-import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
@@ -111,11 +110,11 @@ public class ObstaclesOverlayFragment extends OverlayFragment
 	@Override
 	public void onMapViewReady(MapView mapView) {
 		pathObstaclesOverlay = new ItemizedIconOverlay<>(new ArrayList<Obstacle>(),
-				this, new DefaultResourceProxyImpl(getActivity()));
+				this, getActivity());
 		mapView.getOverlayManager().add(pathObstaclesOverlay);
 
 		privateObstaclesOverlay = new ItemizedIconOverlay<>(new ArrayList<Obstacle>(),
-				this, new DefaultResourceProxyImpl(getActivity()));
+				this, getActivity());
 		mapView.getOverlayManager().add(privateObstaclesOverlay);
 
 		getActivity().bindService(new Intent(getActivity(), RoutingService.class),

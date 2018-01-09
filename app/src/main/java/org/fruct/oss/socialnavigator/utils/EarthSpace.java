@@ -24,8 +24,8 @@ public class EarthSpace implements Space {
 
 	@Override
 	public double bearing(Point a, Point b) {
-		p1.setCoordsE6((int) (a.x * 1e6), (int) (a.y * 1e6));
-		p2.setCoordsE6((int) (b.x * 1e6), (int) (b.y * 1e6));
+		p1.setCoords(a.x , a.y );
+		p2.setCoords(b.x , b.y );
 		return Math.toRadians(p1.bearingTo(p2));
 	}
 

@@ -29,7 +29,6 @@ import org.fruct.oss.socialnavigator.utils.Space;
 import org.fruct.oss.socialnavigator.utils.StaticTranslations;
 import org.fruct.oss.socialnavigator.utils.TrackPath;
 import org.fruct.oss.socialnavigator.utils.Utils;
-import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.PathOverlay;
@@ -45,7 +44,6 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	public static final int TURN_PROXIMITY_NOTIFICATION = 30;
 	public static final int OBJECT_PROXIMITY_NOTIFICATION = 30;
 	private MapView mapView;
-	private DefaultResourceProxyImpl resourceProxy;
 
 	private RoutingService routingService;
 	private RoutingServiceConnection routingServiceConnection = new RoutingServiceConnection();
@@ -164,7 +162,6 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	@Override
 	public void onMapViewReady(MapView mapView) {
 		this.mapView = mapView;
-		resourceProxy = new DefaultResourceProxyImpl(getActivity());
         this.getView().setVisibility(View.INVISIBLE);
 	}
 
@@ -257,7 +254,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 		}
 
 		pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), initialPath),
-				8, resourceProxy);
+				8);
 
 		for (Space.Point point : pointList) {
 			pathOverlay.addPoint(new GeoPoint(point.x, point.y));

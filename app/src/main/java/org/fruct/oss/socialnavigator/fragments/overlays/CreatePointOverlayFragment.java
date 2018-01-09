@@ -375,7 +375,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		}
 
 		@Override
-		protected void draw(Canvas c, MapView mapView, boolean shadow) {
+		public void draw(Canvas c, MapView mapView, boolean shadow) {
 			if (shadow)
 				return;
 
@@ -439,8 +439,8 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		}
 
 		private void moveSelectedPoint(GeoPoint geoPoint) {
-			geoPoint.setLatitudeE6(geoPoint.getLatitudeE6());
-			geoPoint.setLongitudeE6(geoPoint.getLongitudeE6());
+			geoPoint.setLatitude(geoPoint.getLatitude());
+			geoPoint.setLongitude(geoPoint.getLongitude());
 
 			if (trackPath != null) {
 				// TODO: can be optimized
@@ -448,8 +448,8 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 						= trackPath.projectPoint(geoPoint.getLatitude(),
 						geoPoint.getLongitude());
 
-				geoPointProjected.setCoordsE6((int) (projectedPoint.getProjX() * 1e6),
-						(int) (projectedPoint.getProjY() * 1e6));
+				geoPointProjected.setCoords(projectedPoint.getProjX() ,
+						projectedPoint.getProjY());
 			}
 		}
 	}
@@ -465,7 +465,7 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		}
 
 		@Override
-		protected void draw(Canvas c, MapView osmv, boolean shadow) {
+		public void draw(Canvas c, MapView osmv, boolean shadow) {
 			if (shadow || touchedPoint == null)
 				return;
 

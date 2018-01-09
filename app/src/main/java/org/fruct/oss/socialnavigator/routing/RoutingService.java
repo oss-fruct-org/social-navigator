@@ -13,6 +13,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.graphhopper.util.PointList;
 
@@ -551,7 +552,11 @@ public class RoutingService extends Service implements PointsService.Listener,
 		synchronized (serviceMutex) {
 			this.pointsService = pointsService;
 		}
-		pointsService.setLocation(getLastLocation());
+		try {
+			pointsService.setLocation(getLastLocation());
+		} catch (SecurityException ex) {
+			log.warn("getLastLocationError", ex);
+		}
 		pointsService.addListener(this);
 	}
 

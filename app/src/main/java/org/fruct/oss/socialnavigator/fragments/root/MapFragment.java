@@ -42,8 +42,6 @@ import org.fruct.oss.socialnavigator.utils.EarthSpace;
 import org.fruct.oss.socialnavigator.utils.Space;
 import org.fruct.oss.socialnavigator.utils.TrackPath;
 import org.fruct.oss.socialnavigator.utils.Turn;
-import org.osmdroid.DefaultResourceProxyImpl;
-import org.osmdroid.ResourceProxy;
 import org.osmdroid.tileprovider.IRegisterReceiver;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.modules.MapTileDownloader;
@@ -53,6 +51,7 @@ import org.osmdroid.tileprovider.modules.NetworkAvailabliltyCheck;
 import org.osmdroid.tileprovider.modules.TileWriter;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
@@ -95,7 +94,7 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 
 	// наш сервер с картами
 	private static final OnlineTileSourceBase OWN_TILES = new XYTileSource(
-			"OSMWithoutSidewalks", ResourceProxy.string.mapnik, 0, 17, 256, ".png",
+			"OSMWithoutSidewalks", 0, 17, 256, ".png",
 			new String[] { "http://etourism.cs.petrsu.ru:20209/osm_tiles/" });
 
 	public MapFragment() {
@@ -299,8 +298,8 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 
 		IRegisterReceiver registerReceiver = new SimpleRegisterReceiver(getActivity().getApplicationContext());
 		//ITileSource tileSource = TileSourceFactory.MAPQUESTOSM;
-		//ITileSource tileSource = TileSourceFactory.MAPNIK;
-		ITileSource tileSource = OWN_TILES;
+		ITileSource tileSource = TileSourceFactory.MAPNIK;
+		//ITileSource tileSource = OWN_TILES;
 		TileWriter tileWriter = new TileWriter();
 		NetworkAvailabliltyCheck networkAvailabliltyCheck = new NetworkAvailabliltyCheck(getActivity());
 
@@ -312,11 +311,12 @@ public class MapFragment extends Fragment implements RoutingService.Listener {
 				tileSource, registerReceiver, new MapTileModuleProviderBase[]{
 				fileSystemProvider, downloaderProvider});
 
-		mapView = new MapView(getActivity(), 256, new DefaultResourceProxyImpl(getActivity()), tileProviderArray);
+		mapView = new MapView(getActivity(), tileProviderArray);
 		mapView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		mapView.setMultiTouchControls(true);
 		mapView.getController().setZoom(15);
 
+		log.debug("Network status: " + networkAvailabliltyCheck.getNetworkAvailable());
 
 		layout.addView(mapView);
 		//setHardwareAccelerationOff();

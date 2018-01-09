@@ -1,5 +1,6 @@
 package org.fruct.oss.socialnavigator.fragments.overlays;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -27,6 +28,8 @@ import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.Map;
+
+import static org.fruct.oss.socialnavigator.MainActivity.MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION;
 
 public class PositionOverlayFragment extends OverlayFragment implements RoutingService.Listener {
 	private static final String STATE_FOLLOW = "is-following-active";
@@ -132,7 +135,12 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 	private void onRoutingServiceConnected(RoutingService routingService) {
 		this.routingService = routingService;
 		this.routingService.addListener(this);
-		this.routingService.sendLastLocation();
+		try {
+			this.routingService.sendLastLocation();
+		} catch (SecurityException ex) {
+			this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
+					MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+		}
 	}
 
 	private void onRoutingServiceDisconnected() {
@@ -161,7 +169,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	private class ScrollableOverlay extends MyLocationNewOverlay {
 		public ScrollableOverlay(Context context, IMyLocationProvider myLocationProvider, MapView mapView) {
-			super(context, myLocationProvider, mapView);
+			super(myLocationProvider, mapView);
 		}
 
 		@Override
@@ -219,13 +227,20 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 		@Override
 		public void stopLocationProvider() {
-			LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
+			if (receiver != null)
+				LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
 			receiver = null;
 		}
 
 		@Override
 		public Location getLastKnownLocation() {
 			return location;
+		}
+
+		@Override
+		public void destroy() {
+			if (receiver != null)
+				LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
 		}
 	}
 }

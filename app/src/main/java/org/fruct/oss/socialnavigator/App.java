@@ -4,9 +4,11 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
+import com.facebook.FacebookSdk;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -49,7 +51,7 @@ public class App extends Application {
 		context = getApplicationContext();
 		app = this;
 
-		File baseCacheDir = new File("/sdcard/debug/sn-cache");
+		File baseCacheDir = new File(Environment.getExternalStorageDirectory().getPath());
 		if (!BuildConfig.DEBUG) {
 			baseCacheDir = new File(context.getCacheDir(), "base");
 		}

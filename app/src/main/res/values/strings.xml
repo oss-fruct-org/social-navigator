@@ -7,7 +7,7 @@
     <string name="title_section3">Content</string>
     <string name="title_section4">Server</string>
     <string name="title_section5">Preferences</string>
-    <string name="title_section6" translatable="false">Help</string>
+    <string name="title_section6">Help</string>
     <string name="title_section7">About</string>
 
     <string name="title_activity_help">Help</string>
@@ -85,5 +85,8 @@
     <string name="title_cardiacare">CardiaCare</string>
     <integer name="com_vk_sdk_AppId">6035443</integer>
     <string name="make_screenshot">Send screenshot</string>
+    <string name="permission_write_external_storage_message">Application requires access to external storage for temporary storage of downloaded files (maps, points, etc.)</string>
+    <string name="permission_location_message">The application requires information about the location of the device for constructing routes, loading obstacles and positioning the map.</string>
+    <string name="facebook_app_id" translatable="false">1671078956532973</string>
 
 </resources>
