@@ -9,15 +9,30 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.app.Fragment;
 import android.util.Xml;
+import android.widget.Toast;
 
+import com.google.android.gms.auth.GoogleAuthException;
+import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.auth.UserRecoverableAuthException;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.plus.Plus;
 
+import org.fruct.oss.mapcontent.BuildConfig;
 import org.fruct.oss.socialnavigator.parsers.AuthParameters;
 import org.fruct.oss.socialnavigator.parsers.GetsException;
 import org.fruct.oss.socialnavigator.parsers.GetsResponse;
+import org.fruct.oss.socialnavigator.parsers.TokenContent;
 import org.fruct.oss.socialnavigator.points.GetsProvider;
 import org.fruct.oss.socialnavigator.utils.Utils;
 import org.slf4j.Logger;
@@ -26,15 +41,18 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
 
-public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener { //, GoogleApiClient.ServerAuthCodeCallbacks {
 	private static final Logger log = LoggerFactory.getLogger(GooglePlayServicesHelper.class);
 
-	public static final int RC_SIGN_IN = 1;
-	public static final int RC_GET_CODE = 2;
-	public static final int RC_CHECK = 3;
+	public static final int RC_SIGN_IN = 1111;
+	public static final int RC_GET_CODE = 2222;
+	public static final int RC_CHECK = 3333;
 
-	private final Activity activity;
+	private final Fragment activity;
 	private Listener listener;
 
 	private GoogleApiClient client;
@@ -47,7 +65,7 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 	private AsyncTask<Void, Void, AuthParameters> stage1Task;
 	private Handler handler = new Handler(Looper.getMainLooper());
 
-	public GooglePlayServicesHelper(Activity activity) {
+	public GooglePlayServicesHelper(Fragment activity) {
 		this.activity = activity;
 	}
 
@@ -61,11 +79,11 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 	}
 
 	public boolean check() {
-		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
+		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity.getActivity());
 		if (status == ConnectionResult.SUCCESS) {
 			return true;
 		} else if (GooglePlayServicesUtil.isUserRecoverableError(status)) {
-			Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(status, activity, RC_CHECK);
+			Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(status, activity.getActivity(), RC_CHECK);
 			errorDialog.show();
 			return false;
 		} else {
@@ -84,10 +102,11 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 
 	@Override
 	public void onConnectionFailed(ConnectionResult connectionResult) {
+	    log.warn("GooglePlayServicesHelper connectionError: " + connectionResult.getErrorCode() + ": " + connectionResult.getErrorMessage());
 		if (!intentInProgress && connectionResult.hasResolution()) {
 			try {
 				intentInProgress = true;
-				activity.startIntentSenderForResult(connectionResult.getResolution().getIntentSender(),
+				activity.getActivity().startIntentSenderForResult(connectionResult.getResolution().getIntentSender(),
 						RC_SIGN_IN, null, 0, 0, 0);
 			} catch (IntentSender.SendIntentException e) {
 				// The intent was canceled before it was sent.  Return to the default
@@ -102,13 +121,25 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 		}
 	}
 
-	public void onActivityResult(int requestCode, int responseCode, Intent intent) {
+	public void onActivityResult(int requestCode, int responseCode, Intent data) {
+	    log.debug("GooglePlayServicesHelper responce=" + responseCode);
 		if (requestCode == RC_SIGN_IN) {
 			intentInProgress = false;
 
-			if (!client.isConnecting() && responseCode == Activity.RESULT_OK) {
-				client.connect();
-			}
+            GoogleSignInResult result =
+                    Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if (result.isSuccess()) {
+                GoogleSignInAccount signInAccount = result.getSignInAccount();
+                String serverAuthCode = signInAccount.getServerAuthCode();
+                // Send serverAuthCode to server via HTTPS POST using Volley or AsyncTask.
+                if (!onUploadServerAuthCode(clientId, serverAuthCode))
+                    Toast.makeText(activity.getContext(), "Can't finish auth process", Toast.LENGTH_LONG).show();
+            } else {
+                log.warn("Error: " + GoogleSignInStatusCodes.getStatusCodeString(result.getStatus().getStatusCode()));
+                Toast.makeText(activity.getContext(), "Something wrong: " + result.getStatus().getStatusCode() + ": " +
+                        result.getStatus().getStatusMessage(), Toast.LENGTH_LONG).show();
+            }
+
 		}
 	}
 
@@ -167,15 +198,28 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 	}
 
 	private void startStage2() {
-		client = new GoogleApiClient.Builder(activity)
+		log.debug("Start auth stage 2: cleantid=" + clientId);
+		GoogleSignInOptions gso =
+				new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+				.requestEmail()
+				.requestScopes(new Scope("https://www.googleapis.com/auth/plus.me"),
+                        new Scope("https://www.googleapis.com/auth/plus.login"),
+                        new Scope("https://www.googleapis.com/auth/drive"),
+                        new Scope("https://www.googleapis.com/auth/userinfo.email"))
+				.requestServerAuthCode(clientId, true)
+				.build();
+
+		client = new GoogleApiClient.Builder(activity.getActivity())
+                .enableAutoManage(activity.getActivity(), this)
 				.addConnectionCallbacks(this)
 				.addOnConnectionFailedListener(this)
-//				.addApi(Plus.API)
-//				.addScope(new Scope("profile"))
-//				.requestServerAuthCode(clientId, this)
+				.addApi(Auth.GOOGLE_SIGN_IN_API, gso)
 				.build();
 		client.connect();
-	}
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(client);
+        activity.startActivityForResult(signInIntent, RC_SIGN_IN);
+
+    }
 
 	private String createExchangeRequest(String exchangeToken) {
 		XmlSerializer serializer = Xml.newSerializer();
@@ -209,29 +253,29 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 //	}
 
 //	@Override
-//	public boolean onUploadServerAuthCode(String idToken, String serverAuthCode) {
-//		String request = createExchangeRequest(serverAuthCode);
-//
-//		try {
-//			String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
-//			GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
-//
-//			if (getsResponse.getCode() != 0) {
-//				notifyAuthFailed();
-//				return false;
-//			}
-//
-//			notifyAuthCompleted(((TokenContent) getsResponse.getContent()).getAccessToken());
-//
-//			return true;
-//		} catch (IOException e) {
-//			notifyAuthFailed();
-//			return false;
-//		} catch (GetsException e) {
-//			notifyAuthFailed();
-//			return false;
-//		}
-//	}
+	public boolean onUploadServerAuthCode(String idToken, String serverAuthCode) {
+		String request = createExchangeRequest(serverAuthCode);
+
+		try {
+			String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
+			GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
+
+			if (getsResponse.getCode() != 0) {
+				notifyAuthFailed();
+				return false;
+			}
+
+			notifyAuthCompleted(((TokenContent) getsResponse.getContent()).getAccessToken());
+
+			return true;
+		} catch (IOException e) {
+			notifyAuthFailed();
+			return false;
+		} catch (GetsException e) {
+			notifyAuthFailed();
+			return false;
+		}
+	}
 
 	private void notifyAuthFailed() {
 		handler.post(new Runnable() {

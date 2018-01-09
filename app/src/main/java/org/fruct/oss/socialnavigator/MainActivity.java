@@ -432,6 +432,8 @@ public class MainActivity extends AppCompatActivity
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 
+		log.debug("MainActivity.onActivityResult(): request=" + requestCode + "; response=" + resultCode);
+
 //		if (mResultListener != null) {
 //			mResultListener.onActivityResultRedirect(requestCode, resultCode, data);
 //		}

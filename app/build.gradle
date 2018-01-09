@@ -5,6 +5,12 @@ ext {
     miniTrove = false
 }
 
+// place signing config to project.property("project.signing") location
+if(project.hasProperty("project.signing")
+    && new File(rootDir.absolutePath + "/" + project.property("project.signing")).exists()) {
+    apply from: (rootDir.absolutePath + "/" + project.property("project.signing"));
+}
+
 android {
     compileSdkVersion 25
     buildToolsVersion '26.0.2'
@@ -13,8 +19,8 @@ android {
         applicationId "org.fruct.oss.socialnavigator"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 15
-        versionName "0.6.9"
+        versionCode 16
+        versionName "0.7.0"
 
         // Enabling multidex support.
         multiDexEnabled true
@@ -22,7 +28,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
@@ -73,6 +79,8 @@ dependencies {
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
 
     compile 'com.google.android.gms:play-services-identity:11.8.0'
+    compile 'com.google.android.gms:play-services-auth:11.8.0'
+    compile 'com.google.android.gms:play-services-plus:11.8.0'
     //compile "com.google.android.gms:play-services:11.8.0"
 
     compile 'com.jraska:falcon:1.0.4'
@@ -81,3 +89,5 @@ dependencies {
 
     compile 'com.graphhopper:graphhopper:0.7.0'
 }
+
+apply plugin: 'com.google.gms.google-services'

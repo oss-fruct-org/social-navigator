@@ -1,5 +1,7 @@
 package org.fruct.oss.socialnavigator.fragments.root;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -42,6 +44,8 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
+
+import static org.fruct.oss.socialnavigator.settings.GooglePlayServicesHelper.RC_SIGN_IN;
 
 public class GetsFragment extends Fragment implements View.OnClickListener, GooglePlayServicesHelper.Listener,
 		//MainActivity.ActivityResultListener,
@@ -163,16 +167,13 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 		}
 	}
 
-//	@Override
-//	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//		if (requestCode == RC_GETS_FRAGMENT) {
-//			if (resultCode != Activity.RESULT_OK) {
-//				Toast.makeText(getActivity(), R.string.str_google_login_web_error, Toast.LENGTH_LONG).show();
-//			} else {
-//				onGoogleAuthCompleted(data.getStringExtra("auth_token"));
-//			}
-//		}
-//	}
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    log.debug("GetsFragment.onActivityResult(): request=" + requestCode + "; result=" + resultCode);
+		if (requestCode == RC_SIGN_IN) {
+				googlePlayServicesHelper.onActivityResult(requestCode, resultCode, data);
+		}
+	}
 
 //	@Override
 //	public void onActivityResultRedirect(int requestCode, int resultCode, Intent data) {
@@ -278,7 +279,7 @@ public class GetsFragment extends Fragment implements View.OnClickListener, Goog
 	}
 
 	private void startGoogleLogin() {
-		googlePlayServicesHelper = new GooglePlayServicesHelper(getActivity());
+		googlePlayServicesHelper = new GooglePlayServicesHelper(this);
 		googlePlayServicesHelper.setListener(this);
 
 		if (googlePlayServicesHelper.check()) {
