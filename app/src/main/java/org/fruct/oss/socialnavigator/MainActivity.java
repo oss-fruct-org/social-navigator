@@ -3,13 +3,17 @@ package org.fruct.oss.socialnavigator;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -51,6 +55,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import android.graphics.BitmapFactory;
@@ -73,11 +78,12 @@ import com.vk.sdk.api.model.VKWallPostResult;
 import com.vk.sdk.api.photo.VKImageParameters;
 import com.vk.sdk.api.photo.VKUploadImage;
 
+import java.util.List;
 import java.util.Locale;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, ServiceConnection {
 	private static final Logger log = LoggerFactory.getLogger(MainActivity.class);
 
 	private static final String[] sMyScope = new String[]{
@@ -113,6 +119,11 @@ public class MainActivity extends AppCompatActivity
 	private Bitmap mBitMap = null;
 	private String mMessage = "Social navigator project";
 
+	// флаги проверок на полученные права
+	private int hasAccessCoarseLocation = 0;
+	private int hasAccessFineLocation = 0;
+	private int hasAccessStorage = 0;
+
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -132,103 +143,9 @@ public class MainActivity extends AppCompatActivity
 		navigationView.setNavigationItemSelectedListener(this);
 
 		// проверка прав (Андрюша 6+)
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                if (this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+        checkPermissions();
 
-                    final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
-                    dlgAlert.setMessage(R.string.permission_location_message);
-                    dlgAlert.setTitle(R.string.app_name);
-                    dlgAlert.setCancelable(true);
-                    dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @RequiresApi(api = Build.VERSION_CODES.M)
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                                    MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
-                        }
-                    });
-                    dlgAlert.create().show();
-
-
-                } else {
-
-                    this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                            MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
-
-                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                    // app-defined int constant. The callback method gets the
-                    // result of the request.
-                }
-            } else {
-                if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    if (this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                        final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
-                        dlgAlert.setMessage(R.string.permission_location_message);
-                        dlgAlert.setTitle(R.string.app_name);
-                        dlgAlert.setCancelable(true);
-                        dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @RequiresApi(api = Build.VERSION_CODES.M)
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                MainActivity.this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-                            }
-                        });
-                        dlgAlert.create().show();
-
-                    } else {
-
-                        this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-
-                        // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                        // app-defined int constant. The callback method gets the
-                        // result of the request.
-                    }
-                } else {
-                    startService(new Intent(this, RoutingService.class));
-                }
-            }
-            if (this.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                if (this.shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-					log.debug("Explain why we need to write to external storage");
-                    final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
-                    dlgAlert.setMessage(R.string.permission_write_external_storage_message);
-                    dlgAlert.setTitle(R.string.app_name);
-                    dlgAlert.setCancelable(true);
-                    dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @RequiresApi(api = Build.VERSION_CODES.M)
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                    MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-                        }
-                    });
-                    dlgAlert.create().show();
-
-                } else {
-					log.debug("Request permissions to write to external storage");
-
-                    this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                            MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-
-                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                    // app-defined int constant. The callback method gets the
-                    // result of the request.
-                }
-            } else {
-            	log.debug("WE CAN WRITE TO STORAGE");
-                startService(new Intent(this, ContentService.class));
-                startService(new Intent(this, PointsService.class));
-            }
-        } else {
-            startService(new Intent(this, RoutingService.class));
-            startService(new Intent(this, ContentService.class));
-            startService(new Intent(this, PointsService.class));
-        }
-
-
+        runServices();
 		// старт сервисов
 
 		isFromSavedState = savedInstanceState != null;
@@ -274,6 +191,128 @@ public class MainActivity extends AppCompatActivity
 		log.debug("Fingerprint: " +fingerprint[0]);
 	}
 
+    /**
+     * Проверка и запрос прав доступа для Android 6+
+     */
+	private void checkPermissions() {
+	    List<String> requiedPermissions = new ArrayList<>(3);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (hasAccessStorage >= 0 &&
+                    this.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                if (this.shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    log.debug("Explain why we need to write to external storage");
+                    final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
+                    dlgAlert.setMessage(R.string.permission_write_external_storage_message);
+                    dlgAlert.setTitle(R.string.app_name);
+                    dlgAlert.setCancelable(true);
+                    dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @RequiresApi(api = Build.VERSION_CODES.M)
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+                        }
+                    });
+                    dlgAlert.create().show();
+
+                } else {
+                    log.debug("Request permissions to write to external storage");
+
+                    requiedPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+//                    this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                            MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+
+                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+                }
+            } else {
+                log.debug("WE CAN WRITE TO STORAGE");
+                hasAccessStorage = 1;
+            }
+            if (hasAccessCoarseLocation >= 0 &&
+                    this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    log.debug("Ask to coarse location");
+                    final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
+                    dlgAlert.setMessage(R.string.permission_location_message);
+                    dlgAlert.setTitle(R.string.app_name);
+                    dlgAlert.setCancelable(true);
+                    dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @RequiresApi(api = Build.VERSION_CODES.M)
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            log.debug("Request 2 to coarse location");
+                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                                    MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+                        }
+                    });
+                    dlgAlert.create().show();
+
+                } else {
+                    log.debug("Request to coarse location");
+                    requiedPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+//                    this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+//                            MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+                }
+            } else {
+                hasAccessCoarseLocation = 1;
+            }
+            if (hasAccessFineLocation >= 0 &&
+                    this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    log.debug("Ask to fine location");
+                    final AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
+                    dlgAlert.setMessage(R.string.permission_location_message);
+                    dlgAlert.setTitle(R.string.app_name);
+                    dlgAlert.setCancelable(true);
+                    dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @RequiresApi(api = Build.VERSION_CODES.M)
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            log.debug("Request 2 to fine location");
+                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+                        }
+                    });
+                    dlgAlert.create().show();
+
+                } else {
+                    log.debug("Request to fine location");
+                    requiedPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+//                    this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+//                            MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+
+                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+                }
+            } else {
+                hasAccessFineLocation = 1;
+            }
+            if (requiedPermissions.size() > 0) {
+                this.requestPermissions(requiedPermissions.toArray(new String[requiedPermissions.size()]), MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+            }
+        } else {
+            hasAccessFineLocation = 1;
+            hasAccessCoarseLocation = 1;
+            hasAccessStorage = 1;
+        }
+    }
+
+    private void runServices() {
+        if (hasAccessFineLocation > 0 && hasAccessCoarseLocation > 0) {
+            //startService(new Intent(this, RoutingService.class));
+            getApplicationContext().bindService(new Intent(this, RoutingService.class), this, Context.BIND_AUTO_CREATE);
+        }
+        if (hasAccessStorage > 0) {
+            getApplicationContext().bindService(new Intent(this, ContentService.class), this, Context.BIND_AUTO_CREATE);
+            getApplicationContext().bindService(new Intent(this, PointsService.class), this, Context.BIND_AUTO_CREATE);
+            //startService(new Intent(this, ContentService.class));
+            //startService(new Intent(this, PointsService.class));
+        }
+    }
+
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -286,7 +325,7 @@ public class MainActivity extends AppCompatActivity
 		super.onStop();
 	}
 
-	public void displayView(int viewId) {
+	public void displayView(int viewId, Object[] options) {
 		Fragment fragment = null;
 		String title = getString(R.string.app_name);
 
@@ -297,7 +336,10 @@ public class MainActivity extends AppCompatActivity
 			fragment = DisabilitiesFragment.newInstance();
 			title = getString(R.string.title_section2);
 		} else if (viewId == R.id.nav_content) {
-			fragment = RootContentFragment.newInstance();
+		    if (options != null && options.length > 0 && options[0].getClass() == Boolean.class)
+			    fragment = RootContentFragment.newInstance((Boolean) options[0], (Boolean) options[1]);
+		    else
+		        fragment = RootContentFragment.newInstance();
 			title = getString(R.string.title_section3);
 		} else if (viewId == R.id.nav_gets) {
 			fragment = GetsFragment.newInstance();
@@ -335,26 +377,30 @@ public class MainActivity extends AppCompatActivity
 	public boolean onNavigationItemSelected(MenuItem item) {
 		// Handle navigation view item clicks here.
 		int id = item.getItemId();
-		displayView(id);
+		displayView(id, null);
 		return true;
 	}
 
-//	@Override
-//	protected void onNewIntent(Intent intent) {
-//		super.onNewIntent(intent);
-//
-//		String action = intent.getAction();
-//		switch (action) {
-//		case ContentFragment.ACTION_SHOW_ONLINE_CONTENT:
-//			setRootFragment(RootContentFragment.newInstance(true, false));
-//			break;
-//
-//		case ContentFragment.ACTION_UPDATE_READY:
-//			setRootFragment(RootContentFragment.newInstance(false, true));
-//			break;
-//		}
-//	}
-//
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+
+		String action = intent.getAction();
+		switch (action) {
+		case ContentFragment.ACTION_SHOW_ONLINE_CONTENT:
+		    log.debug("Open " + ContentFragment.ACTION_SHOW_ONLINE_CONTENT);
+		    displayView(R.id.nav_content, new Boolean[]{true, false});
+			//setRootFragment(RootContentFragment.newInstance(true, false));
+			break;
+
+		case ContentFragment.ACTION_UPDATE_READY:
+            log.debug("Open " + ContentFragment.ACTION_UPDATE_READY);
+            displayView(R.id.nav_content, new Boolean[]{false, true});
+			///setRootFragment(RootContentFragment.newInstance(false, true));
+			break;
+		}
+	}
+
 //	@Override
 //    public void onNavigationDrawerItemSelected(int position) {
 //		Fragment fragment;
@@ -465,11 +511,11 @@ public class MainActivity extends AppCompatActivity
 //    }
 //
 	public void openCategoriesFragment() {
-		displayView(R.id.nav_disabilities);
+		displayView(R.id.nav_disabilities, null);
 	}
 
 	public void openMapFragment() {
-		displayView(R.id.nav_map);
+		displayView(R.id.nav_map, null);
 	}
 
 	public void runCardiaCare() {
@@ -493,46 +539,88 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	public void onRequestPermissionsResult(int requestCode,
 										   String permissions[], int[] grantResults) {
-		switch (requestCode) {
-			case MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION:
-			case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-				// If request is cancelled, the result arrays are empty.
-				if (grantResults.length > 0
-						&& grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+	    log.debug("Result of requested permissions: " + requestCode + "; " + permissions.toString() + "; " + grantResults.toString());
+		for(int i = 0; i < permissions.length; i++) {
+		    switch (permissions[i]) {
+                case Manifest.permission.ACCESS_COARSE_LOCATION: {
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        hasAccessCoarseLocation = 1;
+                        log.debug("hasAccessCoarseLocation = 1;");
+                    } else if (grantResults[i] == PackageManager.PERMISSION_DENIED){
+                        hasAccessCoarseLocation = -1;
+                        log.debug("hasAccessCoarseLocation = -1;");
+                    }
+                    break;
+                }
+                case Manifest.permission.ACCESS_FINE_LOCATION: {
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        hasAccessFineLocation = 1;
+                        log.debug("hasAccessFineLocation = 1;");
+                    } else if (grantResults[i] == PackageManager.PERMISSION_DENIED){
+                        hasAccessFineLocation = -1;
+                        log.debug("hasAccessFineLocation = -1;");
+                    }
+                    break;
+                }
+                case Manifest.permission.WRITE_EXTERNAL_STORAGE: {
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        hasAccessStorage = 1;
+                        log.debug("hasAccessStorage = 1;");
+                    } else if (grantResults[i] == PackageManager.PERMISSION_DENIED){
+                        hasAccessStorage = -1;
+                        log.debug("hasAccessStorage = -1;");
+                    }
+                    break;
+                }
+                default:
+                    log.warn("Unknown permission: " + permissions[i]);
+            }
+        }
 
-					// permission was granted, yay! Do the
-					// contacts-related task you need to do.
+//	    switch (requestCode) {
+//			case MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION: {
+//                // If request is cancelled, the result arrays are empty.
+//                if (grantResults.length > 0
+//                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    hasAccessCoarseLocation = true;
+//                } else {
+//                    hasAccessCoarseLocation = false;
+//                }
+//                break;
+//            }
+//			case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+//				if (grantResults.length > 0
+//						&& grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//
+//				    hasAccessFineLocation = true;
+//				} else {
+//                    hasAccessFineLocation = false;
+//				}
+//				break;
+//			}
+//			case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
+//				if (grantResults.length > 0
+//						&& grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    hasAccessStorage = true;
+//				} else {
+//				    hasAccessStorage = false;
+//				}
+//				break;
+//			}
+//
+//			default:
+//			    throw new IllegalStateException("Unknown permission was granted or denied: " + requestCode);
+//		}
 
-					startService(new Intent(this, RoutingService.class));
-
-				} else {
-
-					// TODO: permission denied, boo! Disable the
-					// functionality that depends on this permission.
-				}
-				return;
-			}
-			case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
-				// If request is cancelled, the result arrays are empty.
-				if (grantResults.length > 0
-						&& grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-					// permission was granted, yay! Do the
-					// contacts-related task you need to do.
-
-					startService(new Intent(this, ContentService.class));
-					startService(new Intent(this, PointsService.class));
-				} else {
-
-					// TODO: permission denied, boo! Disable the
-					// functionality that depends on this permission.
-				}
-				return;
-			}
-
-			// other 'case' lines to check for other
-			// permissions this app might request
-		}
+		// запускаем проверку прав через 100мс
+		final Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                checkPermissions();
+            }
+        }, 100);
+		runServices();
 	}
 
 	public void sendImage() {
@@ -602,7 +690,23 @@ public class MainActivity extends AppCompatActivity
 		return vkAccessToken != null ? Integer.parseInt(vkAccessToken.userId) : 0;
 	}
 
-	public static class LoginFragment extends android.support.v4.app.Fragment {
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        log.debug("Service connected: " + name + "; service=" + service);
+        if (name.getClassName().equals(RoutingService.class.getCanonicalName())) {
+            RoutingService routingService = ((RoutingService.Binder) service).getService();
+            routingService.restartLocation();
+        } else {
+            log.debug(name.getClassName() + " <> " + RoutingService.class.getCanonicalName());
+        }
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        log.debug("Service disconnected: " + name);
+    }
+
+    public static class LoginFragment extends android.support.v4.app.Fragment {
 		private CallbackManager callbackManager;
 		private LoginButton loginButton;
 

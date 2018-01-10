@@ -7,15 +7,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
@@ -85,6 +88,11 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(getContext(), R.string.permission_location_message, Toast.LENGTH_LONG).show();
+            return false;
+        }
 		if (item.getItemId() == R.id.action_position) {
 			if (isFollowingActive)
 				deactivateFollowMode();
@@ -138,8 +146,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 		try {
 			this.routingService.sendLastLocation();
 		} catch (SecurityException ex) {
-			this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
-					MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+			log.warn("Routing service security exception");
 		}
 	}
 
@@ -212,6 +219,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 		@Override
 		public boolean startLocationProvider(IMyLocationConsumer myLocationConsumer) {
+		    log.debug("startLocationProvider()");
 			this.consumer = myLocationConsumer;
 
 			LocalBroadcastManager.getInstance(context).registerReceiver(receiver = new BroadcastReceiver() {
@@ -227,6 +235,7 @@ public class PositionOverlayFragment extends OverlayFragment implements RoutingS
 
 		@Override
 		public void stopLocationProvider() {
+		    log.debug("stopLocationProvider()");
 			if (receiver != null)
 				LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
 			receiver = null;

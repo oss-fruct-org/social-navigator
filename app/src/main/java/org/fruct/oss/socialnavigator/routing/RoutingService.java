@@ -301,6 +301,7 @@ public class RoutingService extends Service implements PointsService.Listener,
 	}
 
 	public void sendLastLocation() {
+		log.debug("sendLastLocation()");
 		locationReceiver.sendLastLocation();
 	}
 
@@ -320,6 +321,10 @@ public class RoutingService extends Service implements PointsService.Listener,
 
 		locationReceiver.mockLocation(location);
 	}
+
+	public void restartLocation() {
+        locationReceiver.start();
+    }
 
 	@Override
 	public void newLocation(final Location location) {

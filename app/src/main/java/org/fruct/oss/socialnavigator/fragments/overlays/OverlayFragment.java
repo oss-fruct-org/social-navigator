@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class OverlayFragment extends Fragment {
-	private static final Logger log = LoggerFactory.getLogger(OverlayFragment.class);
+	protected static final Logger log = LoggerFactory.getLogger(OverlayFragment.class);
 
 	private Context context;
 

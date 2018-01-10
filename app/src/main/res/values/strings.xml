@@ -85,8 +85,15 @@
     <string name="title_cardiacare">CardiaCare</string>
     <integer name="com_vk_sdk_AppId">6035443</integer>
     <string name="make_screenshot">Send screenshot</string>
-    <string name="permission_write_external_storage_message">Application requires access to external storage for temporary storage of downloaded files (maps, points, etc.)</string>
+    <string name="permission_write_external_storage_message">Application requires access to external storage for temporary storage of downloaded files (maps, points, etc.).</string>
     <string name="permission_location_message">The application requires information about the location of the device for constructing routes, loading obstacles and positioning the map.</string>
     <string name="facebook_app_id" translatable="false">1671078956532973</string>
+    <string name="tran_rough_road">Routh road</string>
+    <string name="tran_border">Border</string>
+    <string name="tran_crosswalk">Crosswalk</string>
+    <string name="tran_traffic_light">Traffic light</string>
+    <string name="tran_ramp">Ramp</string>
+    <string name="tran_slope">Slope</string>
+    <string name="tran_stairs">Stairs</string>
 
 </resources>

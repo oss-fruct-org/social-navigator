@@ -60,7 +60,7 @@ public class AudioManager {
 
     public AudioManager(Context ctx){
         log.error("Created AudioManager ^^^^^^^^^^^^^^^^^^");
-        uris = new ArrayList<String>();
+        uris = new ArrayList<>();
 
         //CategoriesManager.init(); //???
         context = ctx;

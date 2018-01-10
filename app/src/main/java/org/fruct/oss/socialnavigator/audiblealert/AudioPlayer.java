@@ -4,9 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
@@ -35,13 +37,20 @@ public class AudioPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
     }
 
 
-    public boolean startAudioTrack(String uri) {
+    boolean startAudioTrack(String uri) {
+        log.debug("Start audio track: player=" + player + "; uri=" + uri);
         if (player != null || uri == null) {
             return false;
         }
 
         player = new MediaPlayer();
-        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            player.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
+        } else {
+            player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        }
         try {
             AssetFileDescriptor afd = assets.openFd(uri);
             //player.setDataSource(context, uri);
@@ -55,6 +64,7 @@ public class AudioPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
         player.setOnCompletionListener(this);
         player.setOnPreparedListener(this);
         player.setOnErrorListener(this);
+
         player.prepareAsync();
         return true;
     }
@@ -107,6 +117,7 @@ public class AudioPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
+        log.debug("Player finish: " + mediaPlayer + "=" + player);
         if (player != null) {
             player.release();
             player = null;
