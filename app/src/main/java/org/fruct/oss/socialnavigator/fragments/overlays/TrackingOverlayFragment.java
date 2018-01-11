@@ -32,9 +32,11 @@ import org.fruct.oss.socialnavigator.utils.Utils;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.PathOverlay;
+import org.osmdroid.views.overlay.Polyline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,7 +61,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	private ImageView turnImageView;
 	private ImageView obstacleImageView;
 
-	private PathOverlay pathOverlay;
+	private Polyline pathOverlay;
 	private ChoicePath initialPath;
 	private List<Space.Point> pointList;
 
@@ -162,7 +164,7 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 	@Override
 	public void onMapViewReady(MapView mapView) {
 		this.mapView = mapView;
-        this.getView().setVisibility(View.INVISIBLE);
+        //this.getView().setVisibility(View.INVISIBLE);
 	}
 
 	@Override
@@ -253,13 +255,23 @@ public class TrackingOverlayFragment extends OverlayFragment implements RoutingS
 			return;
 		}
 
-		pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), initialPath),
-				8);
+		pathOverlay = new Polyline();
+		pathOverlay.setColor(Utils.getColorByPathType(getResources(), initialPath));
+		pathOverlay.setWidth(8);
 
+//		pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), initialPath),
+//				8);
+
+        List<GeoPoint> points = new ArrayList<>(pointList.size());
 		for (Space.Point point : pointList) {
-			pathOverlay.addPoint(new GeoPoint(point.x, point.y));
+			//pathOverlay.addPoint(new GeoPoint(point.x, point.y));
+            points.add(new GeoPoint(point.x, point.y));
 		}
+		pathOverlay.setPoints(points);
 
+		log.debug("Show line with " + points.size() + " points; color=" + Utils.getColorByPathType(getResources(), initialPath));
+        if (points.size() > 0)
+		    log.debug("Start point=" + points.get(0).toDoubleString());
 		mapView.getOverlayManager().add(pathOverlay);
 	}
 

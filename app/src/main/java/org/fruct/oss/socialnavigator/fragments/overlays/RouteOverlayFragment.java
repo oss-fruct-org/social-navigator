@@ -41,6 +41,7 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.PathOverlay;
+import org.osmdroid.views.overlay.Polyline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +63,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private int servicesBoundCount;
 
-	private final List<PathOverlay> pathOverlays = new ArrayList<PathOverlay>();
+	private final List<Polyline> pathOverlays = new ArrayList<Polyline>();
 	private ItemizedIconOverlay<TargetPointItem> targetPointOverlay;
 	private GeoPoint targetPoint;
 
@@ -286,16 +287,23 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 
 	private void createOverlay(ChoicePath path) {
 
-		PathOverlay pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), path),
-				8);
-		pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
+//		PathOverlay pathOverlay = new PathOverlay(Utils.getColorByPathType(getResources(), path),
+//				8);
+		Polyline pathOverlay = new Polyline();
+		pathOverlay.setColor(Utils.getColorByPathType(getResources(), path));
+		pathOverlay.setWidth(8);
+		pathOverlay.getPaint().setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 80);
+		//pathOverlay.setAlpha(path.getRoutingType() == activeRoutingType ? 255 : 50);
 
 		PointList points = path.getResponse().getBest().getPoints();
+		List<GeoPoint> routePoints = new ArrayList<>();
 		for (int i = 0; i < points.size(); i++) {
 			GeoPoint geoPoint = new GeoPoint(points.getLatitude(i),
 					points.getLongitude(i));
-			pathOverlay.addPoint(geoPoint);
+			routePoints.add(geoPoint);
+//			pathOverlay.addPoint(geoPoint);
 		}
+		pathOverlay.setPoints(routePoints);
 
 		pathOverlays.add(pathOverlay);
 		mapView.getOverlayManager().add(pathOverlay);
