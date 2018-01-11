@@ -156,7 +156,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		getActivity().bindService(new Intent(getActivity(), PointsService.class),
 				pointsServiceConnection, Context.BIND_AUTO_CREATE);
 
-        this.getView().setVisibility(View.INVISIBLE);
+        //this.getView().setVisibility(View.INVISIBLE);
     }
 
 	public void onDestroy() {
