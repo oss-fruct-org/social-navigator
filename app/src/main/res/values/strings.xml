@@ -3,7 +3,7 @@
 
     <string name="app_name">Social Navigator</string>
     <string name="title_section1">Map</string>
-    <string name="title_section2">Categories</string>
+    <string name="title_section2">Disabilities</string>
     <string name="title_section3">Content</string>
     <string name="title_section4">Server</string>
     <string name="title_section5">Preferences</string>
@@ -95,5 +95,6 @@
     <string name="tran_ramp">Ramp</string>
     <string name="tran_slope">Slope</string>
     <string name="tran_stairs">Stairs</string>
+    <string name="warn_select_disability">Please set up disabilities to take into account obstacles in building the route</string>
 
 </resources>

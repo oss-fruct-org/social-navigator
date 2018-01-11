@@ -26,9 +26,11 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
+import android.widget.Toast;
 
 import org.fruct.oss.socialnavigator.R;
 import org.fruct.oss.socialnavigator.points.Category;
+import org.fruct.oss.socialnavigator.points.Disability;
 import org.fruct.oss.socialnavigator.points.PointsService;
 import org.fruct.oss.socialnavigator.routing.ChoicePath;
 import org.fruct.oss.socialnavigator.routing.RoutingService;
@@ -226,12 +228,25 @@ public class CreatePointOverlayFragment extends OverlayFragment implements Popup
 		popupMenu.setOnDismissListener(this);
 		popupMenu.show();
 
-		touchedPoint = new GeoPoint(geoPoint.getLatitudeE6(), geoPoint.getLongitudeE6());
+		touchedPoint = new GeoPoint(geoPoint.getLatitude(), geoPoint.getLongitude());
 		mapView.invalidate();
 	}
 
 	private void route() {
 		routingService.setTargetPoint(touchedPoint);
+		boolean hasSelectedDisability = false;
+		if (pointsService != null) {
+            List<Disability> disabilities = pointsService.queryList(pointsService.requestDisabilities());
+            for (Disability d: disabilities) {
+                if (d.isActive()) {
+                    hasSelectedDisability = true;
+                    break;
+                }
+            }
+        }
+        if (!hasSelectedDisability) {
+            Toast.makeText(getContext(), R.string.warn_select_disability, Toast.LENGTH_LONG).show();
+        }
 	}
 
 	private void place() {

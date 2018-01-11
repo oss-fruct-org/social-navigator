@@ -30,6 +30,7 @@ import com.google.android.gms.plus.Plus;
 
 import org.fruct.oss.mapcontent.BuildConfig;
 import org.fruct.oss.socialnavigator.parsers.AuthParameters;
+import org.fruct.oss.socialnavigator.parsers.AuthRedirectResponse;
 import org.fruct.oss.socialnavigator.parsers.GetsException;
 import org.fruct.oss.socialnavigator.parsers.GetsResponse;
 import org.fruct.oss.socialnavigator.parsers.TokenContent;
@@ -63,6 +64,7 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 	private String clientId;
 
 	private AsyncTask<Void, Void, AuthParameters> stage1Task;
+	private AsyncTask<Void, Void, GetsResponse> stage3Task;
 	private Handler handler = new Handler(Looper.getMainLooper());
 
 	public GooglePlayServicesHelper(Fragment activity) {
@@ -132,8 +134,7 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
                 GoogleSignInAccount signInAccount = result.getSignInAccount();
                 String serverAuthCode = signInAccount.getServerAuthCode();
                 // Send serverAuthCode to server via HTTPS POST using Volley or AsyncTask.
-                if (!onUploadServerAuthCode(clientId, serverAuthCode))
-                    Toast.makeText(activity.getContext(), "Can't finish auth process", Toast.LENGTH_LONG).show();
+                onUploadServerAuthCode(clientId, serverAuthCode);
             } else {
                 log.warn("Error: " + GoogleSignInStatusCodes.getStatusCodeString(result.getStatus().getStatusCode()));
                 Toast.makeText(activity.getContext(), "Something wrong: " + result.getStatus().getStatusCode() + ": " +
@@ -253,28 +254,59 @@ public class GooglePlayServicesHelper implements GoogleApiClient.ConnectionCallb
 //	}
 
 //	@Override
-	public boolean onUploadServerAuthCode(String idToken, String serverAuthCode) {
-		String request = createExchangeRequest(serverAuthCode);
+	void onUploadServerAuthCode(String idToken, String serverAuthCode) {
+		final String request = createExchangeRequest(serverAuthCode);
 
-		try {
-			String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
-			GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
+		stage3Task = new AsyncTask<Void, Void, GetsResponse>() {
+			@Override
+			protected GetsResponse doInBackground(Void... params) {
+				try {
+                    String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
+                    GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
 
-			if (getsResponse.getCode() != 0) {
-				notifyAuthFailed();
-				return false;
+					return getsResponse;
+				} catch (IOException e) {
+					return null;
+				} catch (GetsException e) {
+					return null;
+				}
 			}
 
-			notifyAuthCompleted(((TokenContent) getsResponse.getContent()).getAccessToken());
+			@Override
+			protected void onPostExecute(GetsResponse getsResponse) {
+				super.onPostExecute(getsResponse);
 
-			return true;
-		} catch (IOException e) {
-			notifyAuthFailed();
-			return false;
-		} catch (GetsException e) {
-			notifyAuthFailed();
-			return false;
-		}
+				if (getsResponse == null || getsResponse.getCode() != 0) {
+                    Toast.makeText(activity.getContext(), "Can't finish auth process", Toast.LENGTH_LONG).show();
+                    notifyAuthFailed();
+                    return;
+                }
+
+                notifyAuthCompleted(((TokenContent) getsResponse.getContent()).getAccessToken());
+            }
+		};
+
+		stage3Task.execute();
+
+//		try {
+//			String response = Utils.downloadUrl(GetsProvider.GETS_SERVER + "/auth/exchangeToken.php", request);
+//			GetsResponse getsResponse = GetsResponse.parse(response, TokenContent.class);
+//
+//			if (getsResponse.getCode() != 0) {
+//				notifyAuthFailed();
+//				return false;
+//			}
+//
+//			notifyAuthCompleted(((TokenContent) getsResponse.getContent()).getAccessToken());
+//
+//			return true;
+//		} catch (IOException e) {
+//			notifyAuthFailed();
+//			return false;
+//		} catch (GetsException e) {
+//			notifyAuthFailed();
+//			return false;
+//		}
 	}
 
 	private void notifyAuthFailed() {

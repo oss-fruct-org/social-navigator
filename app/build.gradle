@@ -19,8 +19,8 @@ android {
         applicationId "org.fruct.oss.socialnavigator"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 17
-        versionName "0.7.1"
+        versionCode 19
+        versionName "0.7.3"
 
         // Enabling multidex support.
         multiDexEnabled true

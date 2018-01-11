@@ -83,7 +83,7 @@ public class RouteOverlayFragment extends OverlayFragment implements RoutingServ
 		public void onClick(View v) {
 			PopupMenu popupMenu = new PopupMenu(getActivity(), v);
 
-			log.debug("Open menu");
+			log.debug("Open routing type menu");
 			for (Map.Entry<RoutingType, ChoicePath> entry : paths.entrySet()) {
 				final RoutingType routingType = entry.getKey();
 

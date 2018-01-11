@@ -44,7 +44,6 @@
     <string name="str_next_obstacle">Следующее препятствие</string>
     <string name="str_no_obstacles">Нет препятствий</string>
     <string name="title_section1">Карта</string>
-    <string name="title_section2">Категории</string>
     <string name="title_section3">Контент</string>
     <string name="title_section5">Настройки</string>
     <string name="str_difficulty">Сложность</string>
@@ -123,6 +122,8 @@
     <string name="make_screenshot">Создать снимок экрана</string>
     <string name="permission_write_external_storage_message">Приложению требуется доступ к внешнему хранилищу для временного хранения загруженных файлов (карт, точек и т.д.).</string>
     <string name="permission_location_message">Приложению требуется информация о местоположении устройства для построения маршрутов, загрузки препятствий и позиционирования карты.</string>
+    <string name="warn_select_disability">Пожалуйста настройте ограничения возможности для учета препятствий при построении маршрута</string>
+    <string name="title_section2">Ограничения возможностей</string>
 
 
 </resources>
