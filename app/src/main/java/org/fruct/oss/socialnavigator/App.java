@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.multidex.MultiDexApplication;
 import android.widget.Toast;
 
 import com.facebook.FacebookSdk;
@@ -23,7 +24,7 @@ import org.slf4j.impl.StaticLoggerBinder;
 
 import java.io.File;
 
-public class App extends Application {
+public class App extends MultiDexApplication {
 	private static Context context;
 	private static App app;
 	private static ImageLoader imageLoader;
@@ -116,4 +117,6 @@ public class App extends Application {
 
 		return App.imageLoader;
 	}
+
+
 }
